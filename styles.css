@@ -1,0 +1,64 @@
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+nav a, nav button {
+  transition: all 0.2s ease-in-out;
+}
+
+nav a:hover, nav button:hover {
+  transform: scale(1.05);
+}
+
+.card {
+  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.mobile-nav {
+  z-index: 50;
+}
+
+.table-row-even {
+  background-color: #ffffff;
+}
+
+.table-row-odd {
+  background-color: #f9fafb;
+}
+
+.modal {
+  z-index: 100;
+}
+
+.tooltip {
+  position: relative;
+}
+
+.tooltip:hover::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1f2937;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 10;
+}
+
+.form-toggle {
+  cursor: pointer;
+}
