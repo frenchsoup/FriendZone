@@ -14,13 +14,6 @@
     body {
       font-family: 'Inter', sans-serif;
     }
-    .fade-in {
-      animation: fadeIn 0.5s ease-in;
-    }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
     .table-container {
       overflow-x: auto;
       -webkit-overflow-scrolling: touch;
@@ -37,6 +30,9 @@
     .card:hover {
       transform: translateY(-2px);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+    .mobile-nav {
+      z-index: 50;
     }
   </style>
 </head>
@@ -190,21 +186,21 @@
 
       return (
         <div className="min-h-screen bg-gray-900">
-          <nav className="bg-gray-800 text-white p-4 shadow-lg">
+          <nav className="bg-gray-800 text-white p-3 shadow-lg fixed top-0 left-0 right-0 mobile-nav">
             <div className="container mx-auto flex justify-between items-center">
-              <h1 className="text-2xl font-bold sm:text-3xl">FriendZone FF</h1>
+              <h1 className="text-xl sm:text-2xl font-bold">FriendZone FF</h1>
               <button 
-                className="sm:hidden text-2xl focus:outline-none" 
+                className="sm:hidden text-xl focus:outline-none" 
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
               >
                 ☰
               </button>
-              <ul className={`sm:flex sm:space-x-6 ${isMenuOpen ? 'block' : 'hidden'} sm:block absolute sm:static top-16 left-0 right-0 bg-gray-800 sm:bg-transparent p-4 sm:p-0 transition-all duration-300`}>
+              <ul className={`sm:flex sm:space-x-4 ${isMenuOpen ? 'block' : 'hidden'} sm:block absolute top-full left-0 right-0 bg-gray-800 sm:bg-transparent p-3 sm:p-0 shadow-lg sm:shadow-none`}>
                 {['home', 'rules', 'payouts', 'keepers', 'prizes', 'admin'].map(tab => (
-                  <li key={tab}>
+                  <li key={tab} className="my-2 sm:my-0">
                     <button 
                       onClick={() => { setCurrentTab(tab); setIsMenuOpen(false); }} 
-                      className={`capitalize hover:text-teal-400 focus:outline-none ${currentTab === tab ? 'text-teal-400' : ''}`}
+                      className={`w-full text-left capitalize hover:text-teal-400 focus:outline-none ${currentTab === tab ? 'text-teal-400' : ''}`}
                     >
                       {tab}
                     </button>
@@ -213,56 +209,56 @@
               </ul>
             </div>
           </nav>
-          <main className="container mx-auto p-4 sm:p-6">
+          <main className="container mx-auto pt-20 pb-4 px-3 sm:px-4">
             {currentTab === 'home' && (
-              <div className="card bg-white text-gray-800 rounded-xl shadow-lg p-6 fade-in">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-4">Welcome to FriendZone Fantasy Football</h2>
-                <p className="text-base sm:text-lg">Your longtime fantasy football league, now online! Explore rules, payouts, keepers, and weekly prizes for the 2025 season and beyond.</p>
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+                <h2 className="text-lg sm:text-xl font-bold mb-2">Welcome to FriendZone Fantasy Football</h2>
+                <p className="text-sm sm:text-base">Your longtime fantasy football league, now online! Explore rules, payouts, keepers, and weekly prizes for the 2025 season and beyond.</p>
               </div>
             )}
             {currentTab === 'rules' && (
-              <div className="card bg-white text-gray-800 rounded-xl shadow-lg p-6 fade-in">
-                <h2 className="text-xl sm:text-2xl font-bold mb-4">Rules</h2>
-                <p className="text-base sm:text-lg">{rules.description || 'No rules data available.'}</p>
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+                <h2 className="text-lg sm:text-xl font-bold mb-2">Rules</h2>
+                <p className="text-sm sm:text-base">{rules.description || 'No rules data available.'}</p>
               </div>
             )}
             {currentTab === 'payouts' && (
-              <div className="card bg-white text-gray-800 rounded-xl shadow-lg p-6 fade-in">
-                <h2 className="text-xl sm:text-2xl font-bold mb-4">Payouts</h2>
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+                <h2 className="text-lg sm:text-xl font-bold mb-2">Payouts</h2>
                 {payouts.length > 0 ? (
                   <div className="table-container">
-                    <table className="w-full border-collapse text-sm sm:text-base">
+                    <table className="w-full border-collapse text-xs sm:text-sm">
                       <thead>
                         <tr className="bg-gray-100">
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Category</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Percentage</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Prize ($)</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Category</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">%</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Prize</th>
                         </tr>
                       </thead>
                       <tbody>
                         {payouts.map((payout, index) => (
                           <tr key={index} className="hover:bg-gray-50">
-                            <td className="border border-gray-300 p-2 sm:p-3">{payout.category}</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{(payout.percentage * 100).toFixed(2)}%</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{payout.prize}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{payout.category}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{(payout.percentage * 100).toFixed(2)}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{payout.prize}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 ) : (
-                  <p className="text-base sm:text-lg">No payouts data available.</p>
+                  <p className="text-sm sm:text-base">No payouts data available.</p>
                 )}
               </div>
             )}
             {currentTab === 'keepers' && (
-              <div className="card bg-white text-gray-800 rounded-xl shadow-lg p-6 fade-in">
-                <h2 className="text-xl sm:text-2xl font-bold mb-4">Keepers</h2>
-                <div className="flex flex-wrap gap-2 mb-4">
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+                <h2 className="text-lg sm:text-xl font-bold mb-2">Keepers</h2>
+                <div className="flex flex-wrap gap-2 mb-3">
                   {['2022', '2023', '2024', '2025'].map(year => (
                     <button
                       key={year}
-                      className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                      className={`px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
                       onClick={() => setSelectedYear(year)}
                     >
                       {year}
@@ -271,149 +267,149 @@
                 </div>
                 {keepers[selectedYear].length > 0 ? (
                   <div className="table-container">
-                    <table className="w-full border-collapse text-sm sm:text-base">
+                    <table className="w-full border-collapse text-xs sm:text-sm">
                       <thead>
                         <tr className="bg-gray-100">
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Team</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Keeper #1</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Draft Cost</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Tag</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Cost</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Keeper #2</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Draft Cost</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Tag</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Cost</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Remaining</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Paid</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Team</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">K1</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Cost</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Tag</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Cost</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">K2</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Cost</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Tag</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Cost</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Rem</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Paid</th>
                         </tr>
                       </thead>
                       <tbody>
                         {keepers[selectedYear].map((keeper, index) => (
                           <tr key={index} className="hover:bg-gray-50">
-                            <td className="border border-gray-300 p-2 sm:p-3">{keeper.team}</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{keeper.keeper1}</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{keeper.draftCost1}</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{keeper.tag1 ? 'Yes' : 'No'}</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{keeper.cost1.toFixed(1)}</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{keeper.keeper2}</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{keeper.draftCost2}</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{keeper.tag2 ? 'Yes' : 'No'}</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{keeper.cost2.toFixed(1)}</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{keeper.remaining.toFixed(1)}</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{keeper.paid}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.team}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.keeper1}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.draftCost1}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.tag1 ? 'Y' : 'N'}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.cost1.toFixed(1)}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.keeper2}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.draftCost2}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.tag2 ? 'Y' : 'N'}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.cost2.toFixed(1)}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.remaining.toFixed(1)}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.paid}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 ) : (
-                  <p className="text-base sm:text-lg">No keepers for {selectedYear}.</p>
+                  <p className="text-sm sm:text-base">No keepers for {selectedYear}.</p>
                 )}
               </div>
             )}
             {currentTab === 'prizes' && (
-              <div className="card bg-white text-gray-800 rounded-xl shadow-lg p-6 fade-in">
-                <h2 className="text-xl sm:text-2xl font-bold mb-4">Prizes</h2>
-                <div className="flex flex-wrap gap-2 mb-4">
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+                <h2 className="text-lg sm:text-xl font-bold mb-2">Prizes</h2>
+                <div className="flex flex-wrap gap-2 mb-3">
                   {['2023', '2024', '2025'].map(year => (
                     <button
                       key={year}
-                      className={`px-3 py-1 sm:px-4 sm:py-2 rounded-lg text-sm sm:text-base ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                      className={`px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
                       onClick={() => setSelectedYear(year)}
                     >
                       {year}
                     </button>
                   ))}
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold mb-2">Weekly High Scores</h3>
+                <h3 className="text-base sm:text-lg font-semibold mb-2">Weekly High Scores</h3>
                 {prizes[selectedYear].weeklyHighScores.length > 0 ? (
                   <div className="table-container">
-                    <table className="w-full border-collapse text-sm sm:text-base">
+                    <table className="w-full border-collapse text-xs sm:text-sm">
                       <thead>
                         <tr className="bg-gray-100">
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Week</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Team</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Total</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Week</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Team</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Total</th>
                         </tr>
                       </thead>
                       <tbody>
                         {prizes[selectedYear].weeklyHighScores.map((score, index) => (
                           <tr key={index} className="hover:bg-gray-50">
-                            <td className="border border-gray-300 p-2 sm:p-3">{score.week}</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{score.team}</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{score.total}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{score.week}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{score.team}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{score.total}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 ) : (
-                  <p className="text-base sm:text-lg">No Weekly High Scores for {selectedYear}.</p>
+                  <p className="text-sm sm:text-base">No Weekly High Scores for {selectedYear}.</p>
                 )}
-                <h3 className="text-lg sm:text-xl font-semibold mt-6 mb-2">Survivor</h3>
+                <h3 className="text-base sm:text-lg font-semibold mt-4 mb-2">Survivor</h3>
                 {prizes[selectedYear].survivor.length > 0 ? (
                   <div className="table-container">
-                    <table className="w-full border-collapse text-sm sm:text-base">
+                    <table className="w-full border-collapse text-xs sm:text-sm">
                       <thead>
                         <tr className="bg-gray-100">
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Week</th>
-                          <th className="border border-gray-300 p-2 sm:p-3 text-left">Eliminated</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Week</th>
+                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Eliminated</th>
                         </tr>
                       </thead>
                       <tbody>
                         {prizes[selectedYear].survivor.map((entry, index) => (
                           <tr key={index} className="hover:bg-gray-50">
-                            <td className="border border-gray-300 p-2 sm:p-3">{entry.week || (entry.winner && 'Winner')}</td>
-                            <td className="border border-gray-300 p-2 sm:p-3">{entry.eliminated || entry.winner}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{entry.week || (entry.winner && 'Winner')}</td>
+                            <td className="border border-gray-300 p-1 sm:p-2">{entry.eliminated || entry.winner}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 ) : (
-                  <p className="text-base sm:text-lg">No Survivor data for {selectedYear}.</p>
+                  <p className="text-sm sm:text-base">No Survivor data for {selectedYear}.</p>
                 )}
               </div>
             )}
             {currentTab === 'admin' && (
-              <div className="card bg-white text-gray-800 rounded-xl shadow-lg p-6 fade-in">
-                <h2 className="text-xl sm:text-2xl font-bold mb-4">Admin</h2>
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+                <h2 className="text-lg sm:text-xl font-bold mb-2">Admin</h2>
                 {!isAdminAuthenticated ? (
-                  <div className="max-w-md mx-auto">
-                    <h3 className="text-lg font-semibold mb-2">Admin Login</h3>
-                    <form onSubmit={handleAdminLogin} className="space-y-4">
+                  <div className="max-w-sm mx-auto">
+                    <h3 className="text-base sm:text-lg font-semibold mb-2">Admin Login</h3>
+                    <form onSubmit={handleAdminLogin} className="space-y-3">
                       <input
                         type="password"
                         value={adminPassword}
                         onChange={(e) => setAdminPassword(e.target.value)}
                         placeholder="Enter admin password"
-                        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
                       />
                       <button 
                         type="submit" 
-                        className="w-full px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-all"
+                        className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                       >
                         Login
                       </button>
                     </form>
                   </div>
                 ) : (
-                  <div className="space-y-8">
+                  <div className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-semibold mb-2">Add Keeper (2025)</h3>
-                      <form onSubmit={handleAddKeeper} className="space-y-4 max-w-md">
+                      <h3 className="text-base sm:text-lg font-semibold mb-2">Add Keeper (2025)</h3>
+                      <form onSubmit={handleAddKeeper} className="space-y-3 max-w-sm">
                         <input
                           type="text"
                           name="team"
                           placeholder="Team"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
                           required
                         />
                         <input
                           type="text"
                           name="keeper1"
                           placeholder="Keeper #1"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
                         />
                         <input
                           type="number"
@@ -421,17 +417,17 @@
                           placeholder="Draft Cost #1"
                           step="0.1"
                           min="0"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
                         />
                         <label className="flex items-center space-x-2">
                           <input type="checkbox" name="tag1" className="h-4 w-4 text-teal-500 focus:ring-teal-500" />
-                          <span>Tag #1</span>
+                          <span className="text-sm">Tag #1</span>
                         </label>
                         <input
                           type="text"
                           name="keeper2"
                           placeholder="Keeper #2"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
                         />
                         <input
                           type="number"
@@ -439,37 +435,37 @@
                           placeholder="Draft Cost #2"
                           step="0.1"
                           min="0"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
                         />
                         <label className="flex items-center space-x-2">
                           <input type="checkbox" name="tag2" className="h-4 w-4 text-teal-500 focus:ring-teal-500" />
-                          <span>Tag #2</span>
+                          <span className="text-sm">Tag #2</span>
                         </label>
                         <button 
                           type="submit" 
-                          className="w-full px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-all"
+                          className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                         >
                           Add Keeper
                         </button>
                       </form>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold mb-2">Add Weekly High Score (2025)</h3>
-                      <form onSubmit={handleAddWeeklyScore} className="space-y-4 max-w-md">
+                      <h3 className="text-base sm:text-lg font-semibold mb-2">Add Weekly High Score (2025)</h3>
+                      <form onSubmit={handleAddWeeklyScore} className="space-y-3 max-w-sm">
                         <input
                           type="number"
                           name="week"
                           placeholder="Week (1-14)"
                           min="1"
                           max="14"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
                           required
                         />
                         <input
                           type="text"
                           name="team"
                           placeholder="Team"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
                           required
                         />
                         <input
@@ -478,31 +474,31 @@
                           placeholder="Total Score"
                           step="0.01"
                           min="0"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
                           required
                         />
                         <button 
                           type="submit" 
-                          className="w-full px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-all"
+                          className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                         >
                           Add Score
                         </button>
                       </form>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold mb-2">Add Survivor Entry (2025)</h3>
-                      <form onSubmit={handleAddSurvivor} className="space-y-4 max-w-md">
+                      <h3 className="text-base sm:text-lg font-semibold mb-2">Add Survivor Entry (2025)</h3>
+                      <form onSubmit={handleAddSurvivor} className="space-y-3 max-w-sm">
                         <input
                           type="number"
                           name="week"
                           placeholder="Week (1-12, leave blank for Winner)"
                           min="1"
                           max="12"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
                         />
                         <select
                           name="type"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
                           required
                         >
                           <option value="eliminated">Eliminated</option>
@@ -512,12 +508,12 @@
                           type="text"
                           name="team"
                           placeholder="Team"
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
                           required
                         />
                         <button 
                           type="submit" 
-                          className="w-full px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-all"
+                          className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                         >
                           Add Survivor Entry
                         </button>
