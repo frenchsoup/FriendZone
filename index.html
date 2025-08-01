@@ -40,6 +40,9 @@
     .table-row-odd {
       background-color: #f9fafb;
     }
+    .modal {
+      z-index: 100;
+    }
   </style>
 </head>
 <body class="bg-gray-900 text-gray-100">
@@ -50,6 +53,22 @@
       if (draftCost === 0) return 0;
       if (tag) return draftCost;
       return Math.round((draftCost * 1.1) + 5);
+    };
+
+    // Modal component
+    const Modal = ({ isOpen, onClose, title, children }) => {
+      if (!isOpen) return null;
+      return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal">
+          <div className="bg-white text-gray-800 rounded-lg p-4 max-w-md w-full">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-semibold">{title}</h3>
+              <button onClick={onClose} className="text-gray-500 hover:text-gray-700">&times;</button>
+            </div>
+            {children}
+          </div>
+        </div>
+      );
     };
 
     // Main App component
@@ -63,6 +82,7 @@
       const [payouts, setPayouts] = React.useState([]);
       const [selectedYear, setSelectedYear] = React.useState('2024');
       const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+      const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: null });
 
       // Hardcoded password (replace with environment variable in production)
       const ADMIN_PASSWORD = 'friendzone2025';
@@ -111,8 +131,69 @@
         }
       };
 
-      // Handle adding a new keeper
-      const handleAddKeeper = (e) => {
+      // Update data via Netlify function
+      const updateData = async (file, data, action, index = null) => {
+        try {
+          const res = await fetch('/.netlify/functions/update-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ file, data, action, index })
+          });
+          if (!res.ok) throw new Error('Failed to update data');
+          return await res.json();
+        } catch (err) {
+          console.error('Error updating data:', err);
+          alert('Failed to update data. Please try again.');
+          return null;
+        }
+      };
+
+      // Payouts handlers
+      const handleAddPayout = async (e) => {
+        e.preventDefault();
+        const category = e.target.category.value;
+        const percentage = parseFloat(e.target.percentage.value);
+        const prize = parseInt(e.target.prize.value);
+        if (payouts.some(p => p.category === category)) {
+          alert('Category already exists.');
+          return;
+        }
+        const newPayout = { category, percentage, prize };
+        const updatedPayouts = [...payouts, newPayout];
+        const result = await updateData('payouts.json', updatedPayouts, 'update');
+        if (result) setPayouts(updatedPayouts);
+        e.target.reset();
+      };
+
+      const handleEditPayout = async (e, index) => {
+        e.preventDefault();
+        const category = e.target.category.value;
+        const percentage = parseFloat(e.target.percentage.value);
+        const prize = parseInt(e.target.prize.value);
+        if (payouts.some((p, i) => i !== index && p.category === category)) {
+          alert('Category already exists.');
+          return;
+        }
+        const updatedPayouts = [...payouts];
+        updatedPayouts[index] = { category, percentage, prize };
+        const result = await updateData('payouts.json', updatedPayouts, 'update', index);
+        if (result) {
+          setPayouts(updatedPayouts);
+          setModalState({ isOpen: false, type: '', data: null });
+        }
+      };
+
+      const handleDeletePayout = async (index) => {
+        const updatedPayouts = payouts.filter((_, i) => i !== index);
+        const result = await updateData('payouts.json', updatedPayouts, 'delete', index);
+        if (result) {
+          setPayouts(updatedPayouts);
+          setModalState({ isOpen: false, type: '', data: null });
+        }
+      };
+
+      // Keepers handlers
+      const handleAddKeeper = async (e) => {
         e.preventDefault();
         const team = e.target.team.value;
         const keeper1 = e.target.keeper1.value;
@@ -128,18 +209,60 @@
           alert('Total keeper cost exceeds $200 budget.');
           return;
         }
-        if (keepers[2025].some(k => k.team === team)) {
-          alert('Team already has keepers for 2025.');
+        if (keepers[selectedYear].some(k => k.team === team)) {
+          alert(`Team already has keepers for ${selectedYear}.`);
           return;
         }
         const newKeeper = { team, keeper1, draftCost1, tag1, cost1, keeper2, draftCost2, tag2, cost2, remaining };
-        setKeepers({ ...keepers, 2025: [...keepers[2025], newKeeper] });
-        e.target.reset();
-        // TODO: Call Netlify function to update keepers_2025.json
+        const updatedKeepers = { ...keepers, [selectedYear]: [...keepers[selectedYear], newKeeper] };
+        const result = await updateData(`keepers_${selectedYear}.json`, updatedKeepers[selectedYear], 'update');
+        if (result) {
+          setKeepers(updatedKeepers);
+          e.target.reset();
+        }
       };
 
-      // Handle adding a new weekly high score
-      const handleAddWeeklyScore = (e) => {
+      const handleEditKeeper = async (e, index) => {
+        e.preventDefault();
+        const team = e.target.team.value;
+        const keeper1 = e.target.keeper1.value;
+        const draftCost1 = parseFloat(e.target.draftCost1.value) || 0;
+        const tag1 = e.target.tag1.checked;
+        const cost1 = calculateKeeperCost(draftCost1, tag1);
+        const keeper2 = e.target.keeper2.value;
+        const draftCost2 = parseFloat(e.target.draftCost2.value) || 0;
+        const tag2 = e.target.tag2.checked;
+        const cost2 = calculateKeeperCost(draftCost2, tag2);
+        const remaining = 200 - (cost1 + cost2);
+        if (remaining < 0) {
+          alert('Total keeper cost exceeds $200 budget.');
+          return;
+        }
+        if (keepers[selectedYear].some((k, i) => i !== index && k.team === team)) {
+          alert(`Team already has keepers for ${selectedYear}.`);
+          return;
+        }
+        const updatedKeepers = { ...keepers };
+        updatedKeepers[selectedYear][index] = { team, keeper1, draftCost1, tag1, cost1, keeper2, draftCost2, tag2, cost2, remaining };
+        const result = await updateData(`keepers_${selectedYear}.json`, updatedKeepers[selectedYear], 'update', index);
+        if (result) {
+          setKeepers(updatedKeepers);
+          setModalState({ isOpen: false, type: '', data: null });
+        }
+      };
+
+      const handleDeleteKeeper = async (index) => {
+        const updatedKeepers = { ...keepers };
+        updatedKeepers[selectedYear] = updatedKeepers[selectedYear].filter((_, i) => i !== index);
+        const result = await updateData(`keepers_${selectedYear}.json`, updatedKeepers[selectedYear], 'delete', index);
+        if (result) {
+          setKeepers(updatedKeepers);
+          setModalState({ isOpen: false, type: '', data: null });
+        }
+      };
+
+      // Weekly High Scores handlers
+      const handleAddWeeklyScore = async (e) => {
         e.preventDefault();
         const week = parseInt(e.target.week.value);
         const team = e.target.team.value;
@@ -148,24 +271,60 @@
           alert('Week must be between 1 and 14.');
           return;
         }
-        if (prizes[2025].weeklyHighScores.some(score => score.week === week)) {
-          alert('Week already exists for 2025 Weekly High Scores.');
+        if (prizes[selectedYear].weeklyHighScores.some(score => score.week === week)) {
+          alert(`Week already exists for ${selectedYear} Weekly High Scores.`);
           return;
         }
         const newScore = { week, team, total };
-        setPrizes({
+        const updatedPrizes = {
           ...prizes,
-          2025: {
-            ...prizes[2025],
-            weeklyHighScores: [...prizes[2025].weeklyHighScores, newScore].sort((a, b) => a.week - b.week)
+          [selectedYear]: {
+            ...prizes[selectedYear],
+            weeklyHighScores: [...prizes[selectedYear].weeklyHighScores, newScore].sort((a, b) => a.week - b.week)
           }
-        });
-        e.target.reset();
-        // TODO: Call Netlify function to update prizes_2025.json
+        };
+        const result = await updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update');
+        if (result) {
+          setPrizes(updatedPrizes);
+          e.target.reset();
+        }
       };
 
-      // Handle adding a new survivor entry
-      const handleAddSurvivor = (e) => {
+      const handleEditWeeklyScore = async (e, index) => {
+        e.preventDefault();
+        const week = parseInt(e.target.week.value);
+        const team = e.target.team.value;
+        const total = parseFloat(e.target.total.value);
+        if (week < 1 || week > 14) {
+          alert('Week must be between 1 and 14.');
+          return;
+        }
+        if (prizes[selectedYear].weeklyHighScores.some((score, i) => i !== index && score.week === week)) {
+          alert(`Week already exists for ${selectedYear} Weekly High Scores.`);
+          return;
+        }
+        const updatedPrizes = { ...prizes };
+        updatedPrizes[selectedYear].weeklyHighScores[index] = { week, team, total };
+        updatedPrizes[selectedYear].weeklyHighScores.sort((a, b) => a.week - b.week);
+        const result = await updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update', index);
+        if (result) {
+          setPrizes(updatedPrizes);
+          setModalState({ isOpen: false, type: '', data: null });
+        }
+      };
+
+      const handleDeleteWeeklyScore = async (index) => {
+        const updatedPrizes = { ...prizes };
+        updatedPrizes[selectedYear].weeklyHighScores = updatedPrizes[selectedYear].weeklyHighScores.filter((_, i) => i !== index);
+        const result = await updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'delete', index);
+        if (result) {
+          setPrizes(updatedPrizes);
+          setModalState({ isOpen: false, type: '', data: null });
+        }
+      };
+
+      // Survivor handlers
+      const handleAddSurvivor = async (e) => {
         e.preventDefault();
         const week = parseInt(e.target.week.value) || 0;
         const type = e.target.type.value;
@@ -174,20 +333,121 @@
           alert('Week must be between 1 and 12 for eliminations.');
           return;
         }
-        if (prizes[2025].survivor.some(entry => entry.week === week || (entry.winner && type === 'winner'))) {
-          alert('Week or Winner already exists for 2025 Survivor.');
+        if (prizes[selectedYear].survivor.some(entry => entry.week === week || (entry.winner && type === 'winner'))) {
+          alert(`Week or Winner already exists for ${selectedYear} Survivor.`);
           return;
         }
         const newEntry = type === 'winner' ? { winner: team } : { week, eliminated: team };
-        setPrizes({
+        const updatedPrizes = {
           ...prizes,
-          2025: {
-            ...prizes[2025],
-            survivor: [...prizes[2025].survivor, newEntry].sort((a, b) => (a.week || 999) - (b.week || 999))
+          [selectedYear]: {
+            ...prizes[selectedYear],
+            survivor: [...prizes[selectedYear].survivor, newEntry].sort((a, b) => (a.week || 999) - (b.week || 999))
           }
-        });
-        e.target.reset();
-        // TODO: Call Netlify function to update prizes_2025.json
+        };
+        const result = await updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update');
+        if (result) {
+          setPrizes(updatedPrizes);
+          e.target.reset();
+        }
+      };
+
+      const handleEditSurvivor = async (e, index) => {
+        e.preventDefault();
+        const week = parseInt(e.target.week.value) || 0;
+        const type = e.target.type.value;
+        const team = e.target.team.value;
+        if (type === 'eliminated' && (week < 1 || week > 12)) {
+          alert('Week must be between 1 and 12 for eliminations.');
+          return;
+        }
+        if (prizes[selectedYear].survivor.some((entry, i) => i !== index && (entry.week === week || (entry.winner && type === 'winner')))) {
+          alert(`Week or Winner already exists for ${selectedYear} Survivor.`);
+          return;
+        }
+        const updatedPrizes = { ...prizes };
+        updatedPrizes[selectedYear].survivor[index] = type === 'winner' ? { winner: team } : { week, eliminated: team };
+        updatedPrizes[selectedYear].survivor.sort((a, b) => (a.week || 999) - (b.week || 999));
+        const result = await updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update', index);
+        if (result) {
+          setPrizes(updatedPrizes);
+          setModalState({ isOpen: false, type: '', data: null });
+        }
+      };
+
+      const handleDeleteSurvivor = async (index) => {
+        const updatedPrizes = { ...prizes };
+        updatedPrizes[selectedYear].survivor = updatedPrizes[selectedYear].survivor.filter((_, i) => i !== index);
+        const result = await updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'delete', index);
+        if (result) {
+          setPrizes(updatedPrizes);
+          setModalState({ isOpen: false, type: '', data: null });
+        }
+      };
+
+      // Rules handlers
+      const handleAddRuleSection = async (e) => {
+        e.preventDefault();
+        const title = e.target.title.value;
+        if (rules.sections.some(section => section.title === title)) {
+          alert('Section title already exists.');
+          return;
+        }
+        const updatedRules = {
+          sections: [...rules.sections, { title, items: [] }]
+        };
+        const result = await updateData('rules.json', updatedRules, 'update');
+        if (result) {
+          setRules(updatedRules);
+          e.target.reset();
+        }
+      };
+
+      const handleAddRuleItem = async (e, sectionIndex) => {
+        e.preventDefault();
+        const text = e.target.text.value;
+        const subItems = e.target.subItems.value ? e.target.subItems.value.split('\n').filter(item => item.trim()) : [];
+        const newItem = subItems.length ? { text, subItems } : text;
+        const updatedRules = { ...rules };
+        updatedRules.sections[sectionIndex].items.push(newItem);
+        const result = await updateData('rules.json', updatedRules, 'update');
+        if (result) {
+          setRules(updatedRules);
+          e.target.reset();
+        }
+      };
+
+      const handleEditRuleItem = async (e, sectionIndex, itemIndex) => {
+        e.preventDefault();
+        const text = e.target.text.value;
+        const subItems = e.target.subItems.value ? e.target.subItems.value.split('\n').filter(item => item.trim()) : [];
+        const updatedRules = { ...rules };
+        updatedRules.sections[sectionIndex].items[itemIndex] = subItems.length ? { text, subItems } : text;
+        const result = await updateData('rules.json', updatedRules, 'update', { sectionIndex, itemIndex });
+        if (result) {
+          setRules(updatedRules);
+          setModalState({ isOpen: false, type: '', data: null });
+        }
+      };
+
+      const handleDeleteRuleItem = async (sectionIndex, itemIndex) => {
+        const updatedRules = { ...rules };
+        updatedRules.sections[sectionIndex].items = updatedRules.sections[sectionIndex].items.filter((_, i) => i !== itemIndex);
+        const result = await updateData('rules.json', updatedRules, 'delete', { sectionIndex, itemIndex });
+        if (result) {
+          setRules(updatedRules);
+          setModalState({ isOpen: false, type: '', data: null });
+        }
+      };
+
+      const handleDeleteRuleSection = async (sectionIndex) => {
+        const updatedRules = { ...rules };
+        updatedRules.sections = updatedRules.sections.filter((_, i) => i !== sectionIndex);
+        const result = await updateData('rules.json', updatedRules, 'delete', sectionIndex);
+        if (result) {
+          setRules(updatedRules);
+          setModalState({ isOpen: false, type: '', data: null });
+        }
       };
 
       return (
@@ -204,10 +464,18 @@
                 </button>
               </div>
               <ul className={`sm:flex sm:space-x-4 ${isMenuOpen ? 'block' : 'hidden'} sm:block mt-2 sm:mt-0 p-3 sm:p-0 sm:bg-transparent bg-gray-800 shadow-lg sm:shadow-none`}>
-                {['home', 'rules', 'payouts', 'keepers', 'prizes', 'admin'].map(tab => (
+                {['home', 'rules', 'payouts', 'keepers', 'prizes', isAdminAuthenticated ? 'logout' : 'admin'].map(tab => (
                   <li key={tab} className="my-2 sm:my-0">
                     <button 
-                      onClick={() => { setCurrentTab(tab); setIsMenuOpen(false); }} 
+                      onClick={() => {
+                        if (tab === 'logout') {
+                          setIsAdminAuthenticated(false);
+                          setAdminPassword('');
+                        } else {
+                          setCurrentTab(tab);
+                        }
+                        setIsMenuOpen(false);
+                      }} 
                       className={`w-full sm:w-auto text-left capitalize hover:text-teal-400 focus:outline-none ${currentTab === tab ? 'text-teal-400' : ''}`}
                     >
                       {tab}
@@ -227,25 +495,96 @@
             {currentTab === 'rules' && (
               <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Rules</h2>
+                {isAdminAuthenticated && (
+                  <div className="mb-4">
+                    <h3 className="text-base sm:text-lg font-semibold mb-2">Add Rule Section</h3>
+                    <form onSubmit={handleAddRuleSection} className="space-y-3 max-w-sm">
+                      <input
+                        type="text"
+                        name="title"
+                        placeholder="Section Title"
+                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        required
+                      />
+                      <button 
+                        type="submit" 
+                        className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                      >
+                        Add Section
+                      </button>
+                    </form>
+                  </div>
+                )}
                 {rules.sections.length > 0 ? (
                   <div className="text-sm sm:text-base space-y-3">
-                    {rules.sections.map((section, index) => (
-                      <div key={index}>
-                        <h3 className="text-base sm:text-lg font-semibold text-teal-600 mb-1">{section.title}</h3>
+                    {rules.sections.map((section, sectionIndex) => (
+                      <div key={sectionIndex}>
+                        <div className="flex justify-between items-center">
+                          <h3 className="text-base sm:text-lg font-semibold text-teal-600 mb-1">{section.title}</h3>
+                          {isAdminAuthenticated && (
+                            <button
+                              onClick={() => setModalState({ isOpen: true, type: 'deleteSection', data: { sectionIndex } })}
+                              className="text-red-500 hover:text-red-700 text-sm"
+                            >
+                              Delete Section
+                            </button>
+                          )}
+                        </div>
+                        {isAdminAuthenticated && (
+                          <form onSubmit={(e) => handleAddRuleItem(e, sectionIndex)} className="space-y-3 max-w-sm mb-3">
+                            <input
+                              type="text"
+                              name="text"
+                              placeholder="Rule Text"
+                              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              required
+                            />
+                            <textarea
+                              name="subItems"
+                              placeholder="Sub-items (one per line)"
+                              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                              rows="3"
+                            />
+                            <button 
+                              type="submit" 
+                              className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                            >
+                              Add Rule
+                            </button>
+                          </form>
+                        )}
                         <ul className="list-disc pl-5 space-y-1">
                           {section.items.map((item, itemIndex) => (
-                            <li key={itemIndex}>
-                              {typeof item === 'string' ? item : (
-                                <>
-                                  {item.text}
-                                  {item.subItems && (
-                                    <ul className="list-disc pl-5 mt-1 space-y-1">
-                                      {item.subItems.map((subItem, subIndex) => (
-                                        <li key={subIndex}>{subItem}</li>
-                                      ))}
-                                    </ul>
-                                  )}
-                                </>
+                            <li key={itemIndex} className="flex justify-between items-start">
+                              <div>
+                                {typeof item === 'string' ? item : (
+                                  <>
+                                    {item.text}
+                                    {item.subItems && (
+                                      <ul className="list-disc pl-5 mt-1 space-y-1">
+                                        {item.subItems.map((subItem, subIndex) => (
+                                          <li key={subIndex}>{subItem}</li>
+                                        ))}
+                                      </ul>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                              {isAdminAuthenticated && (
+                                <div className="flex space-x-2">
+                                  <button
+                                    onClick={() => setModalState({ isOpen: true, type: 'editRule', data: { sectionIndex, itemIndex, item } })}
+                                    className="text-blue-500 hover:text-blue-700 text-sm"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() => setModalState({ isOpen: true, type: 'deleteRule', data: { sectionIndex, itemIndex } })}
+                                    className="text-red-500 hover:text-red-700 text-sm"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
                               )}
                             </li>
                           ))}
@@ -261,6 +600,43 @@
             {currentTab === 'payouts' && (
               <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Payouts</h2>
+                {isAdminAuthenticated && (
+                  <div className="mb-4">
+                    <h3 className="text-base sm:text-lg font-semibold mb-2">Add Payout</h3>
+                    <form onSubmit={handleAddPayout} className="space-y-3 max-w-sm">
+                      <input
+                        type="text"
+                        name="category"
+                        placeholder="Category"
+                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        required
+                      />
+                      <input
+                        type="number"
+                        name="percentage"
+                        placeholder="Percentage (e.g., 0.5)"
+                        step="0.01"
+                        min="0"
+                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        required
+                      />
+                      <input
+                        type="number"
+                        name="prize"
+                        placeholder="Prize ($)"
+                        min="0"
+                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        required
+                      />
+                      <button 
+                        type="submit" 
+                        className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                      >
+                        Add Payout
+                      </button>
+                    </form>
+                  </div>
+                )}
                 {payouts.length > 0 ? (
                   <div className="table-container">
                     <table className="w-full border-collapse text-[10px] sm:text-xs">
@@ -269,6 +645,7 @@
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Category</th>
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">%</th>
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Prize</th>
+                          {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
                         </tr>
                       </thead>
                       <tbody>
@@ -277,6 +654,22 @@
                             <td className="border border-gray-300 p-0.5 sm:p-1">{payout.category}</td>
                             <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{(payout.percentage * 100).toFixed(2)}</td>
                             <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${payout.prize}</td>
+                            {isAdminAuthenticated && (
+                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                <button
+                                  onClick={() => setModalState({ isOpen: true, type: 'editPayout', data: { index, payout } })}
+                                  className="text-blue-500 hover:text-blue-700 mr-2"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => setModalState({ isOpen: true, type: 'deletePayout', data: { index } })}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            )}
                           </tr>
                         ))}
                       </tbody>
@@ -301,6 +694,62 @@
                     </button>
                   ))}
                 </div>
+                {isAdminAuthenticated && (
+                  <div className="mb-4">
+                    <h3 className="text-base sm:text-lg font-semibold mb-2">Add Keeper ({selectedYear})</h3>
+                    <form onSubmit={handleAddKeeper} className="space-y-3 max-w-sm">
+                      <input
+                        type="text"
+                        name="team"
+                        placeholder="Team"
+                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                        required
+                      />
+                      <input
+                        type="text"
+                        name="keeper1"
+                        placeholder="Keeper #1"
+                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                      <input
+                        type="number"
+                        name="draftCost1"
+                        placeholder="Draft Cost #1"
+                        step="0.1"
+                        min="0"
+                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                      <label className="flex items-center space-x-2">
+                        <input type="checkbox" name="tag1" className="h-4 w-4 text-teal-500 focus:ring-teal-500" />
+                        <span className="text-sm">Tag #1</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="keeper2"
+                        placeholder="Keeper #2"
+                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                      <input
+                        type="number"
+                        name="draftCost2"
+                        placeholder="Draft Cost #2"
+                        step="0.1"
+                        min="0"
+                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      />
+                      <label className="flex items-center space-x-2">
+                        <input type="checkbox" name="tag2" className="h-4 w-4 text-teal-500 focus:ring-teal-500" />
+                        <span className="text-sm">Tag #2</span>
+                      </label>
+                      <button 
+                        type="submit" 
+                        className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                      >
+                        Add Keeper
+                      </button>
+                    </form>
+                  </div>
+                )}
                 {keepers[selectedYear].length > 0 ? (
                   <div className="table-container">
                     <table className="w-full border-collapse text-[10px] sm:text-xs">
@@ -316,6 +765,7 @@
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Tag</th>
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Cost</th>
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Rem</th>
+                          {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
                         </tr>
                       </thead>
                       <tbody>
@@ -331,6 +781,22 @@
                             <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.tag2 ? 'Y' : 'N'}</td>
                             <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${keeper.cost2}</td>
                             <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${keeper.remaining}</td>
+                            {isAdminAuthenticated && (
+                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                <button
+                                  onClick={() => setModalState({ isOpen: true, type: 'editKeeper', data: { index, keeper } })}
+                                  className="text-blue-500 hover:text-blue-700 mr-2"
+                                >
+                                  Edit
+                                </button>
+                                <button
+                                  onClick={() => setModalState({ isOpen: true, type: 'deleteKeeper', data: { index } })}
+                                  className="text-red-500 hover:text-red-700"
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            )}
                           </tr>
                         ))}
                       </tbody>
@@ -358,6 +824,44 @@
                 <div className="flex flex-col lg:flex-row lg:space-x-2">
                   <div className="flex-1 mb-2 lg:mb-0">
                     <h3 className="text-base sm:text-lg font-semibold mb-1">Weekly High Scores</h3>
+                    {isAdminAuthenticated && (
+                      <div className="mb-4">
+                        <h4 className="text-sm sm:text-base font-semibold mb-2">Add Weekly High Score</h4>
+                        <form onSubmit={handleAddWeeklyScore} className="space-y-3 max-w-sm">
+                          <input
+                            type="number"
+                            name="week"
+                            placeholder="Week (1-14)"
+                            min="1"
+                            max="14"
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            required
+                          />
+                          <input
+                            type="text"
+                            name="team"
+                            placeholder="Team"
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            required
+                          />
+                          <input
+                            type="number"
+                            name="total"
+                            placeholder="Total Score"
+                            step="0.01"
+                            min="0"
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            required
+                          />
+                          <button 
+                            type="submit" 
+                            className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                          >
+                            Add Score
+                          </button>
+                        </form>
+                      </div>
+                    )}
                     {prizes[selectedYear].weeklyHighScores.length > 0 ? (
                       <div className="table-container">
                         <table className="w-full border-collapse text-[10px] sm:text-xs">
@@ -366,6 +870,7 @@
                               <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Week</th>
                               <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Team</th>
                               <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Total</th>
+                              {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
                             </tr>
                           </thead>
                           <tbody>
@@ -374,6 +879,22 @@
                                 <td className="border border-gray-300 p-0.5 sm:p-1">{score.week}</td>
                                 <td className="border border-gray-300 p-0.5 sm:p-1">{score.team}</td>
                                 <td className="border border-gray-300 p-0.5 sm:p-1">{score.total}</td>
+                                {isAdminAuthenticated && (
+                                  <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                    <button
+                                      onClick={() => setModalState({ isOpen: true, type: 'editWeeklyScore', data: { index, score } })}
+                                      className="text-blue-500 hover:text-blue-700 mr-2"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => setModalState({ isOpen: true, type: 'deleteWeeklyScore', data: { index } })}
+                                      className="text-red-500 hover:text-red-700"
+                                    >
+                                      Delete
+                                    </button>
+                                  </td>
+                                )}
                               </tr>
                             ))}
                           </tbody>
@@ -385,6 +906,42 @@
                   </div>
                   <div className="flex-1">
                     <h3 className="text-base sm:text-lg font-semibold mb-1">Survivor</h3>
+                    {isAdminAuthenticated && (
+                      <div className="mb-4">
+                        <h4 className="text-sm sm:text-base font-semibold mb-2">Add Survivor Entry</h4>
+                        <form onSubmit={handleAddSurvivor} className="space-y-3 max-w-sm">
+                          <input
+                            type="number"
+                            name="week"
+                            placeholder="Week (1-12, leave blank for Winner)"
+                            min="1"
+                            max="12"
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                          />
+                          <select
+                            name="type"
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            required
+                          >
+                            <option value="eliminated">Eliminated</option>
+                            <option value="winner">Winner</option>
+                          </select>
+                          <input
+                            type="text"
+                            name="team"
+                            placeholder="Team"
+                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            required
+                          />
+                          <button 
+                            type="submit" 
+                            className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                          >
+                            Add Survivor Entry
+                          </button>
+                        </form>
+                      </div>
+                    )}
                     {prizes[selectedYear].survivor.length > 0 ? (
                       <div className="table-container">
                         <table className="w-full border-collapse text-[10px] sm:text-xs">
@@ -392,6 +949,7 @@
                             <tr className="bg-gray-100">
                               <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Week</th>
                               <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Eliminated</th>
+                              {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
                             </tr>
                           </thead>
                           <tbody>
@@ -399,6 +957,22 @@
                               <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
                                 <td className="border border-gray-300 p-0.5 sm:p-1">{entry.week || (entry.winner && 'Winner')}</td>
                                 <td className="border border-gray-300 p-0.5 sm:p-1">{entry.eliminated || entry.winner}</td>
+                                {isAdminAuthenticated && (
+                                  <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                    <button
+                                      onClick={() => setModalState({ isOpen: true, type: 'editSurvivor', data: { index, entry } })}
+                                      className="text-blue-500 hover:text-blue-700 mr-2"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      onClick={() => setModalState({ isOpen: true, type: 'deleteSurvivor', data: { index } })}
+                                      className="text-red-500 hover:text-red-700"
+                                    >
+                                      Delete
+                                    </button>
+                                  </td>
+                                )}
                               </tr>
                             ))}
                           </tbody>
@@ -413,156 +987,304 @@
             )}
             {currentTab === 'admin' && (
               <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
-                <h2 className="text-lg sm:text-xl font-bold mb-2">Admin</h2>
-                {!isAdminAuthenticated ? (
-                  <div className="max-w-sm mx-auto">
-                    <h3 className="text-base sm:text-lg font-semibold mb-2">Admin Login</h3>
-                    <form onSubmit={handleAdminLogin} className="space-y-3">
-                      <input
-                        type="password"
-                        value={adminPassword}
-                        onChange={(e) => setAdminPassword(e.target.value)}
-                        placeholder="Enter admin password"
-                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                      <button 
-                        type="submit" 
-                        className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                      >
-                        Login
-                      </button>
-                    </form>
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-base sm:text-lg font-semibold mb-2">Add Keeper (2025)</h3>
-                      <form onSubmit={handleAddKeeper} className="space-y-3 max-w-sm">
-                        <input
-                          type="text"
-                          name="team"
-                          placeholder="Team"
-                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                          required
-                        />
-                        <input
-                          type="text"
-                          name="keeper1"
-                          placeholder="Keeper #1"
-                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        />
-                        <input
-                          type="number"
-                          name="draftCost1"
-                          placeholder="Draft Cost #1"
-                          step="0.1"
-                          min="0"
-                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        />
-                        <label className="flex items-center space-x-2">
-                          <input type="checkbox" name="tag1" className="h-4 w-4 text-teal-500 focus:ring-teal-500" />
-                          <span className="text-sm">Tag #1</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="keeper2"
-                          placeholder="Keeper #2"
-                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        />
-                        <input
-                          type="number"
-                          name="draftCost2"
-                          placeholder="Draft Cost #2"
-                          step="0.1"
-                          min="0"
-                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        />
-                        <label className="flex items-center space-x-2">
-                          <input type="checkbox" name="tag2" className="h-4 w-4 text-teal-500 focus:ring-teal-500" />
-                          <span className="text-sm">Tag #2</span>
-                        </label>
-                        <button 
-                          type="submit" 
-                          className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                        >
-                          Add Keeper
-                        </button>
-                      </form>
-                    </div>
-                    <div>
-                      <h3 className="text-base sm:text-lg font-semibold mb-2">Add Weekly High Score (2025)</h3>
-                      <form onSubmit={handleAddWeeklyScore} className="space-y-3 max-w-sm">
-                        <input
-                          type="number"
-                          name="week"
-                          placeholder="Week (1-14)"
-                          min="1"
-                          max="14"
-                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                          required
-                        />
-                        <input
-                          type="text"
-                          name="team"
-                          placeholder="Team"
-                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                          required
-                        />
-                        <input
-                          type="number"
-                          name="total"
-                          placeholder="Total Score"
-                          step="0.01"
-                          min="0"
-                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                          required
-                        />
-                        <button 
-                          type="submit" 
-                          className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                        >
-                          Add Score
-                        </button>
-                      </form>
-                    </div>
-                    <div>
-                      <h3 className="text-base sm:text-lg font-semibold mb-2">Add Survivor Entry (2025)</h3>
-                      <form onSubmit={handleAddSurvivor} className="space-y-3 max-w-sm">
-                        <input
-                          type="number"
-                          name="week"
-                          placeholder="Week (1-12, leave blank for Winner)"
-                          min="1"
-                          max="12"
-                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        />
-                        <select
-                          name="type"
-                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                          required
-                        >
-                          <option value="eliminated">Eliminated</option>
-                          <option value="winner">Winner</option>
-                        </select>
-                        <input
-                          type="text"
-                          name="team"
-                          placeholder="Team"
-                          className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                          required
-                        />
-                        <button 
-                          type="submit" 
-                          className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                        >
-                          Add Survivor Entry
-                        </button>
-                      </form>
-                    </div>
-                  </div>
-                )}
+                <h2 className="text-lg sm:text-xl font-bold mb-2">Admin Login</h2>
+                <div className="max-w-sm mx-auto">
+                  <form onSubmit={handleAdminLogin} className="space-y-3">
+                    <input
+                      type="password"
+                      value={adminPassword}
+                      onChange={(e) => setAdminPassword(e.target.value)}
+                      placeholder="Enter admin password"
+                      className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    />
+                    <button 
+                      type="submit" 
+                      className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                    >
+                      Login
+                    </button>
+                  </form>
+                </div>
               </div>
             )}
+            <Modal
+              isOpen={modalState.isOpen}
+              onClose={() => setModalState({ isOpen: false, type: '', data: null })}
+              title={
+                modalState.type === 'editPayout' ? 'Edit Payout' :
+                modalState.type === 'deletePayout' ? 'Delete Payout' :
+                modalState.type === 'editKeeper' ? 'Edit Keeper' :
+                modalState.type === 'deleteKeeper' ? 'Delete Keeper' :
+                modalState.type === 'editWeeklyScore' ? 'Edit Weekly High Score' :
+                modalState.type === 'deleteWeeklyScore' ? 'Delete Weekly High Score' :
+                modalState.type === 'editSurvivor' ? 'Edit Survivor Entry' :
+                modalState.type === 'deleteSurvivor' ? 'Delete Survivor Entry' :
+                modalState.type === 'editRule' ? 'Edit Rule' :
+                modalState.type === 'deleteRule' ? 'Delete Rule' :
+                modalState.type === 'deleteSection' ? 'Delete Section' : ''
+              }
+            >
+              {modalState.type === 'editPayout' && (
+                <form onSubmit={(e) => handleEditPayout(e, modalState.data.index)} className="space-y-3">
+                  <input
+                    type="text"
+                    name="category"
+                    defaultValue={modalState.data.payout.category}
+                    placeholder="Category"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  />
+                  <input
+                    type="number"
+                    name="percentage"
+                    defaultValue={modalState.data.payout.percentage}
+                    placeholder="Percentage (e.g., 0.5)"
+                    step="0.01"
+                    min="0"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  />
+                  <input
+                    type="number"
+                    name="prize"
+                    defaultValue={modalState.data.payout.prize}
+                    placeholder="Prize ($)"
+                    min="0"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  />
+                  <button 
+                    type="submit" 
+                    className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                  >
+                    Save
+                  </button>
+                </form>
+              )}
+              {modalState.type === 'deletePayout' && (
+                <div>
+                  <p className="mb-3">Are you sure you want to delete this payout?</p>
+                  <button 
+                    onClick={() => handleDeletePayout(modalState.data.index)} 
+                    className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+              {modalState.type === 'editKeeper' && (
+                <form onSubmit={(e) => handleEditKeeper(e, modalState.data.index)} className="space-y-3">
+                  <input
+                    type="text"
+                    name="team"
+                    defaultValue={modalState.data.keeper.team}
+                    placeholder="Team"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  />
+                  <input
+                    type="text"
+                    name="keeper1"
+                    defaultValue={modalState.data.keeper.keeper1}
+                    placeholder="Keeper #1"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                  <input
+                    type="number"
+                    name="draftCost1"
+                    defaultValue={modalState.data.keeper.draftCost1}
+                    placeholder="Draft Cost #1"
+                    step="0.1"
+                    min="0"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" name="tag1" defaultChecked={modalState.data.keeper.tag1} className="h-4 w-4 text-teal-500 focus:ring-teal-500" />
+                    <span className="text-sm">Tag #1</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="keeper2"
+                    defaultValue={modalState.data.keeper.keeper2}
+                    placeholder="Keeper #2"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                  <input
+                    type="number"
+                    name="draftCost2"
+                    defaultValue={modalState.data.keeper.draftCost2}
+                    placeholder="Draft Cost #2"
+                    step="0.1"
+                    min="0"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                  <label className="flex items-center space-x-2">
+                    <input type="checkbox" name="tag2" defaultChecked={modalState.data.keeper.tag2} className="h-4 w-4 text-teal-500 focus:ring-teal-500" />
+                    <span className="text-sm">Tag #2</span>
+                  </label>
+                  <button 
+                    type="submit" 
+                    className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                  >
+                    Save
+                  </button>
+                </form>
+              )}
+              {modalState.type === 'deleteKeeper' && (
+                <div>
+                  <p className="mb-3">Are you sure you want to delete this keeper?</p>
+                  <button 
+                    onClick={() => handleDeleteKeeper(modalState.data.index)} 
+                    className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+              {modalState.type === 'editWeeklyScore' && (
+                <form onSubmit={(e) => handleEditWeeklyScore(e, modalState.data.index)} className="space-y-3">
+                  <input
+                    type="number"
+                    name="week"
+                    defaultValue={modalState.data.score.week}
+                    placeholder="Week (1-14)"
+                    min="1"
+                    max="14"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  />
+                  <input
+                    type="text"
+                    name="team"
+                    defaultValue={modalState.data.score.team}
+                    placeholder="Team"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  />
+                  <input
+                    type="number"
+                    name="total"
+                    defaultValue={modalState.data.score.total}
+                    placeholder="Total Score"
+                    step="0.01"
+                    min="0"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  />
+                  <button 
+                    type="submit" 
+                    className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                  >
+                    Save
+                  </button>
+                </form>
+              )}
+              {modalState.type === 'deleteWeeklyScore' && (
+                <div>
+                  <p className="mb-3">Are you sure you want to delete this weekly high score?</p>
+                  <button 
+                    onClick={() => handleDeleteWeeklyScore(modalState.data.index)} 
+                    className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+              {modalState.type === 'editSurvivor' && (
+                <form onSubmit={(e) => handleEditSurvivor(e, modalState.data.index)} className="space-y-3">
+                  <input
+                    type="number"
+                    name="week"
+                    defaultValue={modalState.data.entry.week || ''}
+                    placeholder="Week (1-12, leave blank for Winner)"
+                    min="1"
+                    max="12"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                  <select
+                    name="type"
+                    defaultValue={modalState.data.entry.winner ? 'winner' : 'eliminated'}
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  >
+                    <option value="eliminated">Eliminated</option>
+                    <option value="winner">Winner</option>
+                  </select>
+                  <input
+                    type="text"
+                    name="team"
+                    defaultValue={modalState.data.entry.eliminated || modalState.data.entry.winner}
+                    placeholder="Team"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  />
+                  <button 
+                    type="submit" 
+                    className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                  >
+                    Save
+                  </button>
+                </form>
+              )}
+              {modalState.type === 'deleteSurvivor' && (
+                <div>
+                  <p className="mb-3">Are you sure you want to delete this survivor entry?</p>
+                  <button 
+                    onClick={() => handleDeleteSurvivor(modalState.data.index)} 
+                    className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+              {modalState.type === 'editRule' && (
+                <form onSubmit={(e) => handleEditRuleItem(e, modalState.data.sectionIndex, modalState.data.itemIndex)} className="space-y-3">
+                  <input
+                    type="text"
+                    name="text"
+                    defaultValue={typeof modalState.data.item === 'string' ? modalState.data.item : modalState.data.item.text}
+                    placeholder="Rule Text"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    required
+                  />
+                  <textarea
+                    name="subItems"
+                    defaultValue={typeof modalState.data.item === 'string' ? '' : modalState.data.item.subItems?.join('\n') || ''}
+                    placeholder="Sub-items (one per line)"
+                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    rows="3"
+                  />
+                  <button 
+                    type="submit" 
+                    className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                  >
+                    Save
+                  </button>
+                </form>
+              )}
+              {modalState.type === 'deleteRule' && (
+                <div>
+                  <p className="mb-3">Are you sure you want to delete this rule?</p>
+                  <button 
+                    onClick={() => handleDeleteRuleItem(modalState.data.sectionIndex, modalState.data.itemIndex)} 
+                    className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+              {modalState.type === 'deleteSection' && (
+                <div>
+                  <p className="mb-3">Are you sure you want to delete this section?</p>
+                  <button 
+                    onClick={() => handleDeleteRuleSection(modalState.data.sectionIndex)} 
+                    className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </Modal>
           </main>
         </div>
       );
