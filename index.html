@@ -34,6 +34,12 @@
     .mobile-nav {
       z-index: 50;
     }
+    .table-row-even {
+      background-color: #ffffff;
+    }
+    .table-row-odd {
+      background-color: #f9fafb;
+    }
   </style>
 </head>
 <body class="bg-gray-900 text-gray-100">
@@ -43,7 +49,7 @@
     const calculateKeeperCost = (draftCost, tag) => {
       if (draftCost === 0) return 0;
       if (tag) return draftCost;
-      return (draftCost * 1.1) + 5;
+      return Math.round((draftCost * 1.1) + 5);
     };
 
     // Main App component
@@ -126,7 +132,7 @@
           alert('Team already has keepers for 2025.');
           return;
         }
-        const newKeeper = { team, keeper1, draftCost1, tag1, cost1, keeper2, draftCost2, tag2, cost2, remaining, paid: "y" };
+        const newKeeper = { team, keeper1, draftCost1, tag1, cost1, keeper2, draftCost2, tag2, cost2, remaining };
         setKeepers({ ...keepers, 2025: [...keepers[2025], newKeeper] });
         e.target.reset();
         // TODO: Call Netlify function to update keepers_2025.json
@@ -225,38 +231,38 @@
               </div>
             )}
             {currentTab === 'payouts' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Payouts</h2>
                 {payouts.length > 0 ? (
                   <div className="table-container">
-                    <table className="w-full border-collapse text-xs sm:text-sm">
+                    <table className="w-full border-collapse text-[10px] sm:text-xs">
                       <thead>
                         <tr className="bg-gray-100">
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Category</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">%</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Prize</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Category</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">%</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Prize</th>
                         </tr>
                       </thead>
                       <tbody>
                         {payouts.map((payout, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="border border-gray-300 p-1 sm:p-2">{payout.category}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{(payout.percentage * 100).toFixed(2)}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{payout.prize}</td>
+                          <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
+                            <td className="border border-gray-300 p-0.5 sm:p-1">{payout.category}</td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{(payout.percentage * 100).toFixed(2)}</td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${payout.prize}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 ) : (
-                  <p className="text-sm sm:text-base">No payouts data available.</p>
+                  <p className="text-xs sm:text-sm">No payouts data available.</p>
                 )}
               </div>
             )}
             {currentTab === 'keepers' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Keepers</h2>
-                <div className="flex flex-wrap gap-2 mb-3">
+                <div className="flex flex-wrap gap-2 mb-2">
                   {['2022', '2023', '2024', '2025'].map(year => (
                     <button
                       key={year}
@@ -269,50 +275,48 @@
                 </div>
                 {keepers[selectedYear].length > 0 ? (
                   <div className="table-container">
-                    <table className="w-full border-collapse text-xs sm:text-sm">
+                    <table className="w-full border-collapse text-[10px] sm:text-xs">
                       <thead>
                         <tr className="bg-gray-100">
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Team</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">K1</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Cost</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Tag</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Cost</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">K2</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Cost</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Tag</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Cost</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Rem</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Paid</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Team</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K1</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Cost</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Tag</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Cost</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K2</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Cost</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Tag</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Cost</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Rem</th>
                         </tr>
                       </thead>
                       <tbody>
                         {keepers[selectedYear].map((keeper, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.team}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.keeper1}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.draftCost1}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.tag1 ? 'Y' : 'N'}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.cost1.toFixed(1)}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.keeper2}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.draftCost2}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.tag2 ? 'Y' : 'N'}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.cost2.toFixed(1)}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.remaining.toFixed(1)}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{keeper.paid}</td>
+                          <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
+                            <td className="border border-gray-300 p-0.5 sm:p-1">{keeper.team}</td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.keeper1}</td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${keeper.draftCost1}</td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.tag1 ? 'Y' : 'N'}</td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${keeper.cost1}</td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.keeper2}</td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${keeper.draftCost2}</td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.tag2 ? 'Y' : 'N'}</td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${keeper.cost2}</td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${keeper.remaining}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 ) : (
-                  <p className="text-sm sm:text-base">No keepers for {selectedYear}.</p>
+                  <p className="text-xs sm:text-sm">No keepers for {selectedYear}.</p>
                 )}
               </div>
             )}
             {currentTab === 'prizes' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Prizes</h2>
-                <div className="flex flex-wrap gap-2 mb-3">
+                <div className="flex flex-wrap gap-2 mb-2">
                   {['2023', '2024', '2025'].map(year => (
                     <button
                       key={year}
@@ -323,54 +327,60 @@
                     </button>
                   ))}
                 </div>
-                <h3 className="text-base sm:text-lg font-semibold mb-2">Weekly High Scores</h3>
-                {prizes[selectedYear].weeklyHighScores.length > 0 ? (
-                  <div className="table-container">
-                    <table className="w-full border-collapse text-xs sm:text-sm">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Week</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Team</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Total</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {prizes[selectedYear].weeklyHighScores.map((score, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="border border-gray-300 p-1 sm:p-2">{score.week}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{score.team}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{score.total}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                <div className="flex flex-col lg:flex-row lg:space-x-2">
+                  <div className="flex-1 mb-2 lg:mb-0">
+                    <h3 className="text-base sm:text-lg font-semibold mb-1">Weekly High Scores</h3>
+                    {prizes[selectedYear].weeklyHighScores.length > 0 ? (
+                      <div className="table-container">
+                        <table className="w-full border-collapse text-[10px] sm:text-xs">
+                          <thead>
+                            <tr className="bg-gray-100">
+                              <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Week</th>
+                              <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Team</th>
+                              <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Total</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {prizes[selectedYear].weeklyHighScores.map((score, index) => (
+                              <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
+                                <td className="border border-gray-300 p-0.5 sm:p-1">{score.week}</td>
+                                <td className="border border-gray-300 p-0.5 sm:p-1">{score.team}</td>
+                                <td className="border border-gray-300 p-0.5 sm:p-1">{score.total}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-xs sm:text-sm">No Weekly High Scores for {selectedYear}.</p>
+                    )}
                   </div>
-                ) : (
-                  <p className="text-sm sm:text-base">No Weekly High Scores for {selectedYear}.</p>
-                )}
-                <h3 className="text-base sm:text-lg font-semibold mt-4 mb-2">Survivor</h3>
-                {prizes[selectedYear].survivor.length > 0 ? (
-                  <div className="table-container">
-                    <table className="w-full border-collapse text-xs sm:text-sm">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Week</th>
-                          <th className="border border-gray-300 p-1 sm:p-2 text-left">Eliminated</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {prizes[selectedYear].survivor.map((entry, index) => (
-                          <tr key={index} className="hover:bg-gray-50">
-                            <td className="border border-gray-300 p-1 sm:p-2">{entry.week || (entry.winner && 'Winner')}</td>
-                            <td className="border border-gray-300 p-1 sm:p-2">{entry.eliminated || entry.winner}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="flex-1">
+                    <h3 className="text-base sm:text-lg font-semibold mb-1">Survivor</h3>
+                    {prizes[selectedYear].survivor.length > 0 ? (
+                      <div className="table-container">
+                        <table className="w-full border-collapse text-[10px] sm:text-xs">
+                          <thead>
+                            <tr className="bg-gray-100">
+                              <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Week</th>
+                              <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Eliminated</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {prizes[selectedYear].survivor.map((entry, index) => (
+                              <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
+                                <td className="border border-gray-300 p-0.5 sm:p-1">{entry.week || (entry.winner && 'Winner')}</td>
+                                <td className="border border-gray-300 p-0.5 sm:p-1">{entry.eliminated || entry.winner}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <p className="text-xs sm:text-sm">No Survivor data for {selectedYear}.</p>
+                    )}
                   </div>
-                ) : (
-                  <p className="text-sm sm:text-base">No Survivor data for {selectedYear}.</p>
-                )}
+                </div>
               </div>
             )}
             {currentTab === 'admin' && (
