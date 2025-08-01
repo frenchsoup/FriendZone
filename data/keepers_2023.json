@@ -9,9 +9,7 @@
     "draftCost2": 0,
     "tag2": false,
     "cost2": 5,
-    "remaining": 185.6,
-    "paid": "y"
-  },
+    "remaining": 185.6  },
   {
     "team": "Ayer",
     "keeper1": "T Pollard",
@@ -22,9 +20,7 @@
     "draftCost2": 3,
     "tag2": true,
     "cost2": 3,
-    "remaining": 181,
-    "paid": "y"
-  },
+    "remaining": 181  },
   {
     "team": "Buck",
     "keeper1": "J Jacobs",
@@ -35,9 +31,7 @@
     "draftCost2": 0,
     "tag2": false,
     "cost2": 0,
-    "remaining": 175,
-    "paid": "y"
-  },
+    "remaining": 175  },
   {
     "team": "Byz",
     "keeper1": "T Lawrence",
@@ -48,9 +42,7 @@
     "draftCost2": 28,
     "tag2": true,
     "cost2": 28,
-    "remaining": 153.8,
-    "paid": "y"
-  },
+    "remaining": 153.8  },
   {
     "team": "Dgatz",
     "keeper1": "J Burrow",
@@ -61,9 +53,7 @@
     "draftCost2": 14,
     "tag2": false,
     "cost2": 20.4,
-    "remaining": 152.6,
-    "paid": "y"
-  },
+    "remaining": 152.6  },
   {
     "team": "Jordan",
     "keeper1": "J Chase",
@@ -74,9 +64,7 @@
     "draftCost2": 7,
     "tag2": true,
     "cost2": 7,
-    "remaining": 171.5,
-    "paid": "y"
-  },
+    "remaining": 171.5  },
   {
     "team": "LeFevre",
     "keeper1": "D Samuel",
@@ -87,9 +75,7 @@
     "draftCost2": 0,
     "tag2": false,
     "cost2": 5,
-    "remaining": 183,
-    "paid": "y"
-  },
+    "remaining": 183  },
   {
     "team": "Lewis",
     "keeper1": "J Herbet",
@@ -100,9 +86,7 @@
     "draftCost2": 1,
     "tag2": false,
     "cost2": 6.1,
-    "remaining": 169.9,
-    "paid": "y"
-  },
+    "remaining": 169.9  },
   {
     "team": "Lusa",
     "keeper1": "G Wilson",
@@ -113,9 +97,7 @@
     "draftCost2": 7,
     "tag2": true,
     "cost2": 7,
-    "remaining": 185.8,
-    "paid": "y"
-  },
+    "remaining": 185.8  },
   {
     "team": "Mante",
     "keeper1": "P Mahomes",
@@ -126,9 +108,7 @@
     "draftCost2": 0,
     "tag2": false,
     "cost2": 0,
-    "remaining": 160,
-    "paid": "y"
-  },
+    "remaining": 160  },
   {
     "team": "Tobin",
     "keeper1": "C Kupp",
@@ -139,9 +119,7 @@
     "draftCost2": 0,
     "tag2": false,
     "cost2": 5,
-    "remaining": 167,
-    "paid": "y"
-  },
+    "remaining": 167  },
   {
     "team": "Yacob",
     "keeper1": "J Hurts",
@@ -152,7 +130,5 @@
     "draftCost2": 13,
     "tag2": true,
     "cost2": 13,
-    "remaining": 161.1,
-    "paid": "y"
-  }
+    "remaining": 161.1  }
 ]

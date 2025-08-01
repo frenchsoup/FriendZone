@@ -59,7 +59,7 @@
       const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState(false);
       const [keepers, setKeepers] = React.useState({ 2022: [], 2023: [], 2024: [], 2025: [] });
       const [prizes, setPrizes] = React.useState({ 2023: { survivor: [], weeklyHighScores: [] }, 2024: { survivor: [], weeklyHighScores: [] }, 2025: { survivor: [], weeklyHighScores: [] } });
-      const [rules, setRules] = React.useState({});
+      const [rules, setRules] = React.useState({ sections: [] });
       const [payouts, setPayouts] = React.useState([]);
       const [selectedYear, setSelectedYear] = React.useState('2024');
       const [isMenuOpen, setIsMenuOpen] = React.useState(false);
@@ -71,7 +71,7 @@
       React.useEffect(() => {
         const fetchData = async () => {
           const files = [
-            { path: '/data/rules.json', setter: setRules, default: {} },
+            { path: '/data/rules.json', setter: setRules, default: { sections: [] } },
             { path: '/data/payouts.json', setter: setPayouts, default: [] },
             { path: '/data/keepers_2022.json', setter: (data) => setKeepers(prev => ({ ...prev, 2022: data })), default: [] },
             { path: '/data/keepers_2023.json', setter: (data) => setKeepers(prev => ({ ...prev, 2023: data })), default: [] },
@@ -219,15 +219,43 @@
           </nav>
           <main className="container mx-auto pt-16 sm:pt-4 pb-4 px-3 sm:px-4">
             {currentTab === 'home' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Welcome to FriendZone Fantasy Football</h2>
                 <p className="text-sm sm:text-base">Your longtime fantasy football league, now online! Explore rules, payouts, keepers, and weekly prizes for the 2025 season and beyond.</p>
               </div>
             )}
             {currentTab === 'rules' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Rules</h2>
-                <p className="text-sm sm:text-base">{rules.description || 'No rules data available.'}</p>
+                {rules.sections.length > 0 ? (
+                  <div className="text-sm sm:text-base space-y-3">
+                    {rules.sections.map((section, index) => (
+                      <div key={index}>
+                        <h3 className="text-base sm:text-lg font-semibold text-teal-600 mb-1">{section.title}</h3>
+                        <ul className="list-disc pl-5 space-y-1">
+                          {section.items.map((item, itemIndex) => (
+                            <li key={itemIndex}>
+                              {typeof item === 'string' ? item : (
+                                <>
+                                  {item.text}
+                                  {item.subItems && (
+                                    <ul className="list-disc pl-5 mt-1 space-y-1">
+                                      {item.subItems.map((subItem, subIndex) => (
+                                        <li key={subIndex}>{subItem}</li>
+                                      ))}
+                                    </ul>
+                                  )}
+                                </>
+                              )}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm sm:text-base">No rules data available.</p>
+                )}
               </div>
             )}
             {currentTab === 'payouts' && (
@@ -384,7 +412,7 @@
               </div>
             )}
             {currentTab === 'admin' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Admin</h2>
                 {!isAdminAuthenticated ? (
                   <div className="max-w-sm mx-auto">

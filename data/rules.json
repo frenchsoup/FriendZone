@@ -1,3 +1,89 @@
 {
-  "description": "FAAB cost and keeper price: Keeper cost is Draft Cost if Tag=true; (Draft Cost * 1.1) + 5 if Tag=false; 0 if Draft Cost=0. TE premium scoring applied."
+  "sections": [
+    {
+      "title": "Roster",
+      "items": [
+        "1 QB",
+        "2 RB",
+        "3 WR",
+        "1 TE",
+        "1 Flex",
+        "1 OP",
+        "6 Bench",
+        "2 IR"
+      ]
+    },
+    {
+      "title": "Draft",
+      "items": [
+        "Standard ESPN Auction Settings"
+      ]
+    },
+    {
+      "title": "Keepers",
+      "items": [
+        "Up to 2 Keepers for 3-year maximum",
+        {
+          "text": "Keeper Cost = (Draft Cost × 1.1) + $5",
+          "subItems": [
+            "10% increase plus $5 fee to keep player"
+          ]
+        },
+        {
+          "text": "Franchise Tag",
+          "subItems": [
+            "Keep player for same cost",
+            "Can only be kept for 1 year",
+            "No one can be kept for $0"
+          ]
+        },
+        {
+          "text": "Free Agents",
+          "subItems": [
+            "If cost = $0, can be kept for $5",
+            "Gentleman's rule: Cannot stash an injured player (e.g., Saquon last year) for $0 and keep for $5"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Scoring",
+      "items": [
+        {
+          "text": "3-point bonus for:",
+          "subItems": [
+            "> 300-yard passing game",
+            "> 100-yard rushing game",
+            "> 100-yard receiving game"
+          ]
+        },
+        "0.5 PPR"
+      ]
+    },
+    {
+      "title": "Waivers",
+      "items": [
+        "$200 FAAB"
+      ]
+    },
+    {
+      "title": "Standings",
+      "items": [
+        "W/L based on Head-to-Head (H2H) matchup",
+        {
+          "text": "W/L based on being in the top/bottom half of team scores for that week",
+          "subItems": [
+            "Can go 2-0, 1-1, or 0-2 weekly"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Last Place",
+      "items": [
+        "Regular season loser",
+        "Pays for the new name plate and shipping for the trophy"
+      ]
+    }
+]
 }

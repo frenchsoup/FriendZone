@@ -9,9 +9,7 @@
     "draftCost2": 0,
     "tag2": false,
     "cost2": 0,
-    "remaining": 198,
-    "paid": "y"
-  },
+    "remaining": 198  },
   {
     "team": "Ayer",
     "keeper1": "Chase",
@@ -22,9 +20,7 @@
     "draftCost2": 16,
     "tag2": false,
     "cost2": 22.6,
-    "remaining": 155.4,
-    "paid": "y"
-  },
+    "remaining": 155.4  },
   {
     "team": "Buck",
     "keeper1": "Rashee Rice",
@@ -35,9 +31,7 @@
     "draftCost2": 0,
     "tag2": false,
     "cost2": 0,
-    "remaining": 199,
-    "paid": "y"
-  },
+    "remaining": 199  },
   {
     "team": "Byz",
     "keeper1": "B. Hall",
@@ -48,9 +42,7 @@
     "draftCost2": 5,
     "tag2": false,
     "cost2": 10.5,
-    "remaining": 161.5,
-    "paid": "y"
-  },
+    "remaining": 161.5  },
   {
     "team": "Dgatz",
     "keeper1": "CJ Stroud",
@@ -61,9 +53,7 @@
     "draftCost2": 5,
     "tag2": true,
     "cost2": 5,
-    "remaining": 180.1,
-    "paid": "y"
-  },
+    "remaining": 180.1  },
   {
     "team": "Jordan",
     "keeper1": "Ceedee",
@@ -74,9 +64,7 @@
     "draftCost2": 13,
     "tag2": false,
     "cost2": 19.3,
-    "remaining": 137.7,
-    "paid": "y"
-  },
+    "remaining": 137.7  },
   {
     "team": "LeFevre",
     "keeper1": "J Love",
@@ -87,9 +75,7 @@
     "draftCost2": 1,
     "tag2": false,
     "cost2": 6.1,
-    "remaining": 188.9,
-    "paid": "y"
-  },
+    "remaining": 188.9  },
   {
     "team": "Lewis",
     "keeper1": "Z Flowers",
@@ -100,9 +86,7 @@
     "draftCost2": 10,
     "tag2": true,
     "cost2": 10,
-    "remaining": 176.2,
-    "paid": "y"
-  },
+    "remaining": 176.2  },
   {
     "team": "Lusa",
     "keeper1": "Kyler",
@@ -113,9 +97,7 @@
     "draftCost2": 0,
     "tag2": false,
     "cost2": 5,
-    "remaining": 179,
-    "paid": "y"
-  },
+    "remaining": 179  },
   {
     "team": "Mante",
     "keeper1": "DJ Moore",
@@ -126,9 +108,7 @@
     "draftCost2": 0,
     "tag2": false,
     "cost2": 0,
-    "remaining": 184,
-    "paid": "y"
-  },
+    "remaining": 184  },
   {
     "team": "Tobin",
     "keeper1": "D Swift",
@@ -139,9 +119,7 @@
     "draftCost2": 0,
     "tag2": false,
     "cost2": 0,
-    "remaining": 186.2,
-    "paid": "y"
-  },
+    "remaining": 186.2  },
   {
     "team": "Yacob",
     "keeper1": "Jalen Hurts",
@@ -152,7 +130,5 @@
     "draftCost2": 0,
     "tag2": false,
     "cost2": 0,
-    "remaining": 174,
-    "paid": "y"
-  }
+    "remaining": 174  }
 ]
