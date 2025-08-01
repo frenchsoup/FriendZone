@@ -1,63 +1,83 @@
-const { Octokit } = require('@octokit/rest');
+async function loadOctokit() {
+  const { Octokit } = await import('@octokit/rest');
+  return Octokit;
+}
 
-exports.handler = async function(event, context) {
+exports.handler = async function (event, context) {
   try {
+    // Parse the incoming request body
     const { file, data, action, index } = JSON.parse(event.body);
-    const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
-    const REPO_OWNER = 'frenchsoup';
-    const REPO_NAME = 'FriendZone';
-    const BRANCH = 'main';
 
-    if (!GITHUB_TOKEN) {
-      console.error('GITHUB_TOKEN is not set');
-      return {
-        statusCode: 500,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ error: 'Server configuration error: GITHUB_TOKEN missing' })
-      };
+    // Load Octokit dynamically
+    const Octokit = await loadOctokit();
+    const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+    // Define repository details
+    const repoOwner = 'frenchsoup';
+    const repoName = 'FriendZone';
+    const branch = 'main';
+    const path = `data/${file}`;
+
+    // Fetch current file content from GitHub
+    let currentContent;
+    let sha;
+    try {
+      const { data: fileData } = await octokit.repos.getContent({
+        owner: repoOwner,
+        repo: repoName,
+        path,
+        ref: branch,
+      });
+      currentContent = JSON.parse(Buffer.from(fileData.content, 'base64').toString());
+      sha = fileData.sha;
+    } catch (error) {
+      if (error.status === 404) {
+        currentContent = Array.isArray(data) ? [] : {};
+      } else {
+        throw error;
+      }
     }
 
-    console.log('Starting function execution:', new Date());
-    const octokit = new Octokit({ auth: GITHUB_TOKEN });
+    // Process the action (update or delete)
+    let updatedContent;
+    if (action === 'update') {
+      updatedContent = data;
+    } else if (action === 'delete') {
+      if (Array.isArray(currentContent)) {
+        updatedContent = currentContent.filter((_, i) => i !== index);
+      } else if (index && typeof index.sectionIndex === 'number' && typeof index.itemIndex === 'number') {
+        updatedContent = { ...currentContent };
+        updatedContent.sections[index.sectionIndex].items.splice(index.itemIndex, 1);
+      } else if (index && typeof index.sectionIndex === 'number') {
+        updatedContent = { ...currentContent };
+        updatedContent.sections.splice(index.sectionIndex, 1);
+      } else {
+        throw new Error('Invalid delete action');
+      }
+    } else {
+      throw new Error('Invalid action');
+    }
 
-    // Get the current file content
-    console.log(`Fetching content for data/${file}`);
-    const { data: fileData } = await octokit.repos.getContent({
-      owner: REPO_OWNER,
-      repo: REPO_NAME,
-      path: `data/${file}`,
-      ref: BRANCH
-    });
-
-    console.log('Fetched file content:', new Date());
-    const currentContent = JSON.parse(Buffer.from(fileData.content, 'base64').toString());
-    let updatedContent = data;
-
-    // Update the file
-    const message = action === 'update' ? `Update ${file}` : `Delete from ${file}`;
-    console.log(`Updating file data/${file} with action: ${action}`);
-    await octokit.repos.createOrUpdateFileContents({
-      owner: REPO_OWNER,
-      repo: REPO_NAME,
-      path: `data/${file}`,
-      message,
+    // Update the file on GitHub
+    const { data: commitData } = await octokit.repos.createOrUpdateFileContents({
+      owner: repoOwner,
+      repo: repoName,
+      path,
+      message: `Update ${file} via Netlify function`,
       content: Buffer.from(JSON.stringify(updatedContent, null, 2)).toString('base64'),
-      sha: fileData.sha,
-      branch: BRANCH
+      branch,
+      sha: sha || undefined,
     });
 
-    console.log('File updated successfully:', new Date());
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ success: true })
+      body: JSON.stringify({ message: 'File updated successfully', commit: commitData.commit.sha }),
     };
   } catch (error) {
-    console.error('Error updating file:', error.message, error.stack);
+    console.error('Error in update-data:', error);
     return {
       statusCode: error.status || 500,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ error: `Failed to update file: ${error.message}` })
+      body: JSON.stringify({ error: error.message || 'Internal Server Error' }),
     };
   }
 };
