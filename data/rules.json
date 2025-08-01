@@ -1,0 +1,3 @@
+{
+  "description": "FAAB cost and keeper price: Keeper cost is Draft Cost if Tag=true; (Draft Cost * 1.1) + 5 if Tag=false; 0 if Draft Cost=0. TE premium scoring applied."
+}

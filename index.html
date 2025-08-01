@@ -9,59 +9,10 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.12.7/recharts.umd.min.js"></script>
 </head>
 <body>
   <div id="root"></div>
   <script type="text/babel">
-    // Sample data (replace with fetch from JSON files)
-    const sampleKeepers2024 = [
-      { team: "Trudy", keeper1: "B Rob Jr", draftCost1: 2, tag1: true, cost1: 2, keeper2: "", draftCost2: 0, tag2: false, cost2: 0, remaining: 198, paid: "y" },
-      { team: "Ayer", keeper1: "Chase", draftCost1: 22, tag1: true, cost1: 22, keeper2: "Taylor", draftCost2: 16, tag2: false, cost2: 22.6, remaining: 155.4, paid: "y" },
-      { team: "Buck", keeper1: "Rashee Rice", draftCost1: 1, tag1: true, cost1: 1, keeper2: "", draftCost2: 0, tag2: false, cost2: 0, remaining: 199, paid: "y" },
-      { team: "Byz", keeper1: "B. Hall", draftCost1: 28, tag1: true, cost1: 28, keeper2: "B. Purdy", draftCost2: 5, tag2: false, cost2: 10.5, remaining: 161.5, paid: "y" },
-      { team: "Dgatz", keeper1: "CJ Stroud", draftCost1: 9, tag1: false, cost1: 14.9, keeper2: "I. Pacheco", draftCost2: 5, tag2: true, cost2: 5, remaining: 180.1, paid: "y" },
-      { team: "Jordan", keeper1: "Ceedee", draftCost1: 43, tag1: true, cost1: 43, keeper2: "London", draftCost2: 13, tag2: false, cost2: 19.3, remaining: 137.7, paid: "y" },
-      { team: "LeFevre", keeper1: "J Love", draftCost1: 5, tag1: true, cost1: 5, keeper2: "N Collins", draftCost2: 1, tag2: false, cost2: 6.1, remaining: 188.9, paid: "y" },
-      { team: "Lewis", keeper1: "Z Flowers", draftCost1: 8, tag1: false, cost1: 13.8, keeper2: "Mike Evans", draftCost2: 10, tag2: true, cost2: 10, remaining: 176.2, paid: "y" },
-      { team: "Lusa", keeper1: "Kyler", draftCost1: 10, tag1: false, cost1: 16, keeper2: "Achane", draftCost2: 0, tag2: false, cost2: 5, remaining: 179, paid: "y" },
-      { team: "Mante", keeper1: "DJ Moore", draftCost1: 16, tag1: true, cost1: 16, keeper2: "", draftCost2: 0, tag2: false, cost2: 0, remaining: 184, paid: "y" },
-      { team: "Tobin", keeper1: "D Swift", draftCost1: 8, tag1: false, cost1: 13.8, keeper2: "", draftCost2: 0, tag2: false, cost2: 0, remaining: 186.2, paid: "y" },
-      { team: "Yacob", keeper1: "Jalen Hurts", draftCost1: 26, tag1: true, cost1: 26, keeper2: "", draftCost2: 0, tag2: false, cost2: 0, remaining: 174, paid: "y" }
-    ];
-
-    const samplePrizes2024 = {
-      survivor: [
-        { week: 1, eliminated: "ALef" },
-        { week: 2, eliminated: "Mante" },
-        { week: 3, eliminated: "Dgatz" },
-        { week: 4, eliminated: "TLew" },
-        { week: 5, eliminated: "Yacob" },
-        { week: 6, eliminated: "Jordan" },
-        { week: 7, eliminated: "Trudy" },
-        { week: 8, eliminated: "Byz" },
-        { week: 9, eliminated: "Ayer" },
-        { week: 10, eliminated: "Tobin" },
-        { week: 11, eliminated: "Lusa" },
-        { week: 12, winner: "Buck" }
-      ],
-      weeklyHighScores: [
-        { week: 1, team: "Tobin", total: 151.36 },
-        { week: 2, team: "Lusa", total: 174.58 },
-        { week: 3, team: "Ayer", total: 152.22 },
-        { week: 4, team: "Ayer", total: 161.76 },
-        { week: 5, team: "Trudy", total: 157.08 },
-        { week: 6, team: "Tobin", total: 175.98 },
-        { week: 7, team: "Ayer", total: 147 },
-        { week: 8, team: "Dgatz", total: 174.56 },
-        { week: 9, team: "Tlew", total: 190.52 },
-        { week: 10, team: "Buck", total: 131.86 },
-        { week: 11, team: "Ayer", total: 155.82 },
-        { week: 12, team: "Mante", total: 174.22 },
-        { week: 13, team: "Tobin", total: 170.9 }
-      ]
-    };
-
     // Keeper cost calculation
     const calculateKeeperCost = (draftCost, tag) => {
       if (draftCost === 0) return 0;
@@ -74,12 +25,48 @@
       const [currentTab, setCurrentTab] = React.useState('home');
       const [adminPassword, setAdminPassword] = React.useState('');
       const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState(false);
-      const [keepers2024, setKeepers2024] = React.useState(sampleKeepers2024);
-      const [prizes2024, setPrizes2024] = React.useState(samplePrizes2024);
+      const [keepers, setKeepers] = React.useState({ 2022: [], 2023: [], 2024: [], 2025: [] });
+      const [prizes, setPrizes] = React.useState({ 2023: { survivor: [], weeklyHighScores: [] }, 2024: { survivor: [], weeklyHighScores: [] }, 2025: { survivor: [], weeklyHighScores: [] } });
+      const [rules, setRules] = React.useState({});
+      const [payouts, setPayouts] = React.useState([]);
       const [selectedYear, setSelectedYear] = React.useState('2024');
 
-      // Hardcoded password for simplicity (replace with environment variable in production)
+      // Hardcoded password (replace with environment variable in production)
       const ADMIN_PASSWORD = 'friendzone2025';
+
+      // Fetch data on mount
+      React.useEffect(() => {
+        const fetchData = async () => {
+          const files = [
+            { path: '/data/rules.json', setter: setRules, default: {} },
+            { path: '/data/payouts.json', setter: setPayouts, default: [] },
+            { path: '/data/keepers_2022.json', setter: (data) => setKeepers(prev => ({ ...prev, 2022: data })), default: [] },
+            { path: '/data/keepers_2023.json', setter: (data) => setKeepers(prev => ({ ...prev, 2023: data })), default: [] },
+            { path: '/data/keepers_2024.json', setter: (data) => setKeepers(prev => ({ ...prev, 2024: data })), default: [] },
+            { path: '/data/keepers_2025.json', setter: (data) => setKeepers(prev => ({ ...prev, 2025: data })), default: [] },
+            { path: '/data/prizes_2023.json', setter: (data) => setPrizes(prev => ({ ...prev, 2023: data })), default: { survivor: [], weeklyHighScores: [] } },
+            { path: '/data/prizes_2024.json', setter: (data) => setPrizes(prev => ({ ...prev, 2024: data })), default: { survivor: [], weeklyHighScores: [] } },
+            { path: '/data/prizes_2025.json', setter: (data) => setPrizes(prev => ({ ...prev, 2025: data })), default: { survivor: [], weeklyHighScores: [] } }
+          ];
+
+          for (const file of files) {
+            try {
+              const res = await fetch(file.path);
+              if (res.ok) {
+                const data = await res.json();
+                file.setter(data);
+              } else {
+                file.setter(file.default);
+                console.warn(`Failed to load ${file.path}. Using default value.`);
+              }
+            } catch (err) {
+              file.setter(file.default);
+              console.warn(`Error fetching ${file.path}:`, err);
+            }
+          }
+        };
+        fetchData();
+      }, []);
 
       // Handle admin login
       const handleAdminLogin = (e) => {
@@ -104,10 +91,18 @@
         const tag2 = e.target.tag2.checked;
         const cost2 = calculateKeeperCost(draftCost2, tag2);
         const remaining = 200 - (cost1 + cost2);
+        if (remaining < 0) {
+          alert('Total keeper cost exceeds $200 budget.');
+          return;
+        }
+        if (keepers[2025].some(k => k.team === team)) {
+          alert('Team already has keepers for 2025.');
+          return;
+        }
         const newKeeper = { team, keeper1, draftCost1, tag1, cost1, keeper2, draftCost2, tag2, cost2, remaining, paid: "y" };
-        setKeepers2024([...keepers2024, newKeeper]);
+        setKeepers({ ...keepers, 2025: [...keepers[2025], newKeeper] });
         e.target.reset();
-        // TODO: Call Netlify function to update keepers_2024.json via GitHub API
+        // TODO: Call Netlify function to update keepers_2025.json
       };
 
       // Handle adding a new weekly high score
@@ -116,12 +111,50 @@
         const week = parseInt(e.target.week.value);
         const team = e.target.team.value;
         const total = parseFloat(e.target.total.value);
-        setPrizes2024({
-          ...prizes2024,
-          weeklyHighScores: [...prizes2024.weeklyHighScores, { week, team, total }]
+        if (week < 1 || week > 14) {
+          alert('Week must be between 1 and 14.');
+          return;
+        }
+        if (prizes[2025].weeklyHighScores.some(score => score.week === week)) {
+          alert('Week already exists for 2025 Weekly High Scores.');
+          return;
+        }
+        const newScore = { week, team, total };
+        setPrizes({
+          ...prizes,
+          2025: {
+            ...prizes[2025],
+            weeklyHighScores: [...prizes[2025].weeklyHighScores, newScore].sort((a, b) => a.week - b.week)
+          }
         });
         e.target.reset();
-        // TODO: Call Netlify function to update prizes_2024.json via GitHub API
+        // TODO: Call Netlify function to update prizes_2025.json
+      };
+
+      // Handle adding a new survivor entry
+      const handleAddSurvivor = (e) => {
+        e.preventDefault();
+        const week = parseInt(e.target.week.value) || 0;
+        const type = e.target.type.value;
+        const team = e.target.team.value;
+        if (type === 'eliminated' && (week < 1 || week > 12)) {
+          alert('Week must be between 1 and 12 for eliminations.');
+          return;
+        }
+        if (prizes[2025].survivor.some(entry => entry.week === week || (entry.winner && type === 'winner'))) {
+          alert('Week or Winner already exists for 2025 Survivor.');
+          return;
+        }
+        const newEntry = type === 'winner' ? { winner: team } : { week, eliminated: team };
+        setPrizes({
+          ...prizes,
+          2025: {
+            ...prizes[2025],
+            survivor: [...prizes[2025].survivor, newEntry].sort((a, b) => (a.week || 999) - (b.week || 999))
+          }
+        });
+        e.target.reset();
+        // TODO: Call Netlify function to update prizes_2025.json
       };
 
       return (
@@ -149,25 +182,51 @@
             {currentTab === 'rules' && (
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Rules</h2>
-                <p className="text-gray-600">FAAB cost, keeper price, and TE premium rules will be displayed here once data is loaded from rules.json.</p>
+                <p className="text-gray-600">{rules.description || 'No rules data available.'}</p>
               </div>
             )}
             {currentTab === 'payouts' && (
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Payouts</h2>
-                <p className="text-gray-600">Payout structure (e.g., Playoff Champ, Weekly High Score) will be displayed here once data is loaded from payouts.json.</p>
+                {payouts.length > 0 ? (
+                  <table className="w-full mb-4 border-collapse">
+                    <thead>
+                      <tr className="bg-gray-200">
+                        <th className="border p-2">Category</th>
+                        <th className="border p-2">Percentage</th>
+                        <th className="border p-2">Prize ($)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {payouts.map((payout, index) => (
+                        <tr key={index} className="hover:bg-gray-100">
+                          <td className="border p-2">{payout.category}</td>
+                          <td className="border p-2">{(payout.percentage * 100).toFixed(2)}%</td>
+                          <td className="border p-2">{payout.prize}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p className="text-gray-600">No payouts data available.</p>
+                )}
               </div>
             )}
             {currentTab === 'keepers' && (
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Keepers</h2>
                 <div className="flex space-x-4 mb-4">
-                  <button className={`px-4 py-2 rounded ${selectedYear === '2022' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`} onClick={() => setSelectedYear('2022')}>2022</button>
-                  <button className={`px-4 py-2 rounded ${selectedYear === '2023' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`} onClick={() => setSelectedYear('2023')}>2023</button>
-                  <button className={`px-4 py-2 rounded ${selectedYear === '2024' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`} onClick={() => setSelectedYear('2024')}>2024</button>
-                  <button className={`px-4 py-2 rounded ${selectedYear === '2025' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`} onClick={() => setSelectedYear('2025')}>2025</button>
+                  {['2022', '2023', '2024', '2025'].map(year => (
+                    <button
+                      key={year}
+                      className={`px-4 py-2 rounded ${selectedYear === year ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`}
+                      onClick={() => setSelectedYear(year)}
+                    >
+                      {year}
+                    </button>
+                  ))}
                 </div>
-                {selectedYear === '2024' && (
+                {keepers[selectedYear].length > 0 ? (
                   <table className="w-full mb-4 border-collapse">
                     <thead>
                       <tr className="bg-gray-200">
@@ -185,7 +244,7 @@
                       </tr>
                     </thead>
                     <tbody>
-                      {keepers2024.map((keeper, index) => (
+                      {keepers[selectedYear].map((keeper, index) => (
                         <tr key={index} className="hover:bg-gray-100">
                           <td className="border p-2">{keeper.team}</td>
                           <td className="border p-2">{keeper.keeper1}</td>
@@ -202,72 +261,69 @@
                       ))}
                     </tbody>
                   </table>
+                ) : (
+                  <p className="text-gray-600">No keepers for {selectedYear}.</p>
                 )}
-                {selectedYear !== '2024' && <p className="text-gray-600">Keeper data for {selectedYear} will be displayed here once loaded from JSON.</p>}
               </div>
             )}
             {currentTab === 'prizes' && (
               <div className="bg-white rounded-lg shadow p-6">
                 <h2 className="text-2xl font-bold text-gray-800 mb-4">Prizes</h2>
                 <div className="flex space-x-4 mb-4">
-                  <button className={`px-4 py-2 rounded ${selectedYear === '2023' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`} onClick={() => setSelectedYear('2023')}>2023</button>
-                  <button className={`px-4 py-2 rounded ${selectedYear === '2024' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`} onClick={() => setSelectedYear('2024')}>2024</button>
-                  <button className={`px-4 py-2 rounded ${selectedYear === '2025' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`} onClick={() => setSelectedYear('2025')}>2025</button>
+                  {['2023', '2024', '2025'].map(year => (
+                    <button
+                      key={year}
+                      className={`px-4 py-2 rounded ${selectedYear === year ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800'}`}
+                      onClick={() => setSelectedYear(year)}
+                    >
+                      {year}
+                    </button>
+                  ))}
                 </div>
-                {selectedYear === '2024' && (
-                  <>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Weekly High Scores</h3>
-                    <table className="w-full mb-4 border-collapse">
-                      <thead>
-                        <tr className="bg-gray-200">
-                          <th className="border p-2">Week</th>
-                          <th className="border p-2">Team</th>
-                          <th className="border p-2">Total</th>
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">Weekly High Scores</h3>
+                {prizes[selectedYear].weeklyHighScores.length > 0 ? (
+                  <table className="w-full mb-4 border-collapse">
+                    <thead>
+                      <tr className="bg-gray-200">
+                        <th className="border p-2">Week</th>
+                        <th className="border p-2">Team</th>
+                        <th className="border p-2">Total</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {prizes[selectedYear].weeklyHighScores.map((score, index) => (
+                        <tr key={index} className="hover:bg-gray-100">
+                          <td className="border p-2">{score.week}</td>
+                          <td className="border p-2">{score.team}</td>
+                          <td className="border p-2">{score.total}</td>
                         </tr>
-                      </thead>
-                      <tbody>
-                        {prizes2024.weeklyHighScores.map((score, index) => (
-                          <tr key={index} className="hover:bg-gray-100">
-                            <td className="border p-2">{score.week}</td>
-                            <td className="border p-2">{score.team}</td>
-                            <td className="border p-2">{score.total}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Survivor</h3>
-                    <table className="w-full mb-4 border-collapse">
-                      <thead>
-                        <tr className="bg-gray-200">
-                          <th className="border p-2">Week</th>
-                          <th className="border p-2">Eliminated</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {prizes2024.survivor.map((entry, index) => (
-                          <tr key={index} className="hover:bg-gray-100">
-                            <td className="border p-2">{entry.week || (entry.winner && 'Winner')}</td>
-                            <td className="border p-2">{entry.eliminated || entry.winner}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <h3 className="text-xl font-semibold text-gray-800 mb-2">Weekly High Scores Chart</h3>
-                    <div className="h-64">
-                      <window.Recharts.ResponsiveContainer width="100%" height="100%">
-                        <window.Recharts.BarChart data={prizes2024.weeklyHighScores}>
-                          <window.Recharts.CartesianGrid strokeDasharray="3 3" />
-                          <window.Recharts.XAxis dataKey="week" />
-                          <window.Recharts.YAxis />
-                          <window.Recharts.Tooltip />
-                          <window.Recharts.Legend />
-                          <window.Recharts.Bar dataKey="total" fill="#2563eb" name="Score" />
-                        </window.Recharts.BarChart>
-                      </window.Recharts.ResponsiveContainer>
-                    </div>
-                  </>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p className="text-gray-600">No Weekly High Scores for {selectedYear}.</p>
                 )}
-                {selectedYear !== '2024' && <p className="text-gray-600">Prize data for {selectedYear} will be displayed here once loaded from JSON.</p>}
+                <h3 className="text-xl font-semibold text-gray-800 mb-2">Survivor</h3>
+                {prizes[selectedYear].survivor.length > 0 ? (
+                  <table className="w-full mb-4 border-collapse">
+                    <thead>
+                      <tr className="bg-gray-200">
+                        <th className="border p-2">Week</th>
+                        <th className="border p-2">Eliminated</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {prizes[selectedYear].survivor.map((entry, index) => (
+                        <tr key={index} className="hover:bg-gray-100">
+                          <td className="border p-2">{entry.week || (entry.winner && 'Winner')}</td>
+                          <td className="border p-2">{entry.eliminated || entry.winner}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <p className="text-gray-600">No Survivor data for {selectedYear}.</p>
+                )}
               </div>
             )}
             {currentTab === 'admin' && (
@@ -312,6 +368,7 @@
                           name="draftCost1"
                           placeholder="Draft Cost #1"
                           step="0.1"
+                          min="0"
                           className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
                         />
                         <label className="flex items-center space-x-2">
@@ -329,6 +386,7 @@
                           name="draftCost2"
                           placeholder="Draft Cost #2"
                           step="0.1"
+                          min="0"
                           className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
                         />
                         <label className="flex items-center space-x-2">
@@ -346,7 +404,9 @@
                         <input
                           type="number"
                           name="week"
-                          placeholder="Week"
+                          placeholder="Week (1-14)"
+                          min="1"
+                          max="14"
                           className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
                           required
                         />
@@ -362,6 +422,7 @@
                           name="total"
                           placeholder="Total Score"
                           step="0.01"
+                          min="0"
                           className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
                           required
                         />
@@ -370,7 +431,37 @@
                         </button>
                       </form>
                     </div>
-                    <p className="text-gray-600 mt-4">Additional admin forms for survivor, rules, and payouts will be added here.</p>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-800 mb-2">Add Survivor Entry (2025)</h3>
+                      <form onSubmit={handleAddSurvivor} className="space-y-4 max-w-md">
+                        <input
+                          type="number"
+                          name="week"
+                          placeholder="Week (1-12, leave blank for Winner)"
+                          min="1"
+                          max="12"
+                          className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
+                        />
+                        <select
+                          name="type"
+                          className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
+                          required
+                        >
+                          <option value="eliminated">Eliminated</option>
+                          <option value="winner">Winner</option>
+                        </select>
+                        <input
+                          type="text"
+                          name="team"
+                          placeholder="Team"
+                          className="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-600"
+                          required
+                        />
+                        <button type="submit" className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                          Add Survivor Entry
+                        </button>
+                      </form>
+                    </div>
                   </div>
                 )}
               </div>
