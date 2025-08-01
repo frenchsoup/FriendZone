@@ -43,6 +43,26 @@
     .modal {
       z-index: 100;
     }
+    .tooltip {
+      position: relative;
+    }
+    .tooltip:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1f2937;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .form-toggle {
+      cursor: pointer;
+    }
   </style>
 </head>
 <body class="bg-gray-900 text-gray-100">
@@ -60,10 +80,10 @@
       if (!isOpen) return null;
       return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal">
-          <div className="bg-white text-gray-800 rounded-lg p-4 max-w-md w-full">
-            <div className="flex justify-between items-center mb-3">
-              <h3 className="text-lg font-semibold">{title}</h3>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700">&times;</button>
+          <div className="bg-white text-gray-800 rounded-lg p-3 max-w-sm w-full">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-base font-semibold">{title}</h3>
+              <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-lg">&times;</button>
             </div>
             {children}
           </div>
@@ -83,6 +103,7 @@
       const [selectedYear, setSelectedYear] = React.useState('2024');
       const [isMenuOpen, setIsMenuOpen] = React.useState(false);
       const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: null });
+      const [formVisibility, setFormVisibility] = React.useState({ payouts: false, keepers: false, weekly: false, survivor: false, rules: {} });
 
       // Hardcoded password (replace with environment variable in production)
       const ADMIN_PASSWORD = 'friendzone2025';
@@ -139,12 +160,24 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ file, data, action, index })
           });
-          if (!res.ok) throw new Error('Failed to update data');
+          if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
           return await res.json();
         } catch (err) {
           console.error('Error updating data:', err);
           alert('Failed to update data. Please try again.');
           return null;
+        }
+      };
+
+      // Toggle form visibility
+      const toggleForm = (key, sectionIndex = null) => {
+        if (sectionIndex !== null) {
+          setFormVisibility(prev => ({
+            ...prev,
+            rules: { ...prev.rules, [sectionIndex]: !prev.rules[sectionIndex] }
+          }));
+        } else {
+          setFormVisibility(prev => ({ ...prev, [key]: !prev[key] }));
         }
       };
 
@@ -161,8 +194,11 @@
         const newPayout = { category, percentage, prize };
         const updatedPayouts = [...payouts, newPayout];
         const result = await updateData('payouts.json', updatedPayouts, 'update');
-        if (result) setPayouts(updatedPayouts);
-        e.target.reset();
+        if (result) {
+          setPayouts(updatedPayouts);
+          toggleForm('payouts');
+          e.target.reset();
+        }
       };
 
       const handleEditPayout = async (e, index) => {
@@ -218,6 +254,7 @@
         const result = await updateData(`keepers_${selectedYear}.json`, updatedKeepers[selectedYear], 'update');
         if (result) {
           setKeepers(updatedKeepers);
+          toggleForm('keepers');
           e.target.reset();
         }
       };
@@ -286,6 +323,7 @@
         const result = await updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update');
         if (result) {
           setPrizes(updatedPrizes);
+          toggleForm('weekly');
           e.target.reset();
         }
       };
@@ -348,6 +386,7 @@
         const result = await updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update');
         if (result) {
           setPrizes(updatedPrizes);
+          toggleForm('survivor');
           e.target.reset();
         }
       };
@@ -399,6 +438,7 @@
         const result = await updateData('rules.json', updatedRules, 'update');
         if (result) {
           setRules(updatedRules);
+          setFormVisibility(prev => ({ ...prev, rules: { ...prev.rules, [rules.sections.length]: false } }));
           e.target.reset();
         }
       };
@@ -413,6 +453,7 @@
         const result = await updateData('rules.json', updatedRules, 'update');
         if (result) {
           setRules(updatedRules);
+          toggleForm('rules', sectionIndex);
           e.target.reset();
         }
       };
@@ -447,6 +488,11 @@
         if (result) {
           setRules(updatedRules);
           setModalState({ isOpen: false, type: '', data: null });
+          setFormVisibility(prev => {
+            const newRules = { ...prev.rules };
+            delete newRules[sectionIndex];
+            return { ...prev, rules: newRules };
+          });
         }
       };
 
@@ -496,23 +542,33 @@
               <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Rules</h2>
                 {isAdminAuthenticated && (
-                  <div className="mb-4">
-                    <h3 className="text-base sm:text-lg font-semibold mb-2">Add Rule Section</h3>
-                    <form onSubmit={handleAddRuleSection} className="space-y-3 max-w-sm">
-                      <input
-                        type="text"
-                        name="title"
-                        placeholder="Section Title"
-                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        required
-                      />
-                      <button 
-                        type="submit" 
-                        className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                      >
-                        Add Section
-                      </button>
-                    </form>
+                  <div className="mb-3">
+                    <button 
+                      onClick={() => toggleForm('rules')} 
+                      className="form-toggle text-sm text-teal-500 hover:text-teal-600 mb-2"
+                    >
+                      {formVisibility.rules[-1] ? 'Hide Add Section' : 'Show Add Section'}
+                    </button>
+                    {formVisibility.rules[-1] && (
+                      <form onSubmit={handleAddRuleSection} className="space-y-2 max-w-xs">
+                        <div>
+                          <label className="text-xs font-medium">Section Title</label>
+                          <input
+                            type="text"
+                            name="title"
+                            placeholder="Enter section title"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            required
+                          />
+                        </div>
+                        <button 
+                          type="submit" 
+                          className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                        >
+                          Add Section
+                        </button>
+                      </form>
+                    )}
                   </div>
                 )}
                 {rules.sections.length > 0 ? (
@@ -524,34 +580,50 @@
                           {isAdminAuthenticated && (
                             <button
                               onClick={() => setModalState({ isOpen: true, type: 'deleteSection', data: { sectionIndex } })}
-                              className="text-red-500 hover:text-red-700 text-sm"
+                              className="text-red-500 hover:text-red-700 text-xs"
                             >
-                              Delete Section
+                              Delete
                             </button>
                           )}
                         </div>
                         {isAdminAuthenticated && (
-                          <form onSubmit={(e) => handleAddRuleItem(e, sectionIndex)} className="space-y-3 max-w-sm mb-3">
-                            <input
-                              type="text"
-                              name="text"
-                              placeholder="Rule Text"
-                              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                              required
-                            />
-                            <textarea
-                              name="subItems"
-                              placeholder="Sub-items (one per line)"
-                              className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                              rows="3"
-                            />
+                          <div className="mb-2">
                             <button 
-                              type="submit" 
-                              className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                              onClick={() => toggleForm('rules', sectionIndex)} 
+                              className="form-toggle text-xs text-teal-500 hover:text-teal-600"
                             >
-                              Add Rule
+                              {formVisibility.rules[sectionIndex] ? 'Hide Add Rule' : 'Show Add Rule'}
                             </button>
-                          </form>
+                            {formVisibility.rules[sectionIndex] && (
+                              <form onSubmit={(e) => handleAddRuleItem(e, sectionIndex)} className="space-y-2 max-w-xs mt-2">
+                                <div>
+                                  <label className="text-xs font-medium">Rule Text</label>
+                                  <input
+                                    type="text"
+                                    name="text"
+                                    placeholder="Enter rule"
+                                    className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    required
+                                  />
+                                </div>
+                                <div>
+                                  <label className="text-xs font-medium">Sub-items (one per line)</label>
+                                  <textarea
+                                    name="subItems"
+                                    placeholder="Enter sub-items"
+                                    className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    rows="2"
+                                  />
+                                </div>
+                                <button 
+                                  type="submit" 
+                                  className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                                >
+                                  Add Rule
+                                </button>
+                              </form>
+                            )}
+                          </div>
                         )}
                         <ul className="list-disc pl-5 space-y-1">
                           {section.items.map((item, itemIndex) => (
@@ -563,7 +635,7 @@
                                     {item.subItems && (
                                       <ul className="list-disc pl-5 mt-1 space-y-1">
                                         {item.subItems.map((subItem, subIndex) => (
-                                          <li key={subIndex}>{subItem}</li>
+                                          <li key={subIndex} className="text-xs">{subItem}</li>
                                         ))}
                                       </ul>
                                     )}
@@ -571,16 +643,16 @@
                                 )}
                               </div>
                               {isAdminAuthenticated && (
-                                <div className="flex space-x-2">
+                                <div className="flex space-x-1">
                                   <button
                                     onClick={() => setModalState({ isOpen: true, type: 'editRule', data: { sectionIndex, itemIndex, item } })}
-                                    className="text-blue-500 hover:text-blue-700 text-sm"
+                                    className="text-blue-500 hover:text-blue-700 text-xs"
                                   >
                                     Edit
                                   </button>
                                   <button
                                     onClick={() => setModalState({ isOpen: true, type: 'deleteRule', data: { sectionIndex, itemIndex } })}
-                                    className="text-red-500 hover:text-red-700 text-sm"
+                                    className="text-red-500 hover:text-red-700 text-xs"
                                   >
                                     Delete
                                   </button>
@@ -593,7 +665,7 @@
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm sm:text-base">No rules data available.</p>
+                  <p className="text-xs sm:text-sm">No rules data available.</p>
                 )}
               </div>
             )}
@@ -601,40 +673,57 @@
               <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Payouts</h2>
                 {isAdminAuthenticated && (
-                  <div className="mb-4">
-                    <h3 className="text-base sm:text-lg font-semibold mb-2">Add Payout</h3>
-                    <form onSubmit={handleAddPayout} className="space-y-3 max-w-sm">
-                      <input
-                        type="text"
-                        name="category"
-                        placeholder="Category"
-                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        required
-                      />
-                      <input
-                        type="number"
-                        name="percentage"
-                        placeholder="Percentage (e.g., 0.5)"
-                        step="0.01"
-                        min="0"
-                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        required
-                      />
-                      <input
-                        type="number"
-                        name="prize"
-                        placeholder="Prize ($)"
-                        min="0"
-                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        required
-                      />
-                      <button 
-                        type="submit" 
-                        className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                      >
-                        Add Payout
-                      </button>
-                    </form>
+                  <div className="mb-3">
+                    <button 
+                      onClick={() => toggleForm('payouts')} 
+                      className="form-toggle text-sm text-teal-500 hover:text-teal-600 mb-2"
+                    >
+                      {formVisibility.payouts ? 'Hide Add Payout' : 'Show Add Payout'}
+                    </button>
+                    {formVisibility.payouts && (
+                      <form onSubmit={handleAddPayout} className="space-y-2 max-w-xs">
+                        <div>
+                          <label className="text-xs font-medium">Category</label>
+                          <input
+                            type="text"
+                            name="category"
+                            placeholder="Enter category"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium">Percentage</label>
+                          <input
+                            type="number"
+                            name="percentage"
+                            placeholder="e.g., 0.5"
+                            step="0.01"
+                            min="0"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            required
+                            data-tooltip="Enter as decimal (e.g., 0.5 for 50%)"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium">Prize ($)</label>
+                          <input
+                            type="number"
+                            name="prize"
+                            placeholder="Enter prize"
+                            min="0"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            required
+                          />
+                        </div>
+                        <button 
+                          type="submit" 
+                          className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                        >
+                          Add Payout
+                        </button>
+                      </form>
+                    )}
                   </div>
                 )}
                 {payouts.length > 0 ? (
@@ -658,13 +747,13 @@
                               <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
                                 <button
                                   onClick={() => setModalState({ isOpen: true, type: 'editPayout', data: { index, payout } })}
-                                  className="text-blue-500 hover:text-blue-700 mr-2"
+                                  className="text-blue-500 hover:text-blue-700 text-xs mr-2"
                                 >
                                   Edit
                                 </button>
                                 <button
                                   onClick={() => setModalState({ isOpen: true, type: 'deletePayout', data: { index } })}
-                                  className="text-red-500 hover:text-red-700"
+                                  className="text-red-500 hover:text-red-700 text-xs"
                                 >
                                   Delete
                                 </button>
@@ -687,7 +776,7 @@
                   {['2022', '2023', '2024', '2025'].map(year => (
                     <button
                       key={year}
-                      className={`px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                      className={`px-2 py-1 text-xs sm:text-sm rounded ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
                       onClick={() => setSelectedYear(year)}
                     >
                       {year}
@@ -695,59 +784,83 @@
                   ))}
                 </div>
                 {isAdminAuthenticated && (
-                  <div className="mb-4">
-                    <h3 className="text-base sm:text-lg font-semibold mb-2">Add Keeper ({selectedYear})</h3>
-                    <form onSubmit={handleAddKeeper} className="space-y-3 max-w-sm">
-                      <input
-                        type="text"
-                        name="team"
-                        placeholder="Team"
-                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                        required
-                      />
-                      <input
-                        type="text"
-                        name="keeper1"
-                        placeholder="Keeper #1"
-                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                      <input
-                        type="number"
-                        name="draftCost1"
-                        placeholder="Draft Cost #1"
-                        step="0.1"
-                        min="0"
-                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                      <label className="flex items-center space-x-2">
-                        <input type="checkbox" name="tag1" className="h-4 w-4 text-teal-500 focus:ring-teal-500" />
-                        <span className="text-sm">Tag #1</span>
-                      </label>
-                      <input
-                        type="text"
-                        name="keeper2"
-                        placeholder="Keeper #2"
-                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                      <input
-                        type="number"
-                        name="draftCost2"
-                        placeholder="Draft Cost #2"
-                        step="0.1"
-                        min="0"
-                        className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                      />
-                      <label className="flex items-center space-x-2">
-                        <input type="checkbox" name="tag2" className="h-4 w-4 text-teal-500 focus:ring-teal-500" />
-                        <span className="text-sm">Tag #2</span>
-                      </label>
-                      <button 
-                        type="submit" 
-                        className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                      >
-                        Add Keeper
-                      </button>
-                    </form>
+                  <div className="mb-3">
+                    <button 
+                      onClick={() => toggleForm('keepers')} 
+                      className="form-toggle text-sm text-teal-500 hover:text-teal-600 mb-2"
+                    >
+                      {formVisibility.keepers ? 'Hide Add Keeper' : 'Show Add Keeper'}
+                    </button>
+                    {formVisibility.keepers && (
+                      <form onSubmit={handleAddKeeper} className="space-y-2 max-w-xs">
+                        <div>
+                          <label className="text-xs font-medium">Team</label>
+                          <input
+                            type="text"
+                            name="team"
+                            placeholder="Enter team"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium">Keeper #1</label>
+                          <input
+                            type="text"
+                            name="keeper1"
+                            placeholder="Player name"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium">Draft Cost #1</label>
+                          <input
+                            type="number"
+                            name="draftCost1"
+                            placeholder="Cost"
+                            step="0.1"
+                            min="0"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            data-tooltip="Enter cost (e.g., 10.5)"
+                          />
+                        </div>
+                        <label className="flex items-center space-x-1">
+                          <input type="checkbox" name="tag1" className="h-3 w-3 text-teal-500 focus:ring-teal-500" />
+                          <span className="text-xs">Tag #1</span>
+                        </label>
+                        <div>
+                          <label className="text-xs font-medium">Keeper #2</label>
+                          <input
+                            type="text"
+                            name="keeper2"
+                            placeholder="Player name"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium">Draft Cost #2</label>
+                          <input
+                            type="number"
+                            name="draftCost2"
+                            placeholder="Cost"
+                            step="0.1"
+                            min="0"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            data-tooltip="Enter cost (e.g., 10.5)"
+                          />
+                        </div>
+                        <label className="flex items-center space-x-1">
+                          <input type="checkbox" name="tag2" className="h-3 w-3 text-teal-500 focus:ring-teal-500" />
+                          <span className="text-xs">Tag #2</span>
+                        </label>
+                        <button 
+                          type="submit" 
+                          className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                        >
+                          Add Keeper
+                        </button>
+                      </form>
+                    )}
                   </div>
                 )}
                 {keepers[selectedYear].length > 0 ? (
@@ -785,13 +898,13 @@
                               <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
                                 <button
                                   onClick={() => setModalState({ isOpen: true, type: 'editKeeper', data: { index, keeper } })}
-                                  className="text-blue-500 hover:text-blue-700 mr-2"
+                                  className="text-blue-500 hover:text-blue-700 text-xs mr-2"
                                 >
                                   Edit
                                 </button>
                                 <button
                                   onClick={() => setModalState({ isOpen: true, type: 'deleteKeeper', data: { index } })}
-                                  className="text-red-500 hover:text-red-700"
+                                  className="text-red-500 hover:text-red-700 text-xs"
                                 >
                                   Delete
                                 </button>
@@ -814,7 +927,7 @@
                   {['2023', '2024', '2025'].map(year => (
                     <button
                       key={year}
-                      className={`px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                      className={`px-2 py-1 text-xs sm:text-sm rounded ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
                       onClick={() => setSelectedYear(year)}
                     >
                       {year}
@@ -825,41 +938,59 @@
                   <div className="flex-1 mb-2 lg:mb-0">
                     <h3 className="text-base sm:text-lg font-semibold mb-1">Weekly High Scores</h3>
                     {isAdminAuthenticated && (
-                      <div className="mb-4">
-                        <h4 className="text-sm sm:text-base font-semibold mb-2">Add Weekly High Score</h4>
-                        <form onSubmit={handleAddWeeklyScore} className="space-y-3 max-w-sm">
-                          <input
-                            type="number"
-                            name="week"
-                            placeholder="Week (1-14)"
-                            min="1"
-                            max="14"
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                            required
-                          />
-                          <input
-                            type="text"
-                            name="team"
-                            placeholder="Team"
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                            required
-                          />
-                          <input
-                            type="number"
-                            name="total"
-                            placeholder="Total Score"
-                            step="0.01"
-                            min="0"
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                            required
-                          />
-                          <button 
-                            type="submit" 
-                            className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                          >
-                            Add Score
-                          </button>
-                        </form>
+                      <div className="mb-3">
+                        <button 
+                          onClick={() => toggleForm('weekly')} 
+                          className="form-toggle text-sm text-teal-500 hover:text-teal-600 mb-2"
+                        >
+                          {formVisibility.weekly ? 'Hide Add Score' : 'Show Add Score'}
+                        </button>
+                        {formVisibility.weekly && (
+                          <form onSubmit={handleAddWeeklyScore} className="space-y-2 max-w-xs">
+                            <div>
+                              <label className="text-xs font-medium">Week</label>
+                              <input
+                                type="number"
+                                name="week"
+                                placeholder="1–14"
+                                min="1"
+                                max="14"
+                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                required
+                                data-tooltip="Enter week (1–14)"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium">Team</label>
+                              <input
+                                type="text"
+                                name="team"
+                                placeholder="Enter team"
+                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                required
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium">Total</label>
+                              <input
+                                type="number"
+                                name="total"
+                                placeholder="Score"
+                                step="0.01"
+                                min="0"
+                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                required
+                                data-tooltip="Enter score (e.g., 150.5)"
+                              />
+                            </div>
+                            <button 
+                              type="submit" 
+                              className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                            >
+                              Add Score
+                            </button>
+                          </form>
+                        )}
                       </div>
                     )}
                     {prizes[selectedYear].weeklyHighScores.length > 0 ? (
@@ -883,13 +1014,13 @@
                                   <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
                                     <button
                                       onClick={() => setModalState({ isOpen: true, type: 'editWeeklyScore', data: { index, score } })}
-                                      className="text-blue-500 hover:text-blue-700 mr-2"
+                                      className="text-blue-500 hover:text-blue-700 text-xs mr-2"
                                     >
                                       Edit
                                     </button>
                                     <button
                                       onClick={() => setModalState({ isOpen: true, type: 'deleteWeeklyScore', data: { index } })}
-                                      className="text-red-500 hover:text-red-700"
+                                      className="text-red-500 hover:text-red-700 text-xs"
                                     >
                                       Delete
                                     </button>
@@ -907,39 +1038,56 @@
                   <div className="flex-1">
                     <h3 className="text-base sm:text-lg font-semibold mb-1">Survivor</h3>
                     {isAdminAuthenticated && (
-                      <div className="mb-4">
-                        <h4 className="text-sm sm:text-base font-semibold mb-2">Add Survivor Entry</h4>
-                        <form onSubmit={handleAddSurvivor} className="space-y-3 max-w-sm">
-                          <input
-                            type="number"
-                            name="week"
-                            placeholder="Week (1-12, leave blank for Winner)"
-                            min="1"
-                            max="12"
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                          />
-                          <select
-                            name="type"
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                            required
-                          >
-                            <option value="eliminated">Eliminated</option>
-                            <option value="winner">Winner</option>
-                          </select>
-                          <input
-                            type="text"
-                            name="team"
-                            placeholder="Team"
-                            className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                            required
-                          />
-                          <button 
-                            type="submit" 
-                            className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                          >
-                            Add Survivor Entry
-                          </button>
-                        </form>
+                      <div className="mb-3">
+                        <button 
+                          onClick={() => toggleForm('survivor')} 
+                          className="form-toggle text-sm text-teal-500 hover:text-teal-600 mb-2"
+                        >
+                          {formVisibility.survivor ? 'Hide Add Survivor' : 'Show Add Survivor'}
+                        </button>
+                        {formVisibility.survivor && (
+                          <form onSubmit={handleAddSurvivor} className="space-y-2 max-w-xs">
+                            <div>
+                              <label className="text-xs font-medium">Week</label>
+                              <input
+                                type="number"
+                                name="week"
+                                placeholder="1–12 or blank"
+                                min="1"
+                                max="12"
+                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                data-tooltip="Enter 1–12 for eliminations, blank for winner"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium">Type</label>
+                              <select
+                                name="type"
+                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                required
+                              >
+                                <option value="eliminated">Eliminated</option>
+                                <option value="winner">Winner</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium">Team</label>
+                              <input
+                                type="text"
+                                name="team"
+                                placeholder="Enter team"
+                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                required
+                              />
+                            </div>
+                            <button 
+                              type="submit" 
+                              className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                            >
+                              Add Survivor
+                            </button>
+                          </form>
+                        )}
                       </div>
                     )}
                     {prizes[selectedYear].survivor.length > 0 ? (
@@ -961,13 +1109,13 @@
                                   <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
                                     <button
                                       onClick={() => setModalState({ isOpen: true, type: 'editSurvivor', data: { index, entry } })}
-                                      className="text-blue-500 hover:text-blue-700 mr-2"
+                                      className="text-blue-500 hover:text-blue-700 text-xs mr-2"
                                     >
                                       Edit
                                     </button>
                                     <button
                                       onClick={() => setModalState({ isOpen: true, type: 'deleteSurvivor', data: { index } })}
-                                      className="text-red-500 hover:text-red-700"
+                                      className="text-red-500 hover:text-red-700 text-xs"
                                     >
                                       Delete
                                     </button>
@@ -988,18 +1136,21 @@
             {currentTab === 'admin' && (
               <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Admin Login</h2>
-                <div className="max-w-sm mx-auto">
-                  <form onSubmit={handleAdminLogin} className="space-y-3">
-                    <input
-                      type="password"
-                      value={adminPassword}
-                      onChange={(e) => setAdminPassword(e.target.value)}
-                      placeholder="Enter admin password"
-                      className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
+                <div className="max-w-xs mx-auto">
+                  <form onSubmit={handleAdminLogin} className="space-y-2">
+                    <div>
+                      <label className="text-xs font-medium">Password</label>
+                      <input
+                        type="password"
+                        value={adminPassword}
+                        onChange={(e) => setAdminPassword(e.target.value)}
+                        placeholder="Enter admin password"
+                        className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      />
+                    </div>
                     <button 
                       type="submit" 
-                      className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                      className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                     >
                       Login
                     </button>
@@ -1025,37 +1176,47 @@
               }
             >
               {modalState.type === 'editPayout' && (
-                <form onSubmit={(e) => handleEditPayout(e, modalState.data.index)} className="space-y-3">
-                  <input
-                    type="text"
-                    name="category"
-                    defaultValue={modalState.data.payout.category}
-                    placeholder="Category"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    required
-                  />
-                  <input
-                    type="number"
-                    name="percentage"
-                    defaultValue={modalState.data.payout.percentage}
-                    placeholder="Percentage (e.g., 0.5)"
-                    step="0.01"
-                    min="0"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    required
-                  />
-                  <input
-                    type="number"
-                    name="prize"
-                    defaultValue={modalState.data.payout.prize}
-                    placeholder="Prize ($)"
-                    min="0"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    required
-                  />
+                <form onSubmit={(e) => handleEditPayout(e, modalState.data.index)} className="space-y-2">
+                  <div>
+                    <label className="text-xs font-medium">Category</label>
+                    <input
+                      type="text"
+                      name="category"
+                      defaultValue={modalState.data.payout.category}
+                      placeholder="Enter category"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Percentage</label>
+                    <input
+                      type="number"
+                      name="percentage"
+                      defaultValue={modalState.data.payout.percentage}
+                      placeholder="e.g., 0.5"
+                      step="0.01"
+                      min="0"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      required
+                      data-tooltip="Enter as decimal (e.g., 0.5 for 50%)"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Prize ($)</label>
+                    <input
+                      type="number"
+                      name="prize"
+                      defaultValue={modalState.data.payout.prize}
+                      placeholder="Enter prize"
+                      min="0"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      required
+                    />
+                  </div>
                   <button 
                     type="submit" 
-                    className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                    className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                   >
                     Save
                   </button>
@@ -1063,68 +1224,85 @@
               )}
               {modalState.type === 'deletePayout' && (
                 <div>
-                  <p className="mb-3">Are you sure you want to delete this payout?</p>
+                  <p className="text-sm mb-2">Are you sure you want to delete this payout?</p>
                   <button 
                     onClick={() => handleDeletePayout(modalState.data.index)} 
-                    className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                    className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
                   >
                     Delete
                   </button>
                 </div>
               )}
               {modalState.type === 'editKeeper' && (
-                <form onSubmit={(e) => handleEditKeeper(e, modalState.data.index)} className="space-y-3">
-                  <input
-                    type="text"
-                    name="team"
-                    defaultValue={modalState.data.keeper.team}
-                    placeholder="Team"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    required
-                  />
-                  <input
-                    type="text"
-                    name="keeper1"
-                    defaultValue={modalState.data.keeper.keeper1}
-                    placeholder="Keeper #1"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                  <input
-                    type="number"
-                    name="draftCost1"
-                    defaultValue={modalState.data.keeper.draftCost1}
-                    placeholder="Draft Cost #1"
-                    step="0.1"
-                    min="0"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                  <label className="flex items-center space-x-2">
-                    <input type="checkbox" name="tag1" defaultChecked={modalState.data.keeper.tag1} className="h-4 w-4 text-teal-500 focus:ring-teal-500" />
-                    <span className="text-sm">Tag #1</span>
+                <form onSubmit={(e) => handleEditKeeper(e, modalState.data.index)} className="space-y-2">
+                  <div>
+                    <label className="text-xs font-medium">Team</label>
+                    <input
+                      type="text"
+                      name="team"
+                      defaultValue={modalState.data.keeper.team}
+                      placeholder="Enter team"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Keeper #1</label>
+                    <input
+                      type="text"
+                      name="keeper1"
+                      defaultValue={modalState.data.keeper.keeper1}
+                      placeholder="Player name"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Draft Cost #1</label>
+                    <input
+                      type="number"
+                      name="draftCost1"
+                      defaultValue={modalState.data.keeper.draftCost1}
+                      placeholder="Cost"
+                      step="0.1"
+                      min="0"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      data-tooltip="Enter cost (e.g., 10.5)"
+                    />
+                  </div>
+                  <label className="flex items-center space-x-1">
+                    <input type="checkbox" name="tag1" defaultChecked={modalState.data.keeper.tag1} className="h-3 w-3 text-teal-500 focus:ring-teal-500" />
+                    <span className="text-xs">Tag #1</span>
                   </label>
-                  <input
-                    type="text"
-                    name="keeper2"
-                    defaultValue={modalState.data.keeper.keeper2}
-                    placeholder="Keeper #2"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                  <input
-                    type="number"
-                    name="draftCost2"
-                    defaultValue={modalState.data.keeper.draftCost2}
-                    placeholder="Draft Cost #2"
-                    step="0.1"
-                    min="0"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                  <label className="flex items-center space-x-2">
-                    <input type="checkbox" name="tag2" defaultChecked={modalState.data.keeper.tag2} className="h-4 w-4 text-teal-500 focus:ring-teal-500" />
-                    <span className="text-sm">Tag #2</span>
+                  <div>
+                    <label className="text-xs font-medium">Keeper #2</label>
+                    <input
+                      type="text"
+                      name="keeper2"
+                      defaultValue={modalState.data.keeper.keeper2}
+                      placeholder="Player name"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Draft Cost #2</label>
+                    <input
+                      type="number"
+                      name="draftCost2"
+                      defaultValue={modalState.data.keeper.draftCost2}
+                      placeholder="Cost"
+                      step="0.1"
+                      min="0"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      data-tooltip="Enter cost (e.g., 10.5)"
+                    />
+                  </div>
+                  <label className="flex items-center space-x-1">
+                    <input type="checkbox" name="tag2" defaultChecked={modalState.data.keeper.tag2} className="h-3 w-3 text-teal-500 focus:ring-teal-500" />
+                    <span className="text-xs">Tag #2</span>
                   </label>
                   <button 
                     type="submit" 
-                    className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                    className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                   >
                     Save
                   </button>
@@ -1132,48 +1310,59 @@
               )}
               {modalState.type === 'deleteKeeper' && (
                 <div>
-                  <p className="mb-3">Are you sure you want to delete this keeper?</p>
+                  <p className="text-sm mb-2">Are you sure you want to delete this keeper?</p>
                   <button 
                     onClick={() => handleDeleteKeeper(modalState.data.index)} 
-                    className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                    className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
                   >
                     Delete
                   </button>
                 </div>
               )}
               {modalState.type === 'editWeeklyScore' && (
-                <form onSubmit={(e) => handleEditWeeklyScore(e, modalState.data.index)} className="space-y-3">
-                  <input
-                    type="number"
-                    name="week"
-                    defaultValue={modalState.data.score.week}
-                    placeholder="Week (1-14)"
-                    min="1"
-                    max="14"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    required
-                  />
-                  <input
-                    type="text"
-                    name="team"
-                    defaultValue={modalState.data.score.team}
-                    placeholder="Team"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    required
-                  />
-                  <input
-                    type="number"
-                    name="total"
-                    defaultValue={modalState.data.score.total}
-                    placeholder="Total Score"
-                    step="0.01"
-                    min="0"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    required
-                  />
+                <form onSubmit={(e) => handleEditWeeklyScore(e, modalState.data.index)} className="space-y-2">
+                  <div>
+                    <label className="text-xs font-medium">Week</label>
+                    <input
+                      type="number"
+                      name="week"
+                      defaultValue={modalState.data.score.week}
+                      placeholder="1–14"
+                      min="1"
+                      max="14"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      required
+                      data-tooltip="Enter week (1–14)"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Team</label>
+                    <input
+                      type="text"
+                      name="team"
+                      defaultValue={modalState.data.score.team}
+                      placeholder="Enter team"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Total</label>
+                    <input
+                      type="number"
+                      name="total"
+                      defaultValue={modalState.data.score.total}
+                      placeholder="Score"
+                      step="0.01"
+                      min="0"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      required
+                      data-tooltip="Enter score (e.g., 150.5)"
+                    />
+                  </div>
                   <button 
                     type="submit" 
-                    className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                    className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                   >
                     Save
                   </button>
@@ -1181,46 +1370,56 @@
               )}
               {modalState.type === 'deleteWeeklyScore' && (
                 <div>
-                  <p className="mb-3">Are you sure you want to delete this weekly high score?</p>
+                  <p className="text-sm mb-2">Are you sure you want to delete this weekly high score?</p>
                   <button 
                     onClick={() => handleDeleteWeeklyScore(modalState.data.index)} 
-                    className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                    className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-teal-600 transition-all"
                   >
                     Delete
                   </button>
                 </div>
               )}
               {modalState.type === 'editSurvivor' && (
-                <form onSubmit={(e) => handleEditSurvivor(e, modalState.data.index)} className="space-y-3">
-                  <input
-                    type="number"
-                    name="week"
-                    defaultValue={modalState.data.entry.week || ''}
-                    placeholder="Week (1-12, leave blank for Winner)"
-                    min="1"
-                    max="12"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                  <select
-                    name="type"
-                    defaultValue={modalState.data.entry.winner ? 'winner' : 'eliminated'}
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    required
-                  >
-                    <option value="eliminated">Eliminated</option>
-                    <option value="winner">Winner</option>
-                  </select>
-                  <input
-                    type="text"
-                    name="team"
-                    defaultValue={modalState.data.entry.eliminated || modalState.data.entry.winner}
-                    placeholder="Team"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    required
-                  />
+                <form onSubmit={(e) => handleEditSurvivor(e, modalState.data.index)} className="space-y-2">
+                  <div>
+                    <label className="text-xs font-medium">Week</label>
+                    <input
+                      type="number"
+                      name="week"
+                      defaultValue={modalState.data.entry.week || ''}
+                      placeholder="1–12 or blank"
+                      min="1"
+                      max="12"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      data-tooltip="Enter 1–12 for eliminations, blank for winner"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Type</label>
+                    <select
+                      name="type"
+                      defaultValue={modalState.data.entry.winner ? 'winner' : 'eliminated'}
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      required
+                    >
+                      <option value="eliminated">Eliminated</option>
+                      <option value="winner">Winner</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Team</label>
+                    <input
+                      type="text"
+                      name="team"
+                      defaultValue={modalState.data.entry.eliminated || modalState.data.entry.winner}
+                      placeholder="Enter team"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      required
+                    />
+                  </div>
                   <button 
                     type="submit" 
-                    className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                    className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                   >
                     Save
                   </button>
@@ -1228,35 +1427,41 @@
               )}
               {modalState.type === 'deleteSurvivor' && (
                 <div>
-                  <p className="mb-3">Are you sure you want to delete this survivor entry?</p>
+                  <p className="text-sm mb-2">Are you sure you want to delete this survivor entry?</p>
                   <button 
                     onClick={() => handleDeleteSurvivor(modalState.data.index)} 
-                    className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                    className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
                   >
                     Delete
                   </button>
                 </div>
               )}
               {modalState.type === 'editRule' && (
-                <form onSubmit={(e) => handleEditRuleItem(e, modalState.data.sectionIndex, modalState.data.itemIndex)} className="space-y-3">
-                  <input
-                    type="text"
-                    name="text"
-                    defaultValue={typeof modalState.data.item === 'string' ? modalState.data.item : modalState.data.item.text}
-                    placeholder="Rule Text"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    required
-                  />
-                  <textarea
-                    name="subItems"
-                    defaultValue={typeof modalState.data.item === 'string' ? '' : modalState.data.item.subItems?.join('\n') || ''}
-                    placeholder="Sub-items (one per line)"
-                    className="w-full p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    rows="3"
-                  />
+                <form onSubmit={(e) => handleEditRuleItem(e, modalState.data.sectionIndex, modalState.data.itemIndex)} className="space-y-2">
+                  <div>
+                    <label className="text-xs font-medium">Rule Text</label>
+                    <input
+                      type="text"
+                      name="text"
+                      defaultValue={typeof modalState.data.item === 'string' ? modalState.data.item : modalState.data.item.text}
+                      placeholder="Enter rule"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium">Sub-items (one per line)</label>
+                    <textarea
+                      name="subItems"
+                      defaultValue={typeof modalState.data.item === 'string' ? '' : modalState.data.item.subItems.join('\n')}
+                      placeholder="Enter sub-items"
+                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                      rows="2"
+                    />
+                  </div>
                   <button 
                     type="submit" 
-                    className="w-full px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                    className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                   >
                     Save
                   </button>
@@ -1264,10 +1469,10 @@
               )}
               {modalState.type === 'deleteRule' && (
                 <div>
-                  <p className="mb-3">Are you sure you want to delete this rule?</p>
+                  <p className="text-sm mb-2">Are you sure you want to delete this rule?</p>
                   <button 
                     onClick={() => handleDeleteRuleItem(modalState.data.sectionIndex, modalState.data.itemIndex)} 
-                    className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                    className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
                   >
                     Delete
                   </button>
@@ -1275,10 +1480,10 @@
               )}
               {modalState.type === 'deleteSection' && (
                 <div>
-                  <p className="mb-3">Are you sure you want to delete this section?</p>
+                  <p className="text-sm mb-2">Are you sure you want to delete this section?</p>
                   <button 
                     onClick={() => handleDeleteRuleSection(modalState.data.sectionIndex)} 
-                    className="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                    className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
                   >
                     Delete
                   </button>
