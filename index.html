@@ -186,21 +186,23 @@
 
       return (
         <div className="min-h-screen bg-gray-900">
-          <nav className="bg-gray-800 text-white p-3 shadow-lg fixed top-0 left-0 right-0 mobile-nav">
-            <div className="container mx-auto flex justify-between items-center">
-              <h1 className="text-xl sm:text-2xl font-bold">FriendZone FF</h1>
-              <button 
-                className="sm:hidden text-xl focus:outline-none" 
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-              >
-                ☰
-              </button>
-              <ul className={`sm:flex sm:space-x-4 ${isMenuOpen ? 'block' : 'hidden'} sm:block absolute top-full left-0 right-0 bg-gray-800 sm:bg-transparent p-3 sm:p-0 shadow-lg sm:shadow-none`}>
+          <nav className="bg-gray-800 text-white p-3 shadow-lg mobile-nav">
+            <div className="container mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex justify-between items-center w-full sm:w-auto">
+                <h1 className="text-xl sm:text-2xl font-bold">FriendZone FF</h1>
+                <button 
+                  className="sm:hidden text-xl focus:outline-none" 
+                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                >
+                  ☰
+                </button>
+              </div>
+              <ul className={`sm:flex sm:space-x-4 ${isMenuOpen ? 'block' : 'hidden'} sm:block mt-2 sm:mt-0 p-3 sm:p-0 sm:bg-transparent bg-gray-800 shadow-lg sm:shadow-none`}>
                 {['home', 'rules', 'payouts', 'keepers', 'prizes', 'admin'].map(tab => (
                   <li key={tab} className="my-2 sm:my-0">
                     <button 
                       onClick={() => { setCurrentTab(tab); setIsMenuOpen(false); }} 
-                      className={`w-full text-left capitalize hover:text-teal-400 focus:outline-none ${currentTab === tab ? 'text-teal-400' : ''}`}
+                      className={`w-full sm:w-auto text-left capitalize hover:text-teal-400 focus:outline-none ${currentTab === tab ? 'text-teal-400' : ''}`}
                     >
                       {tab}
                     </button>
@@ -209,7 +211,7 @@
               </ul>
             </div>
           </nav>
-          <main className="container mx-auto pt-20 pb-4 px-3 sm:px-4">
+          <main className="container mx-auto pt-16 sm:pt-4 pb-4 px-3 sm:px-4">
             {currentTab === 'home' && (
               <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Welcome to FriendZone Fantasy Football</h2>
