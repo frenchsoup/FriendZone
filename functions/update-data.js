@@ -4,30 +4,24 @@ const path = require('path');
 exports.handler = async (event) => {
   try {
     const { file, data, action, index, section } = JSON.parse(event.body);
-    // Try multiple possible paths
-    const possiblePaths = [
-      path.join(__dirname, 'data', file), // /var/task/data/keepers_2025.json
-      path.join(__dirname, 'friendzoneff', 'data', file), // /var/task/friendzoneff/data/keepers_2025.json
-      path.join(__dirname, '..', 'data', file) // /var/data/keepers_2025.json
-    ];
-    
-    let filePath;
-    for (const p of possiblePaths) {
-      console.log('Checking path:', p);
-      if (fs.existsSync(p)) {
-        filePath = p;
-        break;
-      }
-    }
-
-    console.log('Selected filePath:', filePath);
+    // Use friendzoneff/data/ path
+    const filePath = path.join(__dirname, 'friendzoneff', 'data', file);
+    console.log('Attempting to access file:', filePath);
     
     // Log directory contents for debugging
     const rootDir = __dirname;
     console.log('Current __dirname:', __dirname);
     console.log('Root directory contents:', fs.readdirSync(rootDir));
 
-    const dataDir = path.join(__dirname, 'data');
+    const friendzoneffDir = path.join(__dirname, 'friendzoneff');
+    console.log('friendzoneff directory path:', friendzoneffDir);
+    if (fs.existsSync(friendzoneffDir)) {
+      console.log('friendzoneff directory contents:', fs.readdirSync(friendzoneffDir));
+    } else {
+      console.log('friendzoneff directory does not exist:', friendzoneffDir);
+    }
+
+    const dataDir = path.join(__dirname, 'friendzoneff', 'data');
     console.log('Data directory path:', dataDir);
     if (fs.existsSync(dataDir)) {
       console.log('Data directory contents:', fs.readdirSync(dataDir));
@@ -35,8 +29,8 @@ exports.handler = async (event) => {
       console.log('Data directory does not exist:', dataDir);
     }
 
-    if (!filePath) {
-      console.log('File not found at any path:', possiblePaths);
+    if (!fs.existsSync(filePath)) {
+      console.log('File not found at:', filePath);
       return { statusCode: 404, body: JSON.stringify({ error: `File not found: ${file}` }) };
     }
 
