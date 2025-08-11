@@ -52,6 +52,7 @@
       const [selectedYear, setSelectedYear] = React.useState('2025');
       const [isMenuOpen, setIsMenuOpen] = React.useState(false);
       const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: null });
+      const [pendingChanges, setPendingChanges] = React.useState({ 2022: {}, 2023: {}, 2024: {}, 2025: {} });
 
       // Hardcoded password (replace with environment variable in production)
       const ADMIN_PASSWORD = 'friendzone2025';
@@ -124,45 +125,71 @@
         const result = await updateData('locks.json', updatedLocks, 'update');
         if (result) {
           setLocks(updatedLocks);
+          // Clear pending changes for the year if locking
+          if (updatedLocks[year]) {
+            setPendingChanges(prev => ({ ...prev, [year]: {} }));
+          }
         }
       };
 
-      // Handle inline keeper updates
-      const handleKeeperChange = async (year, index, field, value) => {
+      // Handle inline keeper updates (store in pendingChanges)
+      const handleKeeperChange = (year, index, field, value) => {
         if (locks[year]) return; // No edits if year is locked
+        setPendingChanges(prev => {
+          const updatedPending = { ...prev, [year]: { ...prev[year], [index]: { ...prev[year][index], [field]: value } } };
+          const teamData = { ...keepers[year][index], ...updatedPending[year][index] } || {
+            team: `Team ${index + 1}`,
+            keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
+            keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
+            remaining: 200
+          };
+
+          if (field === 'draftCost1' || field === 'tag1') {
+            if (field === 'draftCost1') teamData.draftCost1 = parseFloat(value) || 0;
+            if (teamData.draftCost1 === 0 && value === true) {
+              alert('No player can be kept for $0. Untag or set a draft cost.');
+              teamData.tag1 = false;
+            } else {
+              teamData.tag1 = field === 'tag1' ? value : teamData.tag1;
+            }
+            teamData.cost1 = calculateKeeperCost(teamData.draftCost1, teamData.tag1);
+          }
+          if (field === 'draftCost2' || field === 'tag2') {
+            if (field === 'draftCost2') teamData.draftCost2 = parseFloat(value) || 0;
+            if (teamData.draftCost2 === 0 && value === true) {
+              alert('No player can be kept for $0. Untag or set a draft cost.');
+              teamData.tag2 = false;
+            } else {
+              teamData.tag2 = field === 'tag2' ? value : teamData.tag2;
+            }
+            teamData.cost2 = calculateKeeperCost(teamData.draftCost2, teamData.tag2);
+          }
+          teamData.remaining = 200 - (teamData.cost1 + teamData.cost2);
+          if (teamData.remaining < 0) {
+            alert('Total keeper cost exceeds $200 budget.');
+            return prev; // Don't update pending changes
+          }
+          updatedPending[year][index] = teamData;
+          return updatedPending;
+        });
+      };
+
+      // Handle saving a row
+      const handleSaveRow = async (year, index) => {
+        if (locks[year]) return;
+        const teamData = pendingChanges[year][index] || keepers[year][index];
+        if (!teamData) return;
+
         const updatedKeepers = { ...keepers };
-        const teamData = { ...updatedKeepers[year][index] } || {
-          team: `Team ${index + 1}`,
-          keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
-          keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
-          remaining: 200
-        };
-        teamData[field] = value;
-        if (field === 'draftCost1' || field === 'tag1') {
-          if (field === 'draftCost1') teamData.draftCost1 = parseFloat(value) || 0;
-          if (teamData.draftCost1 === 0 && teamData.tag1) {
-            alert('No player can be kept for $0. Untag or set a draft cost.');
-            teamData.tag1 = false; // Enforce rule: no $0 keepers
-          }
-          teamData.cost1 = calculateKeeperCost(teamData.draftCost1, teamData.tag1);
-        }
-        if (field === 'draftCost2' || field === 'tag2') {
-          if (field === 'draftCost2') teamData.draftCost2 = parseFloat(value) || 0;
-          if (teamData.draftCost2 === 0 && teamData.tag2) {
-            alert('No player can be kept for $0. Untag or set a draft cost.');
-            teamData.tag2 = false; // Enforce rule: no $0 keepers
-          }
-          teamData.cost2 = calculateKeeperCost(teamData.draftCost2, teamData.tag2);
-        }
-        teamData.remaining = 200 - (teamData.cost1 + teamData.cost2);
-        if (teamData.remaining < 0) {
-          alert('Total keeper cost exceeds $200 budget.');
-          return;
-        }
-        updatedKeepers[year][index] = teamData;
+        updatedKeepers[year][index] = { ...keepers[year][index], ...teamData };
         const result = await updateData(`keepers_${year}.json`, updatedKeepers[year], 'update');
         if (result) {
           setKeepers(updatedKeepers);
+          setPendingChanges(prev => {
+            const updatedPending = { ...prev, [year]: { ...prev[year] } };
+            delete updatedPending[year][index];
+            return updatedPending;
+          });
         }
       };
 
@@ -658,83 +685,99 @@
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Tag</th>
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K2 Cost</th>
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Auction $</th>
+                          {!locks[selectedYear] && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
                         </tr>
                       </thead>
                       <tbody>
-                        {keepers[selectedYear].map((keeper, index) => (
-                          <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                            <td className="border border-gray-300 p-0.5 sm:p-1">
-                              <input
-                                type="text"
-                                value={keeper.team}
-                                onChange={(e) => handleKeeperChange(selectedYear, index, 'team', e.target.value)}
-                                className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                disabled={locks[selectedYear]}
-                              />
-                            </td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1">
-                              <input
-                                type="text"
-                                value={keeper.keeper1}
-                                onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper1', e.target.value)}
-                                className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                disabled={locks[selectedYear]}
-                              />
-                            </td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                              <input
-                                type="number"
-                                value={keeper.draftCost1}
-                                onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', parseFloat(e.target.value) || 0)}
-                                step="1"
-                                min="0"
-                                className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                disabled={locks[selectedYear]}
-                              />
-                            </td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                              <input
-                                type="checkbox"
-                                checked={keeper.tag1}
-                                onChange={(e) => handleKeeperChange(selectedYear, index, 'tag1', e.target.checked)}
-                                className="h-3 w-3 text-teal-500 focus:ring-teal-500"
-                                disabled={locks[selectedYear]}
-                              />
-                            </td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.cost1}</td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1">
-                              <input
-                                type="text"
-                                value={keeper.keeper2}
-                                onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper2', e.target.value)}
-                                className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                disabled={locks[selectedYear]}
-                              />
-                            </td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                              <input
-                                type="number"
-                                value={keeper.draftCost2}
-                                onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', parseFloat(e.target.value) || 0)}
-                                step="1"
-                                min="0"
-                                className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                disabled={locks[selectedYear]}
-                              />
-                            </td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                              <input
-                                type="checkbox"
-                                checked={keeper.tag2}
-                                onChange={(e) => handleKeeperChange(selectedYear, index, 'tag2', e.target.checked)}
-                                className="h-3 w-3 text-teal-500 focus:ring-teal-500"
-                                disabled={locks[selectedYear]}
-                              />
-                            </td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.cost2}</td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.remaining}</td>
-                          </tr>
-                        ))}
+                        {keepers[selectedYear].map((keeper, index) => {
+                          const pending = pendingChanges[selectedYear][index] || {};
+                          const displayData = { ...keeper, ...pending };
+                          return (
+                            <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
+                              <td className="border border-gray-300 p-0.5 sm:p-1">
+                                <input
+                                  type="text"
+                                  value={displayData.team}
+                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'team', e.target.value)}
+                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  disabled={locks[selectedYear]}
+                                />
+                              </td>
+                              <td className="border border-gray-300 p-0.5 sm:p-1">
+                                <input
+                                  type="text"
+                                  value={displayData.keeper1}
+                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper1', e.target.value)}
+                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  disabled={locks[selectedYear]}
+                                />
+                              </td>
+                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                <input
+                                  type="number"
+                                  value={displayData.draftCost1}
+                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', parseFloat(e.target.value) || 0)}
+                                  step="1"
+                                  min="0"
+                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  disabled={locks[selectedYear]}
+                                />
+                              </td>
+                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={displayData.tag1}
+                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'tag1', e.target.checked)}
+                                  className="h-3 w-3 text-teal-500 focus:ring-teal-500"
+                                  disabled={locks[selectedYear]}
+                                />
+                              </td>
+                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{displayData.cost1}</td>
+                              <td className="border border-gray-300 p-0.5 sm:p-1">
+                                <input
+                                  type="text"
+                                  value={displayData.keeper2}
+                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper2', e.target.value)}
+                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  disabled={locks[selectedYear]}
+                                />
+                              </td>
+                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                <input
+                                  type="number"
+                                  value={displayData.draftCost2}
+                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', parseFloat(e.target.value) || 0)}
+                                  step="1"
+                                  min="0"
+                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  disabled={locks[selectedYear]}
+                                />
+                              </td>
+                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={displayData.tag2}
+                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'tag2', e.target.checked)}
+                                  className="h-3 w-3 text-teal-500 focus:ring-teal-500"
+                                  disabled={locks[selectedYear]}
+                                />
+                              </td>
+                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{displayData.cost2}</td>
+                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{displayData.remaining}</td>
+                              {!locks[selectedYear] && (
+                                <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                  <button
+                                    onClick={() => handleSaveRow(selectedYear, index)}
+                                    className="px-2 py-0.5 text-[10px] sm:text-xs bg-teal-500 text-white rounded hover:bg-teal-600 transition-all disabled:bg-gray-400"
+                                    disabled={!pendingChanges[selectedYear][index]}
+                                  >
+                                    Save
+                                  </button>
+                                </td>
+                              )}
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
@@ -922,7 +965,7 @@
                           return;
                         }
                         if (prizes[selectedYear].survivor.some(entry => entry.week === week || (entry.winner && type === 'winner'))) {
-                          alert(`Week or Winner already exists for ${year} Survivor.`);
+                          alert(`Week or Winner already exists for ${selectedYear} Survivor.`);
                           return;
                         }
                         const newEntry = type === 'winner' ? { winner: team } : { week, eliminated: team };
