@@ -1,87 +1,46 @@
-const fs = require('fs').promises;
+const fs = require('fs');
 const path = require('path');
 
-exports.handler = async function(event, context) {
+exports.handler = async (event) => {
   try {
     const { file, data, action, index, section } = JSON.parse(event.body);
-    const filePath = path.join(__dirname, '..', 'data', file);
+    // Adjust path to include 'friendzoneff/' directory
+    const filePath = path.join(__dirname, '..', 'friendzoneff', 'data', file);
+    console.log('Attempting to access file:', filePath);
+    
+    // Log directory contents for debugging
+    const rootDir = path.join(__dirname, '..');
+    const projectDir = path.join(__dirname, '..', 'friendzoneff');
+    const dataDir = path.join(__dirname, '..', 'friendzoneff', 'data');
+    console.log('Root directory contents:', fs.readdirSync(rootDir));
+    console.log('Project directory (friendzoneff) contents:', fs.readdirSync(projectDir));
+    console.log('Data directory contents:', fs.readdirSync(dataDir));
+
+    if (!fs.existsSync(filePath)) {
+      console.log('File not found at:', filePath);
+      return { statusCode: 404, body: JSON.stringify({ error: `File not found: ${file}` }) };
+    }
+
+    let fileData = JSON.parse(fs.readFileSync(filePath, 'utf8'));
 
     if (action === 'update') {
-      await fs.writeFile(filePath, JSON.stringify(data, null, 2));
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ message: 'Data updated successfully' })
-      };
+      console.log('Writing data to:', filePath);
+      fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+      return { statusCode: 200, body: JSON.stringify({ message: 'Data updated successfully' }) };
     } else if (action === 'delete') {
-      let currentData;
-      try {
-        currentData = JSON.parse(await fs.readFile(filePath));
-      } catch (err) {
-        return {
-          statusCode: 404,
-          body: JSON.stringify({ error: 'File not found' })
-        };
-      }
-
-      if (file.startsWith('keepers_') || file === 'payouts.json') {
-        if (typeof index !== 'number') {
-          return {
-            statusCode: 400,
-            body: JSON.stringify({ error: 'Invalid index for delete action' })
-          };
-        }
-        currentData.splice(index, 1);
-        await fs.writeFile(filePath, JSON.stringify(currentData, null, 2));
-        return {
-          statusCode: 200,
-          body: JSON.stringify({ message: 'Item deleted successfully' })
-        };
-      } else if (file === 'rules.json') {
-        if (typeof index === 'number') {
-          currentData.sections.splice(index, 1);
-        } else if (index && typeof index.sectionIndex === 'number' && typeof index.itemIndex === 'number') {
-          currentData.sections[index.sectionIndex].items.splice(index.itemIndex, 1);
-        } else {
-          return {
-            statusCode: 400,
-            body: JSON.stringify({ error: 'Invalid index for rules delete action' })
-          };
-        }
-        await fs.writeFile(filePath, JSON.stringify(currentData, null, 2));
-        return {
-          statusCode: 200,
-          body: JSON.stringify({ message: 'Item deleted successfully' })
-        };
-      } else if (file.startsWith('prizes_')) {
-        if (typeof index !== 'number' || !section || !['weeklyHighScores', 'survivor'].includes(section)) {
-          return {
-            statusCode: 400,
-            body: JSON.stringify({ error: 'Invalid delete action: missing or invalid section or index' })
-          };
-        }
-        currentData[section].splice(index, 1);
-        await fs.writeFile(filePath, JSON.stringify(currentData, null, 2));
-        return {
-          statusCode: 200,
-          body: JSON.stringify({ message: 'Item deleted successfully' })
-        };
+      if (section) {
+        fileData[section] = fileData[section].filter((_, i) => i !== index);
       } else {
-        return {
-          statusCode: 400,
-          body: JSON.stringify({ error: 'Invalid delete action' })
-        };
+        fileData = fileData.filter((_, i) => i !== index);
       }
-    } else {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Invalid action' })
-      };
+      console.log('Writing data to:', filePath);
+      fs.writeFileSync(filePath, JSON.stringify(fileData, null, 2));
+      return { statusCode: 200, body: JSON.stringify({ message: 'Item deleted successfully' }) };
     }
+
+    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid action' }) };
   } catch (error) {
     console.error('Error in update-data:', error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: error.message })
-    };
+    return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
   }
 };
