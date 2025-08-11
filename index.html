@@ -18,9 +18,9 @@
     // Keeper cost calculation
     const calculateKeeperCost = (draftCost, tag) => {
       if (draftCost === 0 && !tag) return 5; // Rule: $0 cost → $5 if not tagged
-      if (draftCost === 0 && tag) return 0; // Rule: No one can be kept for $0, but allowing for now
-      if (tag) return draftCost;
-      return Math.round((draftCost * 1.1) + 5);
+      if (draftCost === 0 && tag) return 0; // Will be validated to prevent $0
+      if (tag) return Math.round(draftCost); // Ensure whole dollars
+      return Math.round(draftCost * 1.1 + 5); // Round to whole dollars
     };
 
     // Modal component
@@ -139,10 +139,20 @@
         };
         teamData[field] = value;
         if (field === 'draftCost1' || field === 'tag1') {
-          teamData.cost1 = calculateKeeperCost(parseFloat(teamData.draftCost1) || 0, teamData.tag1);
+          if (field === 'draftCost1') teamData.draftCost1 = parseFloat(value) || 0;
+          if (teamData.draftCost1 === 0 && teamData.tag1) {
+            alert('No player can be kept for $0. Untag or set a draft cost.');
+            teamData.tag1 = false; // Enforce rule: no $0 keepers
+          }
+          teamData.cost1 = calculateKeeperCost(teamData.draftCost1, teamData.tag1);
         }
         if (field === 'draftCost2' || field === 'tag2') {
-          teamData.cost2 = calculateKeeperCost(parseFloat(teamData.draftCost2) || 0, teamData.tag2);
+          if (field === 'draftCost2') teamData.draftCost2 = parseFloat(value) || 0;
+          if (teamData.draftCost2 === 0 && teamData.tag2) {
+            alert('No player can be kept for $0. Untag or set a draft cost.');
+            teamData.tag2 = false; // Enforce rule: no $0 keepers
+          }
+          teamData.cost2 = calculateKeeperCost(teamData.draftCost2, teamData.tag2);
         }
         teamData.remaining = 200 - (teamData.cost1 + teamData.cost2);
         if (teamData.remaining < 0) {
@@ -156,9 +166,9 @@
         }
       };
 
-      // Initialize 12 teams if empty
+      // Initialize 12 teams for 2025 if empty
       const initializeKeepers = (year) => {
-        if (keepers[year].length === 0) {
+        if (year === '2025' && keepers[year].length === 0) {
           const initialTeams = Array.from({ length: 12 }, (_, i) => ({
             team: `Team ${i + 1}`,
             keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
@@ -627,7 +637,7 @@
                   <div className="mb-2">
                     <button
                       onClick={() => handleToggleLock(selectedYear)}
-                      className={`px-2 py-1 text-xs sm:text-sm rounded ${locks[selectedYear] ? 'bg-red-500 text-white' : 'bg-teal-500 text-white'}`}
+                      className={`px-2 py-1 text-xs sm:text-sm rounded lock-button ${locks[selectedYear] ? 'bg-red-500 text-white' : 'bg-teal-500 text-white'}`}
                     >
                       {locks[selectedYear] ? `Unlock ${selectedYear}` : `Lock ${selectedYear}`}
                     </button>
@@ -640,14 +650,14 @@
                         <tr className="bg-gray-100">
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Team</th>
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K1</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Cost</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K1 $</th>
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Tag</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Cost</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K1 Cost</th>
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K2</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Cost</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K2 $</th>
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Tag</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Cost</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Rem</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K2 Cost</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Auction $</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -676,7 +686,7 @@
                                 type="number"
                                 value={keeper.draftCost1}
                                 onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', parseFloat(e.target.value) || 0)}
-                                step="0.1"
+                                step="1"
                                 min="0"
                                 className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
                                 disabled={locks[selectedYear]}
@@ -706,7 +716,7 @@
                                 type="number"
                                 value={keeper.draftCost2}
                                 onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', parseFloat(e.target.value) || 0)}
-                                step="0.1"
+                                step="1"
                                 min="0"
                                 className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
                                 disabled={locks[selectedYear]}
@@ -912,7 +922,7 @@
                           return;
                         }
                         if (prizes[selectedYear].survivor.some(entry => entry.week === week || (entry.winner && type === 'winner'))) {
-                          alert(`Week or Winner already exists for ${selectedYear} Survivor.`);
+                          alert(`Week or Winner already exists for ${year} Survivor.`);
                           return;
                         }
                         const newEntry = type === 'winner' ? { winner: team } : { week, eliminated: team };
