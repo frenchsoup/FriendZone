@@ -7,8 +7,8 @@
     "cost1": 17,
     "keeper2": "Jamo",
     "draftCost2": 4,
-    "tag2": false,
-    "cost2": 9.4,
-    "remaining": 173.6
+    "tag2": true,
+    "cost2": 4,
+    "remaining": 179
   }
 ]
