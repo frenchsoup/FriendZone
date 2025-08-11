@@ -4,16 +4,22 @@ const path = require('path');
 exports.handler = async (event) => {
   try {
     const { file, data, action, index, section } = JSON.parse(event.body);
-    // Use data/ directly under the project root
-    const filePath = path.join(__dirname, '..', 'data', file);
+    // Use data/ in the same directory as the function
+    const filePath = path.join(__dirname, 'data', file);
     console.log('Attempting to access file:', filePath);
     
     // Log directory contents for debugging
-    const rootDir = path.join(__dirname, '..');
-    const dataDir = path.join(__dirname, '..', 'data');
+    const rootDir = __dirname; // /var/task
     console.log('Current __dirname:', __dirname);
     console.log('Root directory contents:', fs.readdirSync(rootDir));
-    console.log('Data directory contents:', fs.readdirSync(dataDir));
+
+    const dataDir = path.join(__dirname, 'data');
+    console.log('Data directory path:', dataDir);
+    if (fs.existsSync(dataDir)) {
+      console.log('Data directory contents:', fs.readdirSync(dataDir));
+    } else {
+      console.log('Data directory does not exist:', dataDir);
+    }
 
     if (!fs.existsSync(filePath)) {
       console.log('File not found at:', filePath);
