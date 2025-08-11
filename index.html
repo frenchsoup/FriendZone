@@ -53,6 +53,11 @@
       const [isMenuOpen, setIsMenuOpen] = React.useState(false);
       const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: null });
       const [pendingChanges, setPendingChanges] = React.useState({ 2022: {}, 2023: {}, 2024: {}, 2025: {} });
+      const [pendingPrizeChanges, setPendingPrizeChanges] = React.useState({
+        2023: { weeklyHighScores: {}, survivor: {} },
+        2024: { weeklyHighScores: {}, survivor: {} },
+        2025: { weeklyHighScores: {}, survivor: {} }
+      });
 
       // Hardcoded password (replace with environment variable in production)
       const ADMIN_PASSWORD = 'friendzone2025';
@@ -103,12 +108,12 @@
       };
 
       // Update data via Netlify function
-      const updateData = async (file, data, action, index = null) => {
+      const updateData = async (file, data, action, index = null, section = null) => {
         try {
           const res = await fetch('/.netlify/functions/update-data', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file, data, action, index })
+            body: JSON.stringify({ file, data, action, index, section })
           });
           if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
           return await res.json();
@@ -174,7 +179,7 @@
         });
       };
 
-      // Handle saving a row
+      // Handle saving a keeper row
       const handleSaveRow = async (year, index) => {
         if (locks[year]) return;
         const teamData = pendingChanges[year][index] || keepers[year][index];
@@ -222,61 +227,98 @@
         }
       };
 
-      // Handle inline weekly high score updates
-      const handleWeeklyScoreChange = async (year, index, field, value) => {
+      // Handle inline weekly high score updates (store in pendingPrizeChanges)
+      const handleWeeklyScoreChange = (year, index, field, value) => {
         if (!isAdminAuthenticated) return;
+        setPendingPrizeChanges(prev => {
+          const updatedPending = { ...prev, [year]: { ...prev[year], weeklyHighScores: { ...prev[year].weeklyHighScores } } };
+          const score = { ...prizes[year].weeklyHighScores[index], ...updatedPending[year].weeklyHighScores[index], [field]: field === 'week' || field === 'total' ? parseFloat(value) || 0 : value };
+          
+          if (score.week < 1 || score.week > 14) {
+            alert('Week must be between 1 and 14.');
+            return prev;
+          }
+          if (prizes[year].weeklyHighScores.some((s, i) => i !== index && s.week === score.week)) {
+            alert(`Week already exists for ${year} Weekly High Scores.`);
+            return prev;
+          }
+          updatedPending[year].weeklyHighScores[index] = score;
+          return updatedPending;
+        });
+      };
+
+      // Handle saving a weekly high score row
+      const handleSaveWeeklyScore = async (year, index) => {
+        if (!isAdminAuthenticated) return;
+        const scoreData = pendingPrizeChanges[year].weeklyHighScores[index] || prizes[year].weeklyHighScores[index];
+        if (!scoreData) return;
+
         const updatedPrizes = { ...prizes };
-        const score = { ...updatedPrizes[year].weeklyHighScores[index] };
-        score[field] = field === 'week' || field === 'total' ? parseFloat(value) || 0 : value;
-        if (score.week < 1 || score.week > 14) {
-          alert('Week must be between 1 and 14.');
-          return;
-        }
-        if (updatedPrizes[year].weeklyHighScores.some((s, i) => i !== index && s.week === score.week)) {
-          alert(`Week already exists for ${year} Weekly High Scores.`);
-          return;
-        }
-        updatedPrizes[year].weeklyHighScores[index] = score;
+        updatedPrizes[year].weeklyHighScores[index] = { ...prizes[year].weeklyHighScores[index], ...scoreData };
         updatedPrizes[year].weeklyHighScores.sort((a, b) => a.week - b.week);
         const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
         if (result) {
           setPrizes(updatedPrizes);
+          setPendingPrizeChanges(prev => {
+            const updatedPending = { ...prev, [year]: { ...prev[year], weeklyHighScores: { ...prev[year].weeklyHighScores } } };
+            delete updatedPending[year].weeklyHighScores[index];
+            return updatedPending;
+          });
         }
       };
 
-      // Handle inline survivor updates
-      const handleSurvivorChange = async (year, index, field, value) => {
+      // Handle inline survivor updates (store in pendingPrizeChanges)
+      const handleSurvivorChange = (year, index, field, value) => {
         if (!isAdminAuthenticated) return;
-        const updatedPrizes = { ...prizes };
-        const entry = { ...updatedPrizes[year].survivor[index] };
-        if (field === 'week') {
-          entry.week = parseInt(value) || 0;
-          if (entry.week && (entry.week < 1 || entry.week > 12)) {
-            alert('Week must be between 1 and 12 for eliminations.');
-            return;
-          }
-        } else if (field === 'type') {
-          if (value === 'winner') {
-            delete entry.week;
-            delete entry.eliminated;
-            entry.winner = entry.eliminated || entry.winner || '';
+        setPendingPrizeChanges(prev => {
+          const updatedPending = { ...prev, [year]: { ...prev[year], survivor: { ...prev[year].survivor } } };
+          const entry = { ...prizes[year].survivor[index], ...updatedPending[year].survivor[index] };
+          
+          if (field === 'week') {
+            entry.week = parseInt(value) || 0;
+            if (entry.week && (entry.week < 1 || entry.week > 12)) {
+              alert('Week must be between 1 and 12 for eliminations.');
+              return prev;
+            }
+          } else if (field === 'type') {
+            if (value === 'winner') {
+              delete entry.week;
+              delete entry.eliminated;
+              entry.winner = entry.eliminated || entry.winner || '';
+            } else {
+              delete entry.winner;
+              entry.week = entry.week || 0;
+              entry.eliminated = entry.winner || entry.eliminated || '';
+            }
           } else {
-            delete entry.winner;
-            entry.week = entry.week || 0;
-            entry.eliminated = entry.winner || entry.eliminated || '';
+            entry[field === 'team' ? (entry.winner ? 'winner' : 'eliminated') : field] = value;
           }
-        } else {
-          entry[field === 'team' ? (entry.winner ? 'winner' : 'eliminated') : field] = value;
-        }
-        if (updatedPrizes[year].survivor.some((e, i) => i !== index && (e.week === entry.week || (e.winner && entry.winner)))) {
-          alert(`Week or Winner already exists for ${year} Survivor.`);
-          return;
-        }
-        updatedPrizes[year].survivor[index] = entry;
+          if (prizes[year].survivor.some((e, i) => i !== index && (e.week === entry.week || (e.winner && entry.winner)))) {
+            alert(`Week or Winner already exists for ${year} Survivor.`);
+            return prev;
+          }
+          updatedPending[year].survivor[index] = entry;
+          return updatedPending;
+        });
+      };
+
+      // Handle saving a survivor row
+      const handleSaveSurvivor = async (year, index) => {
+        if (!isAdminAuthenticated) return;
+        const entryData = pendingPrizeChanges[year].survivor[index] || prizes[year].survivor[index];
+        if (!entryData) return;
+
+        const updatedPrizes = { ...prizes };
+        updatedPrizes[year].survivor[index] = { ...prizes[year].survivor[index], ...entryData };
         updatedPrizes[year].survivor.sort((a, b) => (a.week || 999) - (b.week || 999));
         const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
         if (result) {
           setPrizes(updatedPrizes);
+          setPendingPrizeChanges(prev => {
+            const updatedPending = { ...prev, [year]: { ...prev[year], survivor: { ...prev[year].survivor } } };
+            delete updatedPending[year].survivor[index];
+            return updatedPending;
+          });
         }
       };
 
@@ -333,7 +375,7 @@
           </nav>
           <main className="container mx-auto pt-16 sm:pt-4 pb-4 px-3 sm:px-4">
             {currentTab === 'home' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Welcome to FriendZone Fantasy Football</h2>
                 <p className="text-sm sm:text-base">Your longtime fantasy football league, now online! Explore rules, payouts, keepers, and weekly prizes for the 2025 season and beyond.</p>
               </div>
@@ -887,66 +929,84 @@
                             </tr>
                           </thead>
                           <tbody>
-                            {prizes[selectedYear].weeklyHighScores.map((score, index) => (
-                              <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">
-                                  {isAdminAuthenticated ? (
-                                    <input
-                                      type="number"
-                                      value={score.week}
-                                      onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'week', e.target.value)}
-                                      min="1"
-                                      max="14"
-                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    />
-                                  ) : (
-                                    score.week
-                                  )}
-                                </td>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">
-                                  {isAdminAuthenticated ? (
-                                    <input
-                                      type="text"
-                                      value={score.team}
-                                      onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
-                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    />
-                                  ) : (
-                                    score.team
-                                  )}
-                                </td>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">
-                                  {isAdminAuthenticated ? (
-                                    <input
-                                      type="number"
-                                      value={score.total}
-                                      onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
-                                      step="0.01"
-                                      min="0"
-                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    />
-                                  ) : (
-                                    score.total
-                                  )}
-                                </td>
-                                {isAdminAuthenticated && (
-                                  <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                    <button
-                                      onClick={() => {
-                                        const updatedPrizes = { ...prizes };
-                                        updatedPrizes[selectedYear].weeklyHighScores = updatedPrizes[selectedYear].weeklyHighScores.filter((_, i) => i !== index);
-                                        updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'delete', index).then(result => {
-                                          if (result) setPrizes(updatedPrizes);
-                                        });
-                                      }}
-                                      className="text-red-500 hover:text-red-700 text-xs"
-                                    >
-                                      Delete
-                                    </button>
+                            {prizes[selectedYear].weeklyHighScores.map((score, index) => {
+                              const pending = pendingPrizeChanges[selectedYear].weeklyHighScores[index] || {};
+                              const displayData = { ...score, ...pending };
+                              return (
+                                <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
+                                  <td className="border border-gray-300 p-0.5 sm:p-1">
+                                    {isAdminAuthenticated ? (
+                                      <input
+                                        type="number"
+                                        value={displayData.week}
+                                        onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'week', e.target.value)}
+                                        min="1"
+                                        max="14"
+                                        className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                      />
+                                    ) : (
+                                      displayData.week
+                                    )}
                                   </td>
-                                )}
-                              </tr>
-                            ))}
+                                  <td className="border border-gray-300 p-0.5 sm:p-1">
+                                    {isAdminAuthenticated ? (
+                                      <input
+                                        type="text"
+                                        value={displayData.team}
+                                        onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
+                                        className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                      />
+                                    ) : (
+                                      displayData.team
+                                    )}
+                                  </td>
+                                  <td className="border border-gray-300 p-0.5 sm:p-1">
+                                    {isAdminAuthenticated ? (
+                                      <input
+                                        type="number"
+                                        value={displayData.total}
+                                        onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
+                                        step="0.01"
+                                        min="0"
+                                        className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                      />
+                                    ) : (
+                                      displayData.total
+                                    )}
+                                  </td>
+                                  {isAdminAuthenticated && (
+                                    <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                      <button
+                                        onClick={() => handleSaveWeeklyScore(selectedYear, index)}
+                                        className="px-2 py-0.5 text-[10px] sm:text-xs bg-teal-500 text-white rounded hover:bg-teal-600 transition-all disabled:bg-gray-400 mr-1"
+                                        disabled={!pendingPrizeChanges[selectedYear].weeklyHighScores[index]}
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          const updatedPrizes = { ...prizes };
+                                          updatedPrizes[selectedYear].weeklyHighScores = updatedPrizes[selectedYear].weeklyHighScores.filter((_, i) => i !== index);
+                                          updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'delete', index, 'weeklyHighScores').then(result => {
+                                            if (result) {
+                                              setPrizes(updatedPrizes);
+                                              setPendingPrizeChanges(prev => {
+                                                const updatedPending = { ...prev, [year]: { ...prev[year], weeklyHighScores: { ...prev[year].weeklyHighScores } } };
+                                                delete updatedPending[year].weeklyHighScores[index];
+                                                return updatedPending;
+                                              });
+                                            }
+                                          });
+                                        }}
+                                        className="text-red-500 hover:text-red-700 text-xs"
+                                      >
+                                        Delete
+                                      </button>
+                                    </td>
+                                  )}
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
@@ -1036,60 +1096,78 @@
                             </tr>
                           </thead>
                           <tbody>
-                            {prizes[selectedYear].survivor.map((entry, index) => (
-                              <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">
-                                  {isAdminAuthenticated ? (
-                                    <input
-                                      type="number"
-                                      value={entry.week || ''}
-                                      onChange={(e) => handleSurvivorChange(selectedYear, index, 'week', e.target.value)}
-                                      min="1"
-                                      max="12"
-                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    />
-                                  ) : (
-                                    entry.week || (entry.winner && 'Winner')
-                                  )}
-                                </td>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">
-                                  {isAdminAuthenticated ? (
-                                    <input
-                                      type="text"
-                                      value={entry.eliminated || entry.winner}
-                                      onChange={(e) => handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
-                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    />
-                                  ) : (
-                                    entry.eliminated || entry.winner
-                                  )}
-                                </td>
-                                {isAdminAuthenticated && (
-                                  <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                    <select
-                                      value={entry.winner ? 'winner' : 'eliminated'}
-                                      onChange={(e) => handleSurvivorChange(selectedYear, index, 'type', e.target.value)}
-                                      className="p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    >
-                                      <option value="eliminated">Eliminated</option>
-                                      <option value="winner">Winner</option>
-                                    </select>
-                                    <button
-                                      onClick={() => {
-                                        const updatedPrizes = { ...prizes };
-                                        updatedPrizes[selectedYear].survivor = updatedPrizes[selectedYear].survivor.filter((_, i) => i !== index);
-                                        updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'delete', index).then(result => {
-                                          if (result) setPrizes(updatedPrizes);
-                                        });
-                                      }}
-                                      className="text-red-500 hover:text-red-700 text-xs ml-2"
-                                    >
-                                      Delete
-                                    </button>
+                            {prizes[selectedYear].survivor.map((entry, index) => {
+                              const pending = pendingPrizeChanges[selectedYear].survivor[index] || {};
+                              const displayData = { ...entry, ...pending };
+                              return (
+                                <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
+                                  <td className="border border-gray-300 p-0.5 sm:p-1">
+                                    {isAdminAuthenticated ? (
+                                      <input
+                                        type="number"
+                                        value={displayData.week || ''}
+                                        onChange={(e) => handleSurvivorChange(selectedYear, index, 'week', e.target.value)}
+                                        min="1"
+                                        max="12"
+                                        className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                      />
+                                    ) : (
+                                      displayData.week || (displayData.winner && 'Winner')
+                                    )}
                                   </td>
-                                )}
-                              </tr>
-                            ))}
+                                  <td className="border border-gray-300 p-0.5 sm:p-1">
+                                    {isAdminAuthenticated ? (
+                                      <input
+                                        type="text"
+                                        value={displayData.eliminated || displayData.winner}
+                                        onChange={(e) => handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
+                                        className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                      />
+                                    ) : (
+                                      displayData.eliminated || displayData.winner
+                                    )}
+                                  </td>
+                                  {isAdminAuthenticated && (
+                                    <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                      <select
+                                        value={displayData.winner ? 'winner' : 'eliminated'}
+                                        onChange={(e) => handleSurvivorChange(selectedYear, index, 'type', e.target.value)}
+                                        className="p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                      >
+                                        <option value="eliminated">Eliminated</option>
+                                        <option value="winner">Winner</option>
+                                      </select>
+                                      <button
+                                        onClick={() => handleSaveSurvivor(selectedYear, index)}
+                                        className="px-2 py-0.5 text-[10px] sm:text-xs bg-teal-500 text-white rounded hover:bg-teal-600 transition-all disabled:bg-gray-400 mr-1"
+                                        disabled={!pendingPrizeChanges[selectedYear].survivor[index]}
+                                      >
+                                        Save
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          const updatedPrizes = { ...prizes };
+                                          updatedPrizes[selectedYear].survivor = updatedPrizes[selectedYear].survivor.filter((_, i) => i !== index);
+                                          updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'delete', index, 'survivor').then(result => {
+                                            if (result) {
+                                              setPrizes(updatedPrizes);
+                                              setPendingPrizeChanges(prev => {
+                                                const updatedPending = { ...prev, [year]: { ...prev[year], survivor: { ...prev[year].survivor } } };
+                                                delete updatedPending[year].survivor[index];
+                                                return updatedPending;
+                                              });
+                                            }
+                                          });
+                                        }}
+                                        className="text-red-500 hover:text-red-700 text-xs"
+                                      >
+                                        Delete
+                                      </button>
+                                    </td>
+                                  )}
+                                </tr>
+                              );
+                            })}
                           </tbody>
                         </table>
                       </div>
