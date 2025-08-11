@@ -4,12 +4,26 @@ const path = require('path');
 exports.handler = async (event) => {
   try {
     const { file, data, action, index, section } = JSON.parse(event.body);
-    // Use data/ in the same directory as the function
-    const filePath = path.join(__dirname, 'data', file);
-    console.log('Attempting to access file:', filePath);
+    // Try multiple possible paths
+    const possiblePaths = [
+      path.join(__dirname, 'data', file), // /var/task/data/keepers_2025.json
+      path.join(__dirname, 'friendzoneff', 'data', file), // /var/task/friendzoneff/data/keepers_2025.json
+      path.join(__dirname, '..', 'data', file) // /var/data/keepers_2025.json
+    ];
+    
+    let filePath;
+    for (const p of possiblePaths) {
+      console.log('Checking path:', p);
+      if (fs.existsSync(p)) {
+        filePath = p;
+        break;
+      }
+    }
+
+    console.log('Selected filePath:', filePath);
     
     // Log directory contents for debugging
-    const rootDir = __dirname; // /var/task
+    const rootDir = __dirname;
     console.log('Current __dirname:', __dirname);
     console.log('Root directory contents:', fs.readdirSync(rootDir));
 
@@ -21,8 +35,8 @@ exports.handler = async (event) => {
       console.log('Data directory does not exist:', dataDir);
     }
 
-    if (!fs.existsSync(filePath)) {
-      console.log('File not found at:', filePath);
+    if (!filePath) {
+      console.log('File not found at any path:', possiblePaths);
       return { statusCode: 404, body: JSON.stringify({ error: `File not found: ${file}` }) };
     }
 
