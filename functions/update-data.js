@@ -4,16 +4,14 @@ const path = require('path');
 exports.handler = async (event) => {
   try {
     const { file, data, action, index, section } = JSON.parse(event.body);
-    // Adjust path to include 'friendzoneff/' directory
-    const filePath = path.join(__dirname, '..', 'friendzoneff', 'data', file);
+    // Use data/ directly under the project root
+    const filePath = path.join(__dirname, '..', 'data', file);
     console.log('Attempting to access file:', filePath);
     
     // Log directory contents for debugging
     const rootDir = path.join(__dirname, '..');
-    const projectDir = path.join(__dirname, '..', 'friendzoneff');
-    const dataDir = path.join(__dirname, '..', 'friendzoneff', 'data');
+    const dataDir = path.join(__dirname, '..', 'data');
     console.log('Root directory contents:', fs.readdirSync(rootDir));
-    console.log('Project directory (friendzoneff) contents:', fs.readdirSync(projectDir));
     console.log('Data directory contents:', fs.readdirSync(dataDir));
 
     if (!fs.existsSync(filePath)) {
