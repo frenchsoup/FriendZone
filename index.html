@@ -17,7 +17,8 @@
   <script type="text/babel">
     // Keeper cost calculation
     const calculateKeeperCost = (draftCost, tag) => {
-      if (draftCost === 0) return 0;
+      if (draftCost === 0 && !tag) return 5; // Rule: $0 cost → $5 if not tagged
+      if (draftCost === 0 && tag) return 0; // Rule: No one can be kept for $0, but allowing for now
       if (tag) return draftCost;
       return Math.round((draftCost * 1.1) + 5);
     };
@@ -47,10 +48,10 @@
       const [prizes, setPrizes] = React.useState({ 2023: { survivor: [], weeklyHighScores: [] }, 2024: { survivor: [], weeklyHighScores: [] }, 2025: { survivor: [], weeklyHighScores: [] } });
       const [rules, setRules] = React.useState({ sections: [] });
       const [payouts, setPayouts] = React.useState([]);
-      const [selectedYear, setSelectedYear] = React.useState('2024');
+      const [locks, setLocks] = React.useState({ 2022: false, 2023: false, 2024: false, 2025: false });
+      const [selectedYear, setSelectedYear] = React.useState('2025');
       const [isMenuOpen, setIsMenuOpen] = React.useState(false);
       const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: null });
-      const [formVisibility, setFormVisibility] = React.useState({ payouts: false, keepers: false, weekly: false, survivor: false, rules: {} });
 
       // Hardcoded password (replace with environment variable in production)
       const ADMIN_PASSWORD = 'friendzone2025';
@@ -67,7 +68,8 @@
             { path: '/data/keepers_2025.json', setter: (data) => setKeepers(prev => ({ ...prev, 2025: data })), default: [] },
             { path: '/data/prizes_2023.json', setter: (data) => setPrizes(prev => ({ ...prev, 2023: data })), default: { survivor: [], weeklyHighScores: [] } },
             { path: '/data/prizes_2024.json', setter: (data) => setPrizes(prev => ({ ...prev, 2024: data })), default: { survivor: [], weeklyHighScores: [] } },
-            { path: '/data/prizes_2025.json', setter: (data) => setPrizes(prev => ({ ...prev, 2025: data })), default: { survivor: [], weeklyHighScores: [] } }
+            { path: '/data/prizes_2025.json', setter: (data) => setPrizes(prev => ({ ...prev, 2025: data })), default: { survivor: [], weeklyHighScores: [] } },
+            { path: '/data/locks.json', setter: setLocks, default: { 2022: false, 2023: false, 2024: false, 2025: false } },
           ];
 
           for (const file of files) {
@@ -116,330 +118,144 @@
         }
       };
 
-      // Toggle form visibility
-      const toggleForm = (key, sectionIndex = null) => {
-        if (sectionIndex !== null) {
-          setFormVisibility(prev => ({
-            ...prev,
-            rules: { ...prev.rules, [sectionIndex]: !prev.rules[sectionIndex] }
-          }));
-        } else {
-          setFormVisibility(prev => ({ ...prev, [key]: !prev[key] }));
+      // Toggle lock for a year
+      const handleToggleLock = async (year) => {
+        const updatedLocks = { ...locks, [year]: !locks[year] };
+        const result = await updateData('locks.json', updatedLocks, 'update');
+        if (result) {
+          setLocks(updatedLocks);
         }
       };
 
-      // Payouts handlers
-      const handleAddPayout = async (e) => {
-        e.preventDefault();
-        const category = e.target.category.value;
-        const percentage = parseFloat(e.target.percentage.value);
-        const prize = parseInt(e.target.prize.value);
-        if (payouts.some(p => p.category === category)) {
+      // Handle inline keeper updates
+      const handleKeeperChange = async (year, index, field, value) => {
+        if (locks[year]) return; // No edits if year is locked
+        const updatedKeepers = { ...keepers };
+        const teamData = { ...updatedKeepers[year][index] } || {
+          team: `Team ${index + 1}`,
+          keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
+          keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
+          remaining: 200
+        };
+        teamData[field] = value;
+        if (field === 'draftCost1' || field === 'tag1') {
+          teamData.cost1 = calculateKeeperCost(parseFloat(teamData.draftCost1) || 0, teamData.tag1);
+        }
+        if (field === 'draftCost2' || field === 'tag2') {
+          teamData.cost2 = calculateKeeperCost(parseFloat(teamData.draftCost2) || 0, teamData.tag2);
+        }
+        teamData.remaining = 200 - (teamData.cost1 + teamData.cost2);
+        if (teamData.remaining < 0) {
+          alert('Total keeper cost exceeds $200 budget.');
+          return;
+        }
+        updatedKeepers[year][index] = teamData;
+        const result = await updateData(`keepers_${year}.json`, updatedKeepers[year], 'update');
+        if (result) {
+          setKeepers(updatedKeepers);
+        }
+      };
+
+      // Initialize 12 teams if empty
+      const initializeKeepers = (year) => {
+        if (keepers[year].length === 0) {
+          const initialTeams = Array.from({ length: 12 }, (_, i) => ({
+            team: `Team ${i + 1}`,
+            keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
+            keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
+            remaining: 200
+          }));
+          setKeepers(prev => ({ ...prev, [year]: initialTeams }));
+          updateData(`keepers_${year}.json`, initialTeams, 'update');
+        }
+      };
+
+      // Handle inline payouts updates
+      const handlePayoutChange = async (index, field, value) => {
+        if (!isAdminAuthenticated) return;
+        const updatedPayouts = [...payouts];
+        updatedPayouts[index] = { ...updatedPayouts[index], [field]: field === 'percentage' || field === 'prize' ? parseFloat(value) || 0 : value };
+        if (updatedPayouts.some((p, i) => i !== index && p.category === updatedPayouts[index].category)) {
           alert('Category already exists.');
           return;
         }
-        const newPayout = { category, percentage, prize };
-        const updatedPayouts = [...payouts, newPayout];
         const result = await updateData('payouts.json', updatedPayouts, 'update');
         if (result) {
           setPayouts(updatedPayouts);
-          toggleForm('payouts');
-          e.target.reset();
         }
       };
 
-      const handleEditPayout = async (e, index) => {
-        e.preventDefault();
-        const category = e.target.category.value;
-        const percentage = parseFloat(e.target.percentage.value);
-        const prize = parseInt(e.target.prize.value);
-        if (payouts.some((p, i) => i !== index && p.category === category)) {
-          alert('Category already exists.');
-          return;
-        }
-        const updatedPayouts = [...payouts];
-        updatedPayouts[index] = { category, percentage, prize };
-        const result = await updateData('payouts.json', updatedPayouts, 'update', index);
-        if (result) {
-          setPayouts(updatedPayouts);
-          setModalState({ isOpen: false, type: '', data: null });
-        }
-      };
-
-      const handleDeletePayout = async (index) => {
-        const updatedPayouts = payouts.filter((_, i) => i !== index);
-        const result = await updateData('payouts.json', updatedPayouts, 'delete', index);
-        if (result) {
-          setPayouts(updatedPayouts);
-          setModalState({ isOpen: false, type: '', data: null });
-        }
-      };
-
-      // Keepers handlers
-      const handleAddKeeper = async (e) => {
-        e.preventDefault();
-        const team = e.target.team.value;
-        const keeper1 = e.target.keeper1.value;
-        const draftCost1 = parseFloat(e.target.draftCost1.value) || 0;
-        const tag1 = e.target.tag1.checked;
-        const cost1 = calculateKeeperCost(draftCost1, tag1);
-        const keeper2 = e.target.keeper2.value;
-        const draftCost2 = parseFloat(e.target.draftCost2.value) || 0;
-        const tag2 = e.target.tag2.checked;
-        const cost2 = calculateKeeperCost(draftCost2, tag2);
-        const remaining = 200 - (cost1 + cost2);
-        if (remaining < 0) {
-          alert('Total keeper cost exceeds $200 budget.');
-          return;
-        }
-        if (keepers[selectedYear].some(k => k.team === team)) {
-          alert(`Team already has keepers for ${selectedYear}.`);
-          return;
-        }
-        const newKeeper = { team, keeper1, draftCost1, tag1, cost1, keeper2, draftCost2, tag2, cost2, remaining };
-        const updatedKeepers = { ...keepers, [selectedYear]: [...keepers[selectedYear], newKeeper] };
-        const result = await updateData(`keepers_${selectedYear}.json`, updatedKeepers[selectedYear], 'update');
-        if (result) {
-          setKeepers(updatedKeepers);
-          toggleForm('keepers');
-          e.target.reset();
-        }
-      };
-
-      const handleEditKeeper = async (e, index) => {
-        e.preventDefault();
-        const team = e.target.team.value;
-        const keeper1 = e.target.keeper1.value;
-        const draftCost1 = parseFloat(e.target.draftCost1.value) || 0;
-        const tag1 = e.target.tag1.checked;
-        const cost1 = calculateKeeperCost(draftCost1, tag1);
-        const keeper2 = e.target.keeper2.value;
-        const draftCost2 = parseFloat(e.target.draftCost2.value) || 0;
-        const tag2 = e.target.tag2.checked;
-        const cost2 = calculateKeeperCost(draftCost2, tag2);
-        const remaining = 200 - (cost1 + cost2);
-        if (remaining < 0) {
-          alert('Total keeper cost exceeds $200 budget.');
-          return;
-        }
-        if (keepers[selectedYear].some((k, i) => i !== index && k.team === team)) {
-          alert(`Team already has keepers for ${selectedYear}.`);
-          return;
-        }
-        const updatedKeepers = { ...keepers };
-        updatedKeepers[selectedYear][index] = { team, keeper1, draftCost1, tag1, cost1, keeper2, draftCost2, tag2, cost2, remaining };
-        const result = await updateData(`keepers_${selectedYear}.json`, updatedKeepers[selectedYear], 'update', index);
-        if (result) {
-          setKeepers(updatedKeepers);
-          setModalState({ isOpen: false, type: '', data: null });
-        }
-      };
-
-      const handleDeleteKeeper = async (index) => {
-        const updatedKeepers = { ...keepers };
-        updatedKeepers[selectedYear] = updatedKeepers[selectedYear].filter((_, i) => i !== index);
-        const result = await updateData(`keepers_${selectedYear}.json`, updatedKeepers[selectedYear], 'delete', index);
-        if (result) {
-          setKeepers(updatedKeepers);
-          setModalState({ isOpen: false, type: '', data: null });
-        }
-      };
-
-      // Weekly High Scores handlers
-      const handleAddWeeklyScore = async (e) => {
-        e.preventDefault();
-        const week = parseInt(e.target.week.value);
-        const team = e.target.team.value;
-        const total = parseFloat(e.target.total.value);
-        if (week < 1 || week > 14) {
+      // Handle inline weekly high score updates
+      const handleWeeklyScoreChange = async (year, index, field, value) => {
+        if (!isAdminAuthenticated) return;
+        const updatedPrizes = { ...prizes };
+        const score = { ...updatedPrizes[year].weeklyHighScores[index] };
+        score[field] = field === 'week' || field === 'total' ? parseFloat(value) || 0 : value;
+        if (score.week < 1 || score.week > 14) {
           alert('Week must be between 1 and 14.');
           return;
         }
-        if (prizes[selectedYear].weeklyHighScores.some(score => score.week === week)) {
-          alert(`Week already exists for ${selectedYear} Weekly High Scores.`);
+        if (updatedPrizes[year].weeklyHighScores.some((s, i) => i !== index && s.week === score.week)) {
+          alert(`Week already exists for ${year} Weekly High Scores.`);
           return;
         }
-        const newScore = { week, team, total };
-        const updatedPrizes = {
-          ...prizes,
-          [selectedYear]: {
-            ...prizes[selectedYear],
-            weeklyHighScores: [...prizes[selectedYear].weeklyHighScores, newScore].sort((a, b) => a.week - b.week)
+        updatedPrizes[year].weeklyHighScores[index] = score;
+        updatedPrizes[year].weeklyHighScores.sort((a, b) => a.week - b.week);
+        const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
+        if (result) {
+          setPrizes(updatedPrizes);
+        }
+      };
+
+      // Handle inline survivor updates
+      const handleSurvivorChange = async (year, index, field, value) => {
+        if (!isAdminAuthenticated) return;
+        const updatedPrizes = { ...prizes };
+        const entry = { ...updatedPrizes[year].survivor[index] };
+        if (field === 'week') {
+          entry.week = parseInt(value) || 0;
+          if (entry.week && (entry.week < 1 || entry.week > 12)) {
+            alert('Week must be between 1 and 12 for eliminations.');
+            return;
           }
-        };
-        const result = await updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update');
-        if (result) {
-          setPrizes(updatedPrizes);
-          toggleForm('weekly');
-          e.target.reset();
-        }
-      };
-
-      const handleEditWeeklyScore = async (e, index) => {
-        e.preventDefault();
-        const week = parseInt(e.target.week.value);
-        const team = e.target.team.value;
-        const total = parseFloat(e.target.total.value);
-        if (week < 1 || week > 14) {
-          alert('Week must be between 1 and 14.');
-          return;
-        }
-        if (prizes[selectedYear].weeklyHighScores.some((score, i) => i !== index && score.week === week)) {
-          alert(`Week already exists for ${selectedYear} Weekly High Scores.`);
-          return;
-        }
-        const updatedPrizes = { ...prizes };
-        updatedPrizes[selectedYear].weeklyHighScores[index] = { week, team, total };
-        updatedPrizes[selectedYear].weeklyHighScores.sort((a, b) => a.week - b.week);
-        const result = await updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update', index);
-        if (result) {
-          setPrizes(updatedPrizes);
-          setModalState({ isOpen: false, type: '', data: null });
-        }
-      };
-
-      const handleDeleteWeeklyScore = async (index) => {
-        const updatedPrizes = { ...prizes };
-        updatedPrizes[selectedYear].weeklyHighScores = updatedPrizes[selectedYear].weeklyHighScores.filter((_, i) => i !== index);
-        const result = await updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'delete', index);
-        if (result) {
-          setPrizes(updatedPrizes);
-          setModalState({ isOpen: false, type: '', data: null });
-        }
-      };
-
-      // Survivor handlers
-      const handleAddSurvivor = async (e) => {
-        e.preventDefault();
-        const week = parseInt(e.target.week.value) || 0;
-        const type = e.target.type.value;
-        const team = e.target.team.value;
-        if (type === 'eliminated' && (week < 1 || week > 12)) {
-          alert('Week must be between 1 and 12 for eliminations.');
-          return;
-        }
-        if (prizes[selectedYear].survivor.some(entry => entry.week === week || (entry.winner && type === 'winner'))) {
-          alert(`Week or Winner already exists for ${selectedYear} Survivor.`);
-          return;
-        }
-        const newEntry = type === 'winner' ? { winner: team } : { week, eliminated: team };
-        const updatedPrizes = {
-          ...prizes,
-          [selectedYear]: {
-            ...prizes[selectedYear],
-            survivor: [...prizes[selectedYear].survivor, newEntry].sort((a, b) => (a.week || 999) - (b.week || 999))
+        } else if (field === 'type') {
+          if (value === 'winner') {
+            delete entry.week;
+            delete entry.eliminated;
+            entry.winner = entry.eliminated || entry.winner || '';
+          } else {
+            delete entry.winner;
+            entry.week = entry.week || 0;
+            entry.eliminated = entry.winner || entry.eliminated || '';
           }
-        };
-        const result = await updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update');
+        } else {
+          entry[field === 'team' ? (entry.winner ? 'winner' : 'eliminated') : field] = value;
+        }
+        if (updatedPrizes[year].survivor.some((e, i) => i !== index && (e.week === entry.week || (e.winner && entry.winner)))) {
+          alert(`Week or Winner already exists for ${year} Survivor.`);
+          return;
+        }
+        updatedPrizes[year].survivor[index] = entry;
+        updatedPrizes[year].survivor.sort((a, b) => (a.week || 999) - (b.week || 999));
+        const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
         if (result) {
           setPrizes(updatedPrizes);
-          toggleForm('survivor');
-          e.target.reset();
         }
       };
 
-      const handleEditSurvivor = async (e, index) => {
-        e.preventDefault();
-        const week = parseInt(e.target.week.value) || 0;
-        const type = e.target.type.value;
-        const team = e.target.team.value;
-        if (type === 'eliminated' && (week < 1 || week > 12)) {
-          alert('Week must be between 1 and 12 for eliminations.');
-          return;
+      // Handle inline rule updates
+      const handleRuleChange = async (sectionIndex, itemIndex, field, value) => {
+        if (!isAdminAuthenticated) return;
+        const updatedRules = { ...rules };
+        const item = updatedRules.sections[sectionIndex].items[itemIndex];
+        if (typeof item === 'string') {
+          updatedRules.sections[sectionIndex].items[itemIndex] = value;
+        } else {
+          updatedRules.sections[sectionIndex].items[itemIndex] = { ...item, [field]: field === 'subItems' ? value.split('\n').filter(i => i.trim()) : value };
         }
-        if (prizes[selectedYear].survivor.some((entry, i) => i !== index && (entry.week === week || (entry.winner && type === 'winner')))) {
-          alert(`Week or Winner already exists for ${selectedYear} Survivor.`);
-          return;
-        }
-        const updatedPrizes = { ...prizes };
-        updatedPrizes[selectedYear].survivor[index] = type === 'winner' ? { winner: team } : { week, eliminated: team };
-        updatedPrizes[selectedYear].survivor.sort((a, b) => (a.week || 999) - (b.week || 999));
-        const result = await updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update', index);
-        if (result) {
-          setPrizes(updatedPrizes);
-          setModalState({ isOpen: false, type: '', data: null });
-        }
-      };
-
-      const handleDeleteSurvivor = async (index) => {
-        const updatedPrizes = { ...prizes };
-        updatedPrizes[selectedYear].survivor = updatedPrizes[selectedYear].survivor.filter((_, i) => i !== index);
-        const result = await updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'delete', index);
-        if (result) {
-          setPrizes(updatedPrizes);
-          setModalState({ isOpen: false, type: '', data: null });
-        }
-      };
-
-      // Rules handlers
-      const handleAddRuleSection = async (e) => {
-        e.preventDefault();
-        const title = e.target.title.value;
-        if (rules.sections.some(section => section.title === title)) {
-          alert('Section title already exists.');
-          return;
-        }
-        const updatedRules = {
-          sections: [...rules.sections, { title, items: [] }]
-        };
         const result = await updateData('rules.json', updatedRules, 'update');
         if (result) {
           setRules(updatedRules);
-          setFormVisibility(prev => ({ ...prev, rules: { ...prev.rules, [rules.sections.length]: false } }));
-          e.target.reset();
-        }
-      };
-
-      const handleAddRuleItem = async (e, sectionIndex) => {
-        e.preventDefault();
-        const text = e.target.text.value;
-        const subItems = e.target.subItems.value ? e.target.subItems.value.split('\n').filter(item => item.trim()) : [];
-        const newItem = subItems.length ? { text, subItems } : text;
-        const updatedRules = { ...rules };
-        updatedRules.sections[sectionIndex].items.push(newItem);
-        const result = await updateData('rules.json', updatedRules, 'update');
-        if (result) {
-          setRules(updatedRules);
-          toggleForm('rules', sectionIndex);
-          e.target.reset();
-        }
-      };
-
-      const handleEditRuleItem = async (e, sectionIndex, itemIndex) => {
-        e.preventDefault();
-        const text = e.target.text.value;
-        const subItems = e.target.subItems.value ? e.target.subItems.value.split('\n').filter(item => item.trim()) : [];
-        const updatedRules = { ...rules };
-        updatedRules.sections[sectionIndex].items[itemIndex] = subItems.length ? { text, subItems } : text;
-        const result = await updateData('rules.json', updatedRules, 'update', { sectionIndex, itemIndex });
-        if (result) {
-          setRules(updatedRules);
-          setModalState({ isOpen: false, type: '', data: null });
-        }
-      };
-
-      const handleDeleteRuleItem = async (sectionIndex, itemIndex) => {
-        const updatedRules = { ...rules };
-        updatedRules.sections[sectionIndex].items = updatedRules.sections[sectionIndex].items.filter((_, i) => i !== itemIndex);
-        const result = await updateData('rules.json', updatedRules, 'delete', { sectionIndex, itemIndex });
-        if (result) {
-          setRules(updatedRules);
-          setModalState({ isOpen: false, type: '', data: null });
-        }
-      };
-
-      const handleDeleteRuleSection = async (sectionIndex) => {
-        const updatedRules = { ...rules };
-        updatedRules.sections = updatedRules.sections.filter((_, i) => i !== sectionIndex);
-        const result = await updateData('rules.json', updatedRules, 'delete', sectionIndex);
-        if (result) {
-          setRules(updatedRules);
-          setModalState({ isOpen: false, type: '', data: null });
-          setFormVisibility(prev => {
-            const newRules = { ...prev.rules };
-            delete newRules[sectionIndex];
-            return { ...prev, rules: newRules };
-          });
         }
       };
 
@@ -490,32 +306,38 @@
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Rules</h2>
                 {isAdminAuthenticated && (
                   <div className="mb-3">
-                    <button 
-                      onClick={() => toggleForm('rules')} 
-                      className="form-toggle text-sm text-teal-500 hover:text-teal-600 mb-2"
-                    >
-                      {formVisibility.rules[-1] ? 'Hide Add Section' : 'Show Add Section'}
-                    </button>
-                    {formVisibility.rules[-1] && (
-                      <form onSubmit={handleAddRuleSection} className="space-y-2 max-w-xs">
-                        <div>
-                          <label className="text-xs font-medium">Section Title</label>
-                          <input
-                            type="text"
-                            name="title"
-                            placeholder="Enter section title"
-                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                            required
-                          />
-                        </div>
-                        <button 
-                          type="submit" 
-                          className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                        >
-                          Add Section
-                        </button>
-                      </form>
-                    )}
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      const title = e.target.title.value;
+                      if (rules.sections.some(section => section.title === title)) {
+                        alert('Section title already exists.');
+                        return;
+                      }
+                      const updatedRules = { sections: [...rules.sections, { title, items: [] }] };
+                      updateData('rules.json', updatedRules, 'update').then(result => {
+                        if (result) {
+                          setRules(updatedRules);
+                          e.target.reset();
+                        }
+                      });
+                    }} className="space-y-2 max-w-xs">
+                      <div>
+                        <label className="text-xs font-medium">Section Title</label>
+                        <input
+                          type="text"
+                          name="title"
+                          placeholder="Enter section title"
+                          className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                          required
+                        />
+                      </div>
+                      <button 
+                        type="submit" 
+                        className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                      >
+                        Add Section
+                      </button>
+                    </form>
                   </div>
                 )}
                 {rules.sections.length > 0 ? (
@@ -534,56 +356,88 @@
                           )}
                         </div>
                         {isAdminAuthenticated && (
-                          <div className="mb-2">
+                          <form onSubmit={(e) => {
+                            e.preventDefault();
+                            const text = e.target.text.value;
+                            const subItems = e.target.subItems.value ? e.target.subItems.value.split('\n').filter(item => item.trim()) : [];
+                            const newItem = subItems.length ? { text, subItems } : text;
+                            const updatedRules = { ...rules };
+                            updatedRules.sections[sectionIndex].items.push(newItem);
+                            updateData('rules.json', updatedRules, 'update').then(result => {
+                              if (result) {
+                                setRules(updatedRules);
+                                e.target.reset();
+                              }
+                            });
+                          }} className="space-y-2 max-w-xs mt-2">
+                            <div>
+                              <label className="text-xs font-medium">Rule Text</label>
+                              <input
+                                type="text"
+                                name="text"
+                                placeholder="Enter rule"
+                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                required
+                              />
+                            </div>
+                            <div>
+                              <label className="text-xs font-medium">Sub-items (one per line)</label>
+                              <textarea
+                                name="subItems"
+                                placeholder="Enter sub-items"
+                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                rows="2"
+                              />
+                            </div>
                             <button 
-                              onClick={() => toggleForm('rules', sectionIndex)} 
-                              className="form-toggle text-xs text-teal-500 hover:text-teal-600"
+                              type="submit" 
+                              className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                             >
-                              {formVisibility.rules[sectionIndex] ? 'Hide Add Rule' : 'Show Add Rule'}
+                              Add Rule
                             </button>
-                            {formVisibility.rules[sectionIndex] && (
-                              <form onSubmit={(e) => handleAddRuleItem(e, sectionIndex)} className="space-y-2 max-w-xs mt-2">
-                                <div>
-                                  <label className="text-xs font-medium">Rule Text</label>
-                                  <input
-                                    type="text"
-                                    name="text"
-                                    placeholder="Enter rule"
-                                    className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    required
-                                  />
-                                </div>
-                                <div>
-                                  <label className="text-xs font-medium">Sub-items (one per line)</label>
-                                  <textarea
-                                    name="subItems"
-                                    placeholder="Enter sub-items"
-                                    className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    rows="2"
-                                  />
-                                </div>
-                                <button 
-                                  type="submit" 
-                                  className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                                >
-                                  Add Rule
-                                </button>
-                              </form>
-                            )}
-                          </div>
+                          </form>
                         )}
                         <ul className="list-disc pl-5 space-y-1">
                           {section.items.map((item, itemIndex) => (
                             <li key={itemIndex} className="flex justify-between items-start">
                               <div>
-                                {typeof item === 'string' ? item : (
+                                {typeof item === 'string' ? (
+                                  isAdminAuthenticated ? (
+                                    <input
+                                      type="text"
+                                      value={item}
+                                      onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'text', e.target.value)}
+                                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    />
+                                  ) : (
+                                    item
+                                  )
+                                ) : (
                                   <>
-                                    {item.text}
+                                    {isAdminAuthenticated ? (
+                                      <input
+                                        type="text"
+                                        value={item.text}
+                                        onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'text', e.target.value)}
+                                        className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                      />
+                                    ) : (
+                                      item.text
+                                    )}
                                     {item.subItems && (
                                       <ul className="list-disc pl-5 mt-1 space-y-1">
-                                        {item.subItems.map((subItem, subIndex) => (
-                                          <li key={subIndex} className="text-xs">{subItem}</li>
-                                        ))}
+                                        {isAdminAuthenticated ? (
+                                          <textarea
+                                            value={item.subItems.join('\n')}
+                                            onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'subItems', e.target.value)}
+                                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                            rows="2"
+                                          />
+                                        ) : (
+                                          item.subItems.map((subItem, subIndex) => (
+                                            <li key={subIndex} className="text-xs">{subItem}</li>
+                                          ))
+                                        )}
                                       </ul>
                                     )}
                                   </>
@@ -591,12 +445,6 @@
                               </div>
                               {isAdminAuthenticated && (
                                 <div className="flex space-x-1">
-                                  <button
-                                    onClick={() => setModalState({ isOpen: true, type: 'editRule', data: { sectionIndex, itemIndex, item } })}
-                                    className="text-blue-500 hover:text-blue-700 text-xs"
-                                  >
-                                    Edit
-                                  </button>
                                   <button
                                     onClick={() => setModalState({ isOpen: true, type: 'deleteRule', data: { sectionIndex, itemIndex } })}
                                     className="text-red-500 hover:text-red-700 text-xs"
@@ -621,56 +469,63 @@
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Payouts</h2>
                 {isAdminAuthenticated && (
                   <div className="mb-3">
-                    <button 
-                      onClick={() => toggleForm('payouts')} 
-                      className="form-toggle text-sm text-teal-500 hover:text-teal-600 mb-2"
-                    >
-                      {formVisibility.payouts ? 'Hide Add Payout' : 'Show Add Payout'}
-                    </button>
-                    {formVisibility.payouts && (
-                      <form onSubmit={handleAddPayout} className="space-y-2 max-w-xs">
-                        <div>
-                          <label className="text-xs font-medium">Category</label>
-                          <input
-                            type="text"
-                            name="category"
-                            placeholder="Enter category"
-                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium">Percentage</label>
-                          <input
-                            type="number"
-                            name="percentage"
-                            placeholder="e.g., 0.5"
-                            step="0.01"
-                            min="0"
-                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                            required
-                            data-tooltip="Enter as decimal (e.g., 0.5 for 50%)"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium">Prize ($)</label>
-                          <input
-                            type="number"
-                            name="prize"
-                            placeholder="Enter prize"
-                            min="0"
-                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                            required
-                          />
-                        </div>
-                        <button 
-                          type="submit" 
-                          className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                        >
-                          Add Payout
-                        </button>
-                      </form>
-                    )}
+                    <form onSubmit={(e) => {
+                      e.preventDefault();
+                      const category = e.target.category.value;
+                      const percentage = parseFloat(e.target.percentage.value);
+                      const prize = parseInt(e.target.prize.value);
+                      if (payouts.some(p => p.category === category)) {
+                        alert('Category already exists.');
+                        return;
+                      }
+                      const updatedPayouts = [...payouts, { category, percentage, prize }];
+                      updateData('payouts.json', updatedPayouts, 'update').then(result => {
+                        if (result) {
+                          setPayouts(updatedPayouts);
+                          e.target.reset();
+                        }
+                      });
+                    }} className="space-y-2 max-w-xs">
+                      <div>
+                        <label className="text-xs font-medium">Category</label>
+                        <input
+                          type="text"
+                          name="category"
+                          placeholder="Enter category"
+                          className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium">Percentage</label>
+                        <input
+                          type="number"
+                          name="percentage"
+                          placeholder="e.g., 0.5"
+                          step="0.01"
+                          min="0"
+                          className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium">Prize ($)</label>
+                        <input
+                          type="number"
+                          name="prize"
+                          placeholder="Enter prize"
+                          min="0"
+                          className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                          required
+                        />
+                      </div>
+                      <button 
+                        type="submit" 
+                        className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                      >
+                        Add Payout
+                      </button>
+                    </form>
                   </div>
                 )}
                 {payouts.length > 0 ? (
@@ -687,19 +542,54 @@
                       <tbody>
                         {payouts.map((payout, index) => (
                           <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                            <td className="border border-gray-300 p-0.5 sm:p-1">{payout.category}</td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{(payout.percentage * 100).toFixed(2)}</td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${payout.prize}</td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1">
+                              {isAdminAuthenticated ? (
+                                <input
+                                  type="text"
+                                  value={payout.category}
+                                  onChange={(e) => handlePayoutChange(index, 'category', e.target.value)}
+                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                              ) : (
+                                payout.category
+                              )}
+                            </td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                              {isAdminAuthenticated ? (
+                                <input
+                                  type="number"
+                                  value={payout.percentage}
+                                  onChange={(e) => handlePayoutChange(index, 'percentage', e.target.value)}
+                                  step="0.01"
+                                  min="0"
+                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                              ) : (
+                                (payout.percentage * 100).toFixed(2)
+                              )}
+                            </td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                              {isAdminAuthenticated ? (
+                                <input
+                                  type="number"
+                                  value={payout.prize}
+                                  onChange={(e) => handlePayoutChange(index, 'prize', e.target.value)}
+                                  min="0"
+                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                />
+                              ) : (
+                                `$${payout.prize}`
+                              )}
+                            </td>
                             {isAdminAuthenticated && (
                               <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
                                 <button
-                                  onClick={() => setModalState({ isOpen: true, type: 'editPayout', data: { index, payout } })}
-                                  className="text-blue-500 hover:text-blue-700 text-xs mr-2"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => setModalState({ isOpen: true, type: 'deletePayout', data: { index } })}
+                                  onClick={() => {
+                                    const updatedPayouts = payouts.filter((_, i) => i !== index);
+                                    updateData('payouts.json', updatedPayouts, 'delete', index).then(result => {
+                                      if (result) setPayouts(updatedPayouts);
+                                    });
+                                  }}
                                   className="text-red-500 hover:text-red-700 text-xs"
                                 >
                                   Delete
@@ -724,90 +614,23 @@
                     <button
                       key={year}
                       className={`px-2 py-1 text-xs sm:text-sm rounded ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
-                      onClick={() => setSelectedYear(year)}
+                      onClick={() => {
+                        setSelectedYear(year);
+                        initializeKeepers(year);
+                      }}
                     >
                       {year}
                     </button>
                   ))}
                 </div>
                 {isAdminAuthenticated && (
-                  <div className="mb-3">
-                    <button 
-                      onClick={() => toggleForm('keepers')} 
-                      className="form-toggle text-sm text-teal-500 hover:text-teal-600 mb-2"
+                  <div className="mb-2">
+                    <button
+                      onClick={() => handleToggleLock(selectedYear)}
+                      className={`px-2 py-1 text-xs sm:text-sm rounded ${locks[selectedYear] ? 'bg-red-500 text-white' : 'bg-teal-500 text-white'}`}
                     >
-                      {formVisibility.keepers ? 'Hide Add Keeper' : 'Show Add Keeper'}
+                      {locks[selectedYear] ? `Unlock ${selectedYear}` : `Lock ${selectedYear}`}
                     </button>
-                    {formVisibility.keepers && (
-                      <form onSubmit={handleAddKeeper} className="space-y-2 max-w-xs">
-                        <div>
-                          <label className="text-xs font-medium">Team</label>
-                          <input
-                            type="text"
-                            name="team"
-                            placeholder="Enter team"
-                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium">Keeper #1</label>
-                          <input
-                            type="text"
-                            name="keeper1"
-                            placeholder="Player name"
-                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium">Draft Cost #1</label>
-                          <input
-                            type="number"
-                            name="draftCost1"
-                            placeholder="Cost"
-                            step="0.1"
-                            min="0"
-                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                            data-tooltip="Enter cost (e.g., 10.5)"
-                          />
-                        </div>
-                        <label className="flex items-center space-x-1">
-                          <input type="checkbox" name="tag1" className="h-3 w-3 text-teal-500 focus:ring-teal-500" />
-                          <span className="text-xs">Tag #1</span>
-                        </label>
-                        <div>
-                          <label className="text-xs font-medium">Keeper #2</label>
-                          <input
-                            type="text"
-                            name="keeper2"
-                            placeholder="Player name"
-                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium">Draft Cost #2</label>
-                          <input
-                            type="number"
-                            name="draftCost2"
-                            placeholder="Cost"
-                            step="0.1"
-                            min="0"
-                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                            data-tooltip="Enter cost (e.g., 10.5)"
-                          />
-                        </div>
-                        <label className="flex items-center space-x-1">
-                          <input type="checkbox" name="tag2" className="h-3 w-3 text-teal-500 focus:ring-teal-500" />
-                          <span className="text-xs">Tag #2</span>
-                        </label>
-                        <button 
-                          type="submit" 
-                          className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                        >
-                          Add Keeper
-                        </button>
-                      </form>
-                    )}
                   </div>
                 )}
                 {keepers[selectedYear].length > 0 ? (
@@ -825,45 +648,88 @@
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Tag</th>
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Cost</th>
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Rem</th>
-                          {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
                         </tr>
                       </thead>
                       <tbody>
                         {keepers[selectedYear].map((keeper, index) => (
                           <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                            <td className="border border-gray-300 p-0.5 sm:p-1">{keeper.team}</td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.keeper1}</td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${keeper.draftCost1}</td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.tag1 ? 'Y' : 'N'}</td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${keeper.cost1}</td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.keeper2}</td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${keeper.draftCost2}</td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.tag2 ? 'Y' : 'N'}</td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${keeper.cost2}</td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${keeper.remaining}</td>
-                            {isAdminAuthenticated && (
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                <button
-                                  onClick={() => setModalState({ isOpen: true, type: 'editKeeper', data: { index, keeper } })}
-                                  className="text-blue-500 hover:text-blue-700 text-xs mr-2"
-                                >
-                                  Edit
-                                </button>
-                                <button
-                                  onClick={() => setModalState({ isOpen: true, type: 'deleteKeeper', data: { index } })}
-                                  className="text-red-500 hover:text-red-700 text-xs"
-                                >
-                                  Delete
-                                </button>
-                              </td>
-                            )}
+                            <td className="border border-gray-300 p-0.5 sm:p-1">
+                              <input
+                                type="text"
+                                value={keeper.team}
+                                onChange={(e) => handleKeeperChange(selectedYear, index, 'team', e.target.value)}
+                                className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                disabled={locks[selectedYear]}
+                              />
+                            </td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1">
+                              <input
+                                type="text"
+                                value={keeper.keeper1}
+                                onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper1', e.target.value)}
+                                className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                disabled={locks[selectedYear]}
+                              />
+                            </td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                              <input
+                                type="number"
+                                value={keeper.draftCost1}
+                                onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', parseFloat(e.target.value) || 0)}
+                                step="0.1"
+                                min="0"
+                                className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                disabled={locks[selectedYear]}
+                              />
+                            </td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                              <input
+                                type="checkbox"
+                                checked={keeper.tag1}
+                                onChange={(e) => handleKeeperChange(selectedYear, index, 'tag1', e.target.checked)}
+                                className="h-3 w-3 text-teal-500 focus:ring-teal-500"
+                                disabled={locks[selectedYear]}
+                              />
+                            </td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.cost1}</td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1">
+                              <input
+                                type="text"
+                                value={keeper.keeper2}
+                                onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper2', e.target.value)}
+                                className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                disabled={locks[selectedYear]}
+                              />
+                            </td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                              <input
+                                type="number"
+                                value={keeper.draftCost2}
+                                onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', parseFloat(e.target.value) || 0)}
+                                step="0.1"
+                                min="0"
+                                className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                disabled={locks[selectedYear]}
+                              />
+                            </td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                              <input
+                                type="checkbox"
+                                checked={keeper.tag2}
+                                onChange={(e) => handleKeeperChange(selectedYear, index, 'tag2', e.target.checked)}
+                                className="h-3 w-3 text-teal-500 focus:ring-teal-500"
+                                disabled={locks[selectedYear]}
+                              />
+                            </td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.cost2}</td>
+                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{keeper.remaining}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
                 ) : (
-                  <p className="text-xs sm:text-sm">No keepers for {selectedYear}.</p>
+                  <p className="text-xs sm:text-sm">Loading keepers for {selectedYear}...</p>
                 )}
               </div>
             )}
@@ -885,60 +751,74 @@
                   <div className="flex-1 mb-2 lg:mb-0">
                     <h3 className="text-base sm:text-lg font-semibold mb-1">Weekly High Scores</h3>
                     {isAdminAuthenticated && (
-                      <div className="mb-3">
+                      <form onSubmit={(e) => {
+                        e.preventDefault();
+                        const week = parseInt(e.target.week.value);
+                        const team = e.target.team.value;
+                        const total = parseFloat(e.target.total.value);
+                        if (week < 1 || week > 14) {
+                          alert('Week must be between 1 and 14.');
+                          return;
+                        }
+                        if (prizes[selectedYear].weeklyHighScores.some(score => score.week === week)) {
+                          alert(`Week already exists for ${selectedYear} Weekly High Scores.`);
+                          return;
+                        }
+                        const updatedPrizes = {
+                          ...prizes,
+                          [selectedYear]: {
+                            ...prizes[selectedYear],
+                            weeklyHighScores: [...prizes[selectedYear].weeklyHighScores, { week, team, total }].sort((a, b) => a.week - b.week)
+                          }
+                        };
+                        updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update').then(result => {
+                          if (result) {
+                            setPrizes(updatedPrizes);
+                            e.target.reset();
+                          }
+                        });
+                      }} className="space-y-2 max-w-xs mb-3">
+                        <div>
+                          <label className="text-xs font-medium">Week</label>
+                          <input
+                            type="number"
+                            name="week"
+                            placeholder="1–14"
+                            min="1"
+                            max="14"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium">Team</label>
+                          <input
+                            type="text"
+                            name="team"
+                            placeholder="Enter team"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium">Total</label>
+                          <input
+                            type="number"
+                            name="total"
+                            placeholder="Score"
+                            step="0.01"
+                            min="0"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            required
+                          />
+                        </div>
                         <button 
-                          onClick={() => toggleForm('weekly')} 
-                          className="form-toggle text-sm text-teal-500 hover:text-teal-600 mb-2"
+                          type="submit" 
+                          className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                         >
-                          {formVisibility.weekly ? 'Hide Add Score' : 'Show Add Score'}
+                          Add Score
                         </button>
-                        {formVisibility.weekly && (
-                          <form onSubmit={handleAddWeeklyScore} className="space-y-2 max-w-xs">
-                            <div>
-                              <label className="text-xs font-medium">Week</label>
-                              <input
-                                type="number"
-                                name="week"
-                                placeholder="1–14"
-                                min="1"
-                                max="14"
-                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                required
-                                data-tooltip="Enter week (1–14)"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-xs font-medium">Team</label>
-                              <input
-                                type="text"
-                                name="team"
-                                placeholder="Enter team"
-                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                required
-                              />
-                            </div>
-                            <div>
-                              <label className="text-xs font-medium">Total</label>
-                              <input
-                                type="number"
-                                name="total"
-                                placeholder="Score"
-                                step="0.01"
-                                min="0"
-                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                required
-                                data-tooltip="Enter score (e.g., 150.5)"
-                              />
-                            </div>
-                            <button 
-                              type="submit" 
-                              className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                            >
-                              Add Score
-                            </button>
-                          </form>
-                        )}
-                      </div>
+                      </form>
                     )}
                     {prizes[selectedYear].weeklyHighScores.length > 0 ? (
                       <div className="table-container">
@@ -954,19 +834,56 @@
                           <tbody>
                             {prizes[selectedYear].weeklyHighScores.map((score, index) => (
                               <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">{score.week}</td>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">{score.team}</td>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">{score.total}</td>
+                                <td className="border border-gray-300 p-0.5 sm:p-1">
+                                  {isAdminAuthenticated ? (
+                                    <input
+                                      type="number"
+                                      value={score.week}
+                                      onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'week', e.target.value)}
+                                      min="1"
+                                      max="14"
+                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    />
+                                  ) : (
+                                    score.week
+                                  )}
+                                </td>
+                                <td className="border border-gray-300 p-0.5 sm:p-1">
+                                  {isAdminAuthenticated ? (
+                                    <input
+                                      type="text"
+                                      value={score.team}
+                                      onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
+                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    />
+                                  ) : (
+                                    score.team
+                                  )}
+                                </td>
+                                <td className="border border-gray-300 p-0.5 sm:p-1">
+                                  {isAdminAuthenticated ? (
+                                    <input
+                                      type="number"
+                                      value={score.total}
+                                      onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
+                                      step="0.01"
+                                      min="0"
+                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    />
+                                  ) : (
+                                    score.total
+                                  )}
+                                </td>
                                 {isAdminAuthenticated && (
                                   <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
                                     <button
-                                      onClick={() => setModalState({ isOpen: true, type: 'editWeeklyScore', data: { index, score } })}
-                                      className="text-blue-500 hover:text-blue-700 text-xs mr-2"
-                                    >
-                                      Edit
-                                    </button>
-                                    <button
-                                      onClick={() => setModalState({ isOpen: true, type: 'deleteWeeklyScore', data: { index } })}
+                                      onClick={() => {
+                                        const updatedPrizes = { ...prizes };
+                                        updatedPrizes[selectedYear].weeklyHighScores = updatedPrizes[selectedYear].weeklyHighScores.filter((_, i) => i !== index);
+                                        updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'delete', index).then(result => {
+                                          if (result) setPrizes(updatedPrizes);
+                                        });
+                                      }}
                                       className="text-red-500 hover:text-red-700 text-xs"
                                     >
                                       Delete
@@ -985,57 +902,73 @@
                   <div className="flex-1">
                     <h3 className="text-base sm:text-lg font-semibold mb-1">Survivor</h3>
                     {isAdminAuthenticated && (
-                      <div className="mb-3">
+                      <form onSubmit={(e) => {
+                        e.preventDefault();
+                        const week = parseInt(e.target.week.value) || 0;
+                        const type = e.target.type.value;
+                        const team = e.target.team.value;
+                        if (type === 'eliminated' && (week < 1 || week > 12)) {
+                          alert('Week must be between 1 and 12 for eliminations.');
+                          return;
+                        }
+                        if (prizes[selectedYear].survivor.some(entry => entry.week === week || (entry.winner && type === 'winner'))) {
+                          alert(`Week or Winner already exists for ${selectedYear} Survivor.`);
+                          return;
+                        }
+                        const newEntry = type === 'winner' ? { winner: team } : { week, eliminated: team };
+                        const updatedPrizes = {
+                          ...prizes,
+                          [selectedYear]: {
+                            ...prizes[selectedYear],
+                            survivor: [...prizes[selectedYear].survivor, newEntry].sort((a, b) => (a.week || 999) - (b.week || 999))
+                          }
+                        };
+                        updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update').then(result => {
+                          if (result) {
+                            setPrizes(updatedPrizes);
+                            e.target.reset();
+                          }
+                        });
+                      }} className="space-y-2 max-w-xs mb-3">
+                        <div>
+                          <label className="text-xs font-medium">Week</label>
+                          <input
+                            type="number"
+                            name="week"
+                            placeholder="1–12 or blank"
+                            min="1"
+                            max="12"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium">Type</label>
+                          <select
+                            name="type"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            required
+                          >
+                            <option value="eliminated">Eliminated</option>
+                            <option value="winner">Winner</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium">Team</label>
+                          <input
+                            type="text"
+                            name="team"
+                            placeholder="Enter team"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            required
+                          />
+                        </div>
                         <button 
-                          onClick={() => toggleForm('survivor')} 
-                          className="form-toggle text-sm text-teal-500 hover:text-teal-600 mb-2"
+                          type="submit" 
+                          className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                         >
-                          {formVisibility.survivor ? 'Hide Add Survivor' : 'Show Add Survivor'}
+                          Add Survivor
                         </button>
-                        {formVisibility.survivor && (
-                          <form onSubmit={handleAddSurvivor} className="space-y-2 max-w-xs">
-                            <div>
-                              <label className="text-xs font-medium">Week</label>
-                              <input
-                                type="number"
-                                name="week"
-                                placeholder="1–12 or blank"
-                                min="1"
-                                max="12"
-                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                data-tooltip="Enter 1–12 for eliminations, blank for winner"
-                              />
-                            </div>
-                            <div>
-                              <label className="text-xs font-medium">Type</label>
-                              <select
-                                name="type"
-                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                required
-                              >
-                                <option value="eliminated">Eliminated</option>
-                                <option value="winner">Winner</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label className="text-xs font-medium">Team</label>
-                              <input
-                                type="text"
-                                name="team"
-                                placeholder="Enter team"
-                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                required
-                              />
-                            </div>
-                            <button 
-                              type="submit" 
-                              className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                            >
-                              Add Survivor
-                            </button>
-                          </form>
-                        )}
-                      </div>
+                      </form>
                     )}
                     {prizes[selectedYear].survivor.length > 0 ? (
                       <div className="table-container">
@@ -1050,19 +983,51 @@
                           <tbody>
                             {prizes[selectedYear].survivor.map((entry, index) => (
                               <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">{entry.week || (entry.winner && 'Winner')}</td>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">{entry.eliminated || entry.winner}</td>
+                                <td className="border border-gray-300 p-0.5 sm:p-1">
+                                  {isAdminAuthenticated ? (
+                                    <input
+                                      type="number"
+                                      value={entry.week || ''}
+                                      onChange={(e) => handleSurvivorChange(selectedYear, index, 'week', e.target.value)}
+                                      min="1"
+                                      max="12"
+                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    />
+                                  ) : (
+                                    entry.week || (entry.winner && 'Winner')
+                                  )}
+                                </td>
+                                <td className="border border-gray-300 p-0.5 sm:p-1">
+                                  {isAdminAuthenticated ? (
+                                    <input
+                                      type="text"
+                                      value={entry.eliminated || entry.winner}
+                                      onChange={(e) => handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
+                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    />
+                                  ) : (
+                                    entry.eliminated || entry.winner
+                                  )}
+                                </td>
                                 {isAdminAuthenticated && (
                                   <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                    <button
-                                      onClick={() => setModalState({ isOpen: true, type: 'editSurvivor', data: { index, entry } })}
-                                      className="text-blue-500 hover:text-blue-700 text-xs mr-2"
+                                    <select
+                                      value={entry.winner ? 'winner' : 'eliminated'}
+                                      onChange={(e) => handleSurvivorChange(selectedYear, index, 'type', e.target.value)}
+                                      className="p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
                                     >
-                                      Edit
-                                    </button>
+                                      <option value="eliminated">Eliminated</option>
+                                      <option value="winner">Winner</option>
+                                    </select>
                                     <button
-                                      onClick={() => setModalState({ isOpen: true, type: 'deleteSurvivor', data: { index } })}
-                                      className="text-red-500 hover:text-red-700 text-xs"
+                                      onClick={() => {
+                                        const updatedPrizes = { ...prizes };
+                                        updatedPrizes[selectedYear].survivor = updatedPrizes[selectedYear].survivor.filter((_, i) => i !== index);
+                                        updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'delete', index).then(result => {
+                                          if (result) setPrizes(updatedPrizes);
+                                        });
+                                      }}
+                                      className="text-red-500 hover:text-red-700 text-xs ml-2"
                                     >
                                       Delete
                                     </button>
@@ -1108,317 +1073,22 @@
             <Modal
               isOpen={modalState.isOpen}
               onClose={() => setModalState({ isOpen: false, type: '', data: null })}
-              title={
-                modalState.type === 'editPayout' ? 'Edit Payout' :
-                modalState.type === 'deletePayout' ? 'Delete Payout' :
-                modalState.type === 'editKeeper' ? 'Edit Keeper' :
-                modalState.type === 'deleteKeeper' ? 'Delete Keeper' :
-                modalState.type === 'editWeeklyScore' ? 'Edit Weekly High Score' :
-                modalState.type === 'deleteWeeklyScore' ? 'Delete Weekly High Score' :
-                modalState.type === 'editSurvivor' ? 'Edit Survivor Entry' :
-                modalState.type === 'deleteSurvivor' ? 'Delete Survivor Entry' :
-                modalState.type === 'editRule' ? 'Edit Rule' :
-                modalState.type === 'deleteRule' ? 'Delete Rule' :
-                modalState.type === 'deleteSection' ? 'Delete Section' : ''
-              }
+              title={modalState.type === 'deleteRule' ? 'Delete Rule' : 'Delete Section'}
             >
-              {modalState.type === 'editPayout' && (
-                <form onSubmit={(e) => handleEditPayout(e, modalState.data.index)} className="space-y-2">
-                  <div>
-                    <label className="text-xs font-medium">Category</label>
-                    <input
-                      type="text"
-                      name="category"
-                      defaultValue={modalState.data.payout.category}
-                      placeholder="Enter category"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium">Percentage</label>
-                    <input
-                      type="number"
-                      name="percentage"
-                      defaultValue={modalState.data.payout.percentage}
-                      placeholder="e.g., 0.5"
-                      step="0.01"
-                      min="0"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      required
-                      data-tooltip="Enter as decimal (e.g., 0.5 for 50%)"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium">Prize ($)</label>
-                    <input
-                      type="number"
-                      name="prize"
-                      defaultValue={modalState.data.payout.prize}
-                      placeholder="Enter prize"
-                      min="0"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      required
-                    />
-                  </div>
-                  <button 
-                    type="submit" 
-                    className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                  >
-                    Save
-                  </button>
-                </form>
-              )}
-              {modalState.type === 'deletePayout' && (
-                <div>
-                  <p className="text-sm mb-2">Are you sure you want to delete this payout?</p>
-                  <button 
-                    onClick={() => handleDeletePayout(modalState.data.index)} 
-                    className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-              {modalState.type === 'editKeeper' && (
-                <form onSubmit={(e) => handleEditKeeper(e, modalState.data.index)} className="space-y-2">
-                  <div>
-                    <label className="text-xs font-medium">Team</label>
-                    <input
-                      type="text"
-                      name="team"
-                      defaultValue={modalState.data.keeper.team}
-                      placeholder="Enter team"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium">Keeper #1</label>
-                    <input
-                      type="text"
-                      name="keeper1"
-                      defaultValue={modalState.data.keeper.keeper1}
-                      placeholder="Player name"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium">Draft Cost #1</label>
-                    <input
-                      type="number"
-                      name="draftCost1"
-                      defaultValue={modalState.data.keeper.draftCost1}
-                      placeholder="Cost"
-                      step="0.1"
-                      min="0"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      data-tooltip="Enter cost (e.g., 10.5)"
-                    />
-                  </div>
-                  <label className="flex items-center space-x-1">
-                    <input type="checkbox" name="tag1" defaultChecked={modalState.data.keeper.tag1} className="h-3 w-3 text-teal-500 focus:ring-teal-500" />
-                    <span className="text-xs">Tag #1</span>
-                  </label>
-                  <div>
-                    <label className="text-xs font-medium">Keeper #2</label>
-                    <input
-                      type="text"
-                      name="keeper2"
-                      defaultValue={modalState.data.keeper.keeper2}
-                      placeholder="Player name"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium">Draft Cost #2</label>
-                    <input
-                      type="number"
-                      name="draftCost2"
-                      defaultValue={modalState.data.keeper.draftCost2}
-                      placeholder="Cost"
-                      step="0.1"
-                      min="0"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      data-tooltip="Enter cost (e.g., 10.5)"
-                    />
-                  </div>
-                  <label className="flex items-center space-x-1">
-                    <input type="checkbox" name="tag2" defaultChecked={modalState.data.keeper.tag2} className="h-3 w-3 text-teal-500 focus:ring-teal-500" />
-                    <span className="text-xs">Tag #2</span>
-                  </label>
-                  <button 
-                    type="submit" 
-                    className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                  >
-                    Save
-                  </button>
-                </form>
-              )}
-              {modalState.type === 'deleteKeeper' && (
-                <div>
-                  <p className="text-sm mb-2">Are you sure you want to delete this keeper?</p>
-                  <button 
-                    onClick={() => handleDeleteKeeper(modalState.data.index)} 
-                    className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-              {modalState.type === 'editWeeklyScore' && (
-                <form onSubmit={(e) => handleEditWeeklyScore(e, modalState.data.index)} className="space-y-2">
-                  <div>
-                    <label className="text-xs font-medium">Week</label>
-                    <input
-                      type="number"
-                      name="week"
-                      defaultValue={modalState.data.score.week}
-                      placeholder="1–14"
-                      min="1"
-                      max="14"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      required
-                      data-tooltip="Enter week (1–14)"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium">Team</label>
-                    <input
-                      type="text"
-                      name="team"
-                      defaultValue={modalState.data.score.team}
-                      placeholder="Enter team"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium">Total</label>
-                    <input
-                      type="number"
-                      name="total"
-                      defaultValue={modalState.data.score.total}
-                      placeholder="Score"
-                      step="0.01"
-                      min="0"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      required
-                      data-tooltip="Enter score (e.g., 150.5)"
-                    />
-                  </div>
-                  <button 
-                    type="submit" 
-                    className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                  >
-                    Save
-                  </button>
-                </form>
-              )}
-              {modalState.type === 'deleteWeeklyScore' && (
-                <div>
-                  <p className="text-sm mb-2">Are you sure you want to delete this weekly high score?</p>
-                  <button 
-                    onClick={() => handleDeleteWeeklyScore(modalState.data.index)} 
-                    className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-teal-600 transition-all"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-              {modalState.type === 'editSurvivor' && (
-                <form onSubmit={(e) => handleEditSurvivor(e, modalState.data.index)} className="space-y-2">
-                  <div>
-                    <label className="text-xs font-medium">Week</label>
-                    <input
-                      type="number"
-                      name="week"
-                      defaultValue={modalState.data.entry.week || ''}
-                      placeholder="1–12 or blank"
-                      min="1"
-                      max="12"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      data-tooltip="Enter 1–12 for eliminations, blank for winner"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium">Type</label>
-                    <select
-                      name="type"
-                      defaultValue={modalState.data.entry.winner ? 'winner' : 'eliminated'}
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      required
-                    >
-                      <option value="eliminated">Eliminated</option>
-                      <option value="winner">Winner</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium">Team</label>
-                    <input
-                      type="text"
-                      name="team"
-                      defaultValue={modalState.data.entry.eliminated || modalState.data.entry.winner}
-                      placeholder="Enter team"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      required
-                    />
-                  </div>
-                  <button 
-                    type="submit" 
-                    className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                  >
-                    Save
-                  </button>
-                </form>
-              )}
-              {modalState.type === 'deleteSurvivor' && (
-                <div>
-                  <p className="text-sm mb-2">Are you sure you want to delete this survivor entry?</p>
-                  <button 
-                    onClick={() => handleDeleteSurvivor(modalState.data.index)} 
-                    className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-              {modalState.type === 'editRule' && (
-                <form onSubmit={(e) => handleEditRuleItem(e, modalState.data.sectionIndex, modalState.data.itemIndex)} className="space-y-2">
-                  <div>
-                    <label className="text-xs font-medium">Rule Text</label>
-                    <input
-                      type="text"
-                      name="text"
-                      defaultValue={typeof modalState.data.item === 'string' ? modalState.data.item : modalState.data.item.text}
-                      placeholder="Enter rule"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs font-medium">Sub-items (one per line)</label>
-                    <textarea
-                      name="subItems"
-                      defaultValue={typeof modalState.data.item === 'string' ? '' : modalState.data.item.subItems.join('\n')}
-                      placeholder="Enter sub-items"
-                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      rows="2"
-                    />
-                  </div>
-                  <button 
-                    type="submit" 
-                    className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                  >
-                    Save
-                  </button>
-                </form>
-              )}
               {modalState.type === 'deleteRule' && (
                 <div>
                   <p className="text-sm mb-2">Are you sure you want to delete this rule?</p>
                   <button 
-                    onClick={() => handleDeleteRuleItem(modalState.data.sectionIndex, modalState.data.itemIndex)} 
+                    onClick={() => {
+                      const updatedRules = { ...rules };
+                      updatedRules.sections[modalState.data.sectionIndex].items.splice(modalState.data.itemIndex, 1);
+                      updateData('rules.json', updatedRules, 'delete', { sectionIndex: modalState.data.sectionIndex, itemIndex: modalState.data.itemIndex }).then(result => {
+                        if (result) {
+                          setRules(updatedRules);
+                          setModalState({ isOpen: false, type: '', data: null });
+                        }
+                      });
+                    }} 
                     className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
                   >
                     Delete
@@ -1429,7 +1099,16 @@
                 <div>
                   <p className="text-sm mb-2">Are you sure you want to delete this section?</p>
                   <button 
-                    onClick={() => handleDeleteRuleSection(modalState.data.sectionIndex)} 
+                    onClick={() => {
+                      const updatedRules = { ...rules };
+                      updatedRules.sections.splice(modalState.data.sectionIndex, 1);
+                      updateData('rules.json', updatedRules, 'delete', modalState.data.sectionIndex).then(result => {
+                        if (result) {
+                          setRules(updatedRules);
+                          setModalState({ isOpen: false, type: '', data: null });
+                        }
+                      });
+                    }} 
                     className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
                   >
                     Delete

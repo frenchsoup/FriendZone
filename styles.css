@@ -40,25 +40,23 @@ nav a:hover, nav button:hover {
   z-index: 100;
 }
 
-.tooltip {
-  position: relative;
+input, select, textarea {
+  transition: all 0.2s ease-in-out;
 }
 
-.tooltip:hover::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #1f2937;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-  white-space: nowrap;
-  z-index: 10;
+input:focus, select:focus, textarea:focus {
+  box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.3);
 }
 
-.form-toggle {
-  cursor: pointer;
+input:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.lock-button {
+  transition: all 0.2s ease-in-out;
+}
+
+.lock-button:hover {
+  transform: scale(1.05);
 }

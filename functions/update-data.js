@@ -5,20 +5,15 @@ async function loadOctokit() {
 
 exports.handler = async function (event, context) {
   try {
-    // Parse the incoming request body
     const { file, data, action, index } = JSON.parse(event.body);
-
-    // Load Octokit dynamically
     const Octokit = await loadOctokit();
     const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
-    // Define repository details
     const repoOwner = 'frenchsoup';
     const repoName = 'FriendZone';
     const branch = 'main';
     const path = `data/${file}`;
 
-    // Fetch current file content from GitHub
     let currentContent;
     let sha;
     try {
@@ -32,13 +27,12 @@ exports.handler = async function (event, context) {
       sha = fileData.sha;
     } catch (error) {
       if (error.status === 404) {
-        currentContent = Array.isArray(data) ? [] : {};
+        currentContent = file === 'locks.json' ? { 2022: false, 2023: false, 2024: false, 2025: false } : Array.isArray(data) ? [] : {};
       } else {
         throw error;
       }
     }
 
-    // Process the action (update or delete)
     let updatedContent;
     if (action === 'update') {
       updatedContent = data;
@@ -58,7 +52,6 @@ exports.handler = async function (event, context) {
       throw new Error('Invalid action');
     }
 
-    // Update the file on GitHub
     const { data: commitData } = await octokit.repos.createOrUpdateFileContents({
       owner: repoOwner,
       repo: repoName,
