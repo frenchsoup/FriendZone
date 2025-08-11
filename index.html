@@ -107,16 +107,23 @@
         }
       };
 
-      // Update data via Netlify function
+      // Update data via Netlify function with added logging
       const updateData = async (file, data, action, index = null, section = null) => {
+        console.log('Sending request to update-data:', { file, data, action, index, section });
         try {
           const res = await fetch('/.netlify/functions/update-data', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ file, data, action, index, section })
           });
-          if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-          return await res.json();
+          if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Response error from update-data:', { status: res.status, errorText });
+            throw new Error(`HTTP ${res.status}: ${errorText}`);
+          }
+          const result = await res.json();
+          console.log('Response from update-data:', result);
+          return result;
         } catch (err) {
           console.error('Error updating data:', err);
           alert('Failed to update data. Please try again.');
