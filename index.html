@@ -28,9 +28,9 @@
       if (!isOpen) return null;
       return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal">
-          <div className="bg-white text-gray-800 rounded-lg p-3 max-w-sm w-full">
+          <div className="bg-white text-gray-800 rounded-lg p-2 sm:p-3 max-w-sm w-full">
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-base font-semibold">{title}</h3>
+              <h3 className="text-sm sm:text-base font-semibold">{title}</h3>
               <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-lg">&times;</button>
             </div>
             {children}
@@ -339,10 +339,10 @@
               </div>
             )}
             {currentTab === 'rules' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
-                <h2 className="text-lg sm:text-xl font-bold mb-2">Rules</h2>
+              <div className="space-y-3">
+                <h2 className="text-lg sm:text-xl font-bold text-white">Rules</h2>
                 {isAdminAuthenticated && (
-                  <div className="mb-3">
+                  <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3 mb-3">
                     <form onSubmit={(e) => {
                       e.preventDefault();
                       const title = e.target.title.value;
@@ -378,11 +378,11 @@
                   </div>
                 )}
                 {rules.sections.length > 0 ? (
-                  <div className="text-sm sm:text-base space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {rules.sections.map((section, sectionIndex) => (
-                      <div key={sectionIndex}>
-                        <div className="flex justify-between items-center">
-                          <h3 className="text-base sm:text-lg font-semibold text-teal-600 mb-1">{section.title}</h3>
+                      <div key={sectionIndex} className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
+                        <div className="flex justify-between items-center mb-2">
+                          <h3 className="text-sm sm:text-base font-semibold text-teal-600">{section.title}</h3>
                           {isAdminAuthenticated && (
                             <button
                               onClick={() => setModalState({ isOpen: true, type: 'deleteSection', data: { sectionIndex } })}
@@ -406,7 +406,7 @@
                                 e.target.reset();
                               }
                             });
-                          }} className="space-y-2 max-w-xs mt-2">
+                          }} className="space-y-2 max-w-xs mt-2 mb-3">
                             <div>
                               <label className="text-xs font-medium">Rule Text</label>
                               <input
@@ -434,7 +434,7 @@
                             </button>
                           </form>
                         )}
-                        <ul className="list-disc pl-5 space-y-1">
+                        <ul className="list-disc pl-5 space-y-1 text-sm sm:text-base">
                           {section.items.map((item, itemIndex) => (
                             <li key={itemIndex} className="flex justify-between items-start">
                               <div>
@@ -472,7 +472,7 @@
                                           />
                                         ) : (
                                           item.subItems.map((subItem, subIndex) => (
-                                            <li key={subIndex} className="text-xs">{subItem}</li>
+                                            <li key={subIndex} className="text-xs sm:text-sm">{subItem}</li>
                                           ))
                                         )}
                                       </ul>
@@ -497,12 +497,14 @@
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs sm:text-sm">No rules data available.</p>
+                  <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
+                    <p className="text-xs sm:text-sm">No rules data available.</p>
+                  </div>
                 )}
               </div>
             )}
             {currentTab === 'payouts' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Payouts</h2>
                 {isAdminAuthenticated && (
                   <div className="mb-3">
@@ -534,7 +536,7 @@
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-medium">Percentage</label>
+                        <label className="text-xs font-medium">Pot %</label>
                         <input
                           type="number"
                           name="percentage"
@@ -571,7 +573,7 @@
                       <thead>
                         <tr className="bg-gray-100">
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Category</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">%</th>
+                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Pot %</th>
                           <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Prize</th>
                           {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
                         </tr>
@@ -644,7 +646,7 @@
               </div>
             )}
             {currentTab === 'keepers' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Keepers</h2>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {['2022', '2023', '2024', '2025'].map(year => (
@@ -787,7 +789,7 @@
               </div>
             )}
             {currentTab === 'prizes' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Prizes</h2>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {['2023', '2024', '2025'].map(year => (
@@ -1099,7 +1101,7 @@
               </div>
             )}
             {currentTab === 'admin' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
+              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
                 <h2 className="text-lg sm:text-xl font-bold mb-2">Admin Login</h2>
                 <div className="max-w-xs mx-auto">
                   <form onSubmit={handleAdminLogin} className="space-y-2">
