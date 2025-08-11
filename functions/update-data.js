@@ -11,6 +11,7 @@ exports.handler = async (event) => {
     // Log directory contents for debugging
     const rootDir = path.join(__dirname, '..');
     const dataDir = path.join(__dirname, '..', 'data');
+    console.log('Current __dirname:', __dirname);
     console.log('Root directory contents:', fs.readdirSync(rootDir));
     console.log('Data directory contents:', fs.readdirSync(dataDir));
 
