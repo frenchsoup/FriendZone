@@ -31,7 +31,7 @@
           <div className="bg-white text-gray-800 rounded-lg p-2 sm:p-3 max-w-sm w-full">
             <div className="flex justify-between items-center mb-2">
               <h3 className="text-sm sm:text-base font-semibold">{title}</h3>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-lg">&times;</button>
+              <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-lg">\u00D7</button>
             </div>
             {children}
           </div>
@@ -132,6 +132,14 @@
         }
       };
 
+      // Normalize input to remove leading zeros
+      const normalizeNumberInput = (value) => {
+        if (value === '' || value == null) return '';
+        // Convert to string, remove leading zeros, and ensure valid number
+        const strValue = String(value).replace(/^0+/, '');
+        return strValue === '' ? '0' : strValue;
+      };
+
       // Handle inline keeper updates (store in pendingChanges)
       const handleKeeperChange = (year, index, field, value) => {
         if (locks[year]) return; // No edits if year is locked
@@ -145,7 +153,11 @@
           };
 
           if (field === 'draftCost1' || field === 'tag1') {
-            if (field === 'draftCost1') teamData.draftCost1 = parseFloat(value) || 0;
+            if (field === 'draftCost1') {
+              const normalizedValue = normalizeNumberInput(value);
+              teamData.draftCost1 = normalizedValue === '' ? 0 : parseFloat(normalizedValue) || 0;
+              updatedPending[year][index].draftCost1 = normalizedValue; // Store normalized string for display
+            }
             if (teamData.draftCost1 === 0 && value === true) {
               alert('No player can be kept for $0. Untag or set a draft cost.');
               teamData.tag1 = false;
@@ -155,7 +167,11 @@
             teamData.cost1 = calculateKeeperCost(teamData.draftCost1, teamData.tag1);
           }
           if (field === 'draftCost2' || field === 'tag2') {
-            if (field === 'draftCost2') teamData.draftCost2 = parseFloat(value) || 0;
+            if (field === 'draftCost2') {
+              const normalizedValue = normalizeNumberInput(value);
+              teamData.draftCost2 = normalizedValue === '' ? 0 : parseFloat(normalizedValue) || 0;
+              updatedPending[year][index].draftCost2 = normalizedValue; // Store normalized string for display
+            }
             if (teamData.draftCost2 === 0 && value === true) {
               alert('No player can be kept for $0. Untag or set a draft cost.');
               teamData.tag2 = false;
@@ -332,536 +348,228 @@
             </div>
           </nav>
           <main className="container mx-auto pt-16 sm:pt-4 pb-4 px-3 sm:px-4">
-            {currentTab === 'home' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
-                <h2 className="text-lg sm:text-xl font-bold mb-2">Welcome to FriendZone Fantasy Football</h2>
-                <p className="text-sm sm:text-base">Your longtime fantasy football league, now online! Explore rules, payouts, keepers, and weekly prizes for the 2025 season and beyond.</p>
-              </div>
-            )}
-            {currentTab === 'rules' && (
-              <div className="space-y-3">
-                <h2 className="text-lg sm:text-xl font-bold text-white">Rules</h2>
-                {isAdminAuthenticated && (
-                  <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3 mb-3">
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      const title = e.target.title.value;
-                      if (rules.sections.some(section => section.title === title)) {
-                        alert('Section title already exists.');
-                        return;
-                      }
-                      const updatedRules = { sections: [...rules.sections, { title, items: [] }] };
-                      updateData('rules.json', updatedRules, 'update').then(result => {
-                        if (result) {
-                          setRules(updatedRules);
-                          e.target.reset();
+            <>
+              {currentTab === 'home' && (
+                <div className="card bg-white text-gray-800 rounded-lg shadow-md p-3">
+                  <h2 className="text-lg sm:text-xl font-bold mb-2">Welcome to FriendZone Fantasy Football</h2>
+                  <p className="text-sm sm:text-base">Your longtime fantasy football league, now online! Explore rules, payouts, keepers, and weekly prizes for the 2025 season and beyond.</p>
+                </div>
+              )}
+              {currentTab === 'rules' && (
+                <div className="space-y-3">
+                  <h2 className="text-lg sm:text-xl font-bold text-white">Rules</h2>
+                  {isAdminAuthenticated && (
+                    <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3 mb-3">
+                      <form onSubmit={(e) => {
+                        e.preventDefault();
+                        const title = e.target.title.value;
+                        if (rules.sections.some(section => section.title === title)) {
+                          alert('Section title already exists.');
+                          return;
                         }
-                      });
-                    }} className="space-y-2 max-w-xs">
-                      <div>
-                        <label className="text-xs font-medium">Section Title</label>
-                        <input
-                          type="text"
-                          name="title"
-                          placeholder="Enter section title"
-                          className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                          required
-                        />
-                      </div>
-                      <button 
-                        type="submit" 
-                        className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                      >
-                        Add Section
-                      </button>
-                    </form>
-                  </div>
-                )}
-                {rules.sections.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {rules.sections.map((section, sectionIndex) => (
-                      <div key={sectionIndex} className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
-                        <div className="flex justify-between items-center mb-2">
-                          <h3 className="text-sm sm:text-base font-semibold text-teal-600">{section.title}</h3>
-                          {isAdminAuthenticated && (
-                            <button
-                              onClick={() => setModalState({ isOpen: true, type: 'deleteSection', data: { sectionIndex } })}
-                              className="text-red-500 hover:text-red-700 text-xs"
-                            >
-                              Delete
-                            </button>
-                          )}
+                        const updatedRules = { sections: [...rules.sections, { title, items: [] }] };
+                        updateData('rules.json', updatedRules, 'update').then(result => {
+                          if (result) {
+                            setRules(updatedRules);
+                            e.target.reset();
+                          }
+                        });
+                      }} className="space-y-2 max-w-xs">
+                        <div>
+                          <label className="text-xs font-medium">Section Title</label>
+                          <input
+                            type="text"
+                            name="title"
+                            placeholder="Enter section title"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            required
+                          />
                         </div>
-                        {isAdminAuthenticated && (
-                          <form onSubmit={(e) => {
-                            e.preventDefault();
-                            const text = e.target.text.value;
-                            const subItems = e.target.subItems.value ? e.target.subItems.value.split('\n').filter(item => item.trim()) : [];
-                            const newItem = subItems.length ? { text, subItems } : text;
-                            const updatedRules = { ...rules };
-                            updatedRules.sections[sectionIndex].items.push(newItem);
-                            updateData('rules.json', updatedRules, 'update').then(result => {
-                              if (result) {
-                                setRules(updatedRules);
-                                e.target.reset();
-                              }
-                            });
-                          }} className="space-y-2 max-w-xs mt-2 mb-3">
-                            <div>
-                              <label className="text-xs font-medium">Rule Text</label>
-                              <input
-                                type="text"
-                                name="text"
-                                placeholder="Enter rule"
-                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                required
-                              />
-                            </div>
-                            <div>
-                              <label className="text-xs font-medium">Sub-items (one per line)</label>
-                              <textarea
-                                name="subItems"
-                                placeholder="Enter sub-items"
-                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                rows="2"
-                              />
-                            </div>
-                            <button 
-                              type="submit" 
-                              className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                            >
-                              Add Rule
-                            </button>
-                          </form>
-                        )}
-                        <ul className="list-disc pl-5 space-y-1 text-sm sm:text-base">
-                          {section.items.map((item, itemIndex) => (
-                            <li key={itemIndex} className="flex justify-between items-start">
+                        <button 
+                          type="submit" 
+                          className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                        >
+                          Add Section
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                  {rules.sections.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {rules.sections.map((section, sectionIndex) => (
+                        <div key={sectionIndex} className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
+                          <div className="flex justify-between items-center mb-2">
+                            <h3 className="text-sm sm:text-base font-semibold text-teal-600">{section.title}</h3>
+                            {isAdminAuthenticated && (
+                              <button
+                                onClick={() => setModalState({ isOpen: true, type: 'deleteSection', data: { sectionIndex } })}
+                                className="text-red-500 hover:text-red-700 text-xs"
+                              >
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                          {isAdminAuthenticated && (
+                            <form onSubmit={(e) => {
+                              e.preventDefault();
+                              const text = e.target.text.value;
+                              const subItems = e.target.subItems.value ? e.target.subItems.value.split('\n').filter(item => item.trim()) : [];
+                              const newItem = subItems.length ? { text, subItems } : text;
+                              const updatedRules = { ...rules };
+                              updatedRules.sections[sectionIndex].items.push(newItem);
+                              updateData('rules.json', updatedRules, 'update').then(result => {
+                                if (result) {
+                                  setRules(updatedRules);
+                                  e.target.reset();
+                                }
+                              });
+                            }} className="space-y-2 max-w-xs mt-2 mb-3">
                               <div>
-                                {typeof item === 'string' ? (
-                                  isAdminAuthenticated ? (
-                                    <input
-                                      type="text"
-                                      value={item}
-                                      onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'text', e.target.value)}
-                                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    />
-                                  ) : (
-                                    item
-                                  )
-                                ) : (
-                                  <>
-                                    {isAdminAuthenticated ? (
+                                <label className="text-xs font-medium">Rule Text</label>
+                                <input
+                                  type="text"
+                                  name="text"
+                                  placeholder="Enter rule"
+                                  className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  required
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium">Sub-items (one per line)</label>
+                                <textarea
+                                  name="subItems"
+                                  placeholder="Enter sub-items"
+                                  className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  rows="2"
+                                />
+                              </div>
+                              <button 
+                                type="submit" 
+                                className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                              >
+                                Add Rule
+                              </button>
+                            </form>
+                          )}
+                          <ul className="list-disc pl-5 space-y-1 text-sm sm:text-base">
+                            {section.items.map((item, itemIndex) => (
+                              <li key={itemIndex} className="flex justify-between items-start">
+                                <div>
+                                  {typeof item === 'string' ? (
+                                    isAdminAuthenticated ? (
                                       <input
                                         type="text"
-                                        value={item.text}
+                                        value={item}
                                         onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'text', e.target.value)}
                                         className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
                                       />
                                     ) : (
-                                      item.text
-                                    )}
-                                    {item.subItems && (
-                                      <ul className="list-disc pl-5 mt-1 space-y-1">
-                                        {isAdminAuthenticated ? (
-                                          <textarea
-                                            value={item.subItems.join('\n')}
-                                            onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'subItems', e.target.value)}
-                                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                            rows="2"
-                                          />
-                                        ) : (
-                                          item.subItems.map((subItem, subIndex) => (
-                                            <li key={subIndex} className="text-xs sm:text-sm">{subItem}</li>
-                                          ))
-                                        )}
-                                      </ul>
-                                    )}
-                                  </>
-                                )}
-                              </div>
-                              {isAdminAuthenticated && (
-                                <div className="flex space-x-1">
-                                  <button
-                                    onClick={() => setModalState({ isOpen: true, type: 'deleteRule', data: { sectionIndex, itemIndex } })}
-                                    className="text-red-500 hover:text-red-700 text-xs"
-                                  >
-                                    Delete
-                                  </button>
+                                      item
+                                    )
+                                  ) : (
+                                    <>
+                                      {isAdminAuthenticated ? (
+                                        <input
+                                          type="text"
+                                          value={item.text}
+                                          onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'text', e.target.value)}
+                                          className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                        />
+                                      ) : (
+                                        item.text
+                                      )}
+                                      {item.subItems && (
+                                        <ul className="list-disc pl-5 mt-1 space-y-1">
+                                          {isAdminAuthenticated ? (
+                                            <textarea
+                                              value={item.subItems.join('\n')}
+                                              onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'subItems', e.target.value)}
+                                              className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                              rows="2"
+                                            />
+                                          ) : (
+                                            item.subItems.map((subItem, subIndex) => (
+                                              <li key={subIndex} className="text-xs sm:text-sm">{subItem}</li>
+                                            ))
+                                          )}
+                                        </ul>
+                                      )}
+                                    </>
+                                  )}
                                 </div>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
-                    <p className="text-xs sm:text-sm">No rules data available.</p>
-                  </div>
-                )}
-              </div>
-            )}
-            {currentTab === 'payouts' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
-                <h2 className="text-lg sm:text-xl font-bold mb-2">Payouts</h2>
-                {isAdminAuthenticated && (
-                  <div className="mb-3">
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      const category = e.target.category.value;
-                      const percentage = parseFloat(e.target.percentage.value);
-                      const prize = parseInt(e.target.prize.value);
-                      if (payouts.some(p => p.category === category)) {
-                        alert('Category already exists.');
-                        return;
-                      }
-                      const updatedPayouts = [...payouts, { category, percentage, prize }];
-                      updateData('payouts.json', updatedPayouts, 'update').then(result => {
-                        if (result) {
-                          setPayouts(updatedPayouts);
-                          e.target.reset();
-                        }
-                      });
-                    }} className="space-y-2 max-w-xs">
-                      <div>
-                        <label className="text-xs font-medium">Category</label>
-                        <input
-                          type="text"
-                          name="category"
-                          placeholder="Enter category"
-                          className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium">Pot %</label>
-                        <input
-                          type="number"
-                          name="percentage"
-                          placeholder="e.g., 0.5"
-                          step="0.01"
-                          min="0"
-                          className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium">Prize ($)</label>
-                        <input
-                          type="number"
-                          name="prize"
-                          placeholder="Enter prize"
-                          min="0"
-                          className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                          required
-                        />
-                      </div>
-                      <button 
-                        type="submit" 
-                        className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                      >
-                        Add Payout
-                      </button>
-                    </form>
-                  </div>
-                )}
-                {payouts.length > 0 ? (
-                  <div className="table-container">
-                    <table className="w-full border-collapse text-[10px] sm:text-xs">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Category</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Pot %</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Prize</th>
-                          {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {payouts.map((payout, index) => (
-                          <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                            <td className="border border-gray-300 p-0.5 sm:p-1">
-                              {isAdminAuthenticated ? (
-                                <input
-                                  type="text"
-                                  value={payout.category}
-                                  onChange={(e) => handlePayoutChange(index, 'category', e.target.value)}
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                              ) : (
-                                payout.category
-                              )}
-                            </td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                              {isAdminAuthenticated ? (
-                                <input
-                                  type="number"
-                                  value={payout.percentage}
-                                  onChange={(e) => handlePayoutChange(index, 'percentage', e.target.value)}
-                                  step="0.01"
-                                  min="0"
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                              ) : (
-                                (payout.percentage * 100).toFixed(2)
-                              )}
-                            </td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                              {isAdminAuthenticated ? (
-                                <input
-                                  type="number"
-                                  value={payout.prize}
-                                  onChange={(e) => handlePayoutChange(index, 'prize', e.target.value)}
-                                  min="0"
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                              ) : (
-                                `$${payout.prize}`
-                              )}
-                            </td>
-                            {isAdminAuthenticated && (
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                <button
-                                  onClick={() => {
-                                    const updatedPayouts = payouts.filter((_, i) => i !== index);
-                                    updateData('payouts.json', updatedPayouts, 'delete', index).then(result => {
-                                      if (result) setPayouts(updatedPayouts);
-                                    });
-                                  }}
-                                  className="text-red-500 hover:text-red-700 text-xs"
-                                >
-                                  Delete
-                                </button>
-                              </td>
-                            )}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="text-xs sm:text-sm">No payouts data available.</p>
-                )}
-              </div>
-            )}
-            {currentTab === 'keepers' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
-                <h2 className="text-lg sm:text-xl font-bold mb-2">Keepers</h2>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {['2022', '2023', '2024', '2025'].map(year => (
-                    <button
-                      key={year}
-                      className={`px-2 py-1 text-xs sm:text-sm rounded ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
-                      onClick={() => {
-                        setSelectedYear(year);
-                        initializeKeepers(year);
-                      }}
-                    >
-                      {year}
-                    </button>
-                  ))}
+                                {isAdminAuthenticated && (
+                                  <div className="flex space-x-1">
+                                    <button
+                                      onClick={() => setModalState({ isOpen: true, type: 'deleteRule', data: { sectionIndex, itemIndex } })}
+                                      className="text-red-500 hover:text-red-700 text-xs"
+                                    >
+                                      Delete
+                                    </button>
+                                  </div>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
+                      <p className="text-xs sm:text-sm">No rules data available.</p>
+                    </div>
+                  )}
                 </div>
-                {isAdminAuthenticated && (
-                  <div className="mb-2">
-                    <button
-                      onClick={() => handleToggleLock(selectedYear)}
-                      className={`px-2 py-1 text-xs sm:text-sm rounded lock-button ${locks[selectedYear] ? 'bg-red-500 text-white' : 'bg-teal-500 text-white'}`}
-                    >
-                      {locks[selectedYear] ? `Unlock ${selectedYear}` : `Lock ${selectedYear}`}
-                    </button>
-                  </div>
-                )}
-                {keepers[selectedYear].length > 0 ? (
-                  <div className="table-container">
-                    <table className="w-full border-collapse text-[10px] sm:text-xs">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Team</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K1</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K1 $</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Tag</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K1 Cost</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K2</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K2 $</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Tag</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K2 Cost</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Auction $</th>
-                          {!locks[selectedYear] && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {keepers[selectedYear].map((keeper, index) => {
-                          const pending = pendingChanges[selectedYear][index] || {};
-                          const displayData = { ...keeper, ...pending };
-                          return (
-                            <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                              <td className="border border-gray-300 p-0.5 sm:p-1">
-                                <input
-                                  type="text"
-                                  value={displayData.team}
-                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'team', e.target.value)}
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                  disabled={locks[selectedYear]}
-                                />
-                              </td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1">
-                                <input
-                                  type="text"
-                                  value={displayData.keeper1}
-                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper1', e.target.value)}
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                  disabled={locks[selectedYear]}
-                                />
-                              </td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                <input
-                                  type="number"
-                                  value={displayData.draftCost1}
-                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', parseFloat(e.target.value) || 0)}
-                                  step="1"
-                                  min="0"
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                  disabled={locks[selectedYear]}
-                                />
-                              </td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={displayData.tag1}
-                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'tag1', e.target.checked)}
-                                  className="h-3 w-3 text-teal-500 focus:ring-teal-500"
-                                  disabled={locks[selectedYear]}
-                                />
-                              </td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{displayData.cost1}</td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1">
-                                <input
-                                  type="text"
-                                  value={displayData.keeper2}
-                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper2', e.target.value)}
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                  disabled={locks[selectedYear]}
-                                />
-                              </td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                <input
-                                  type="number"
-                                  value={displayData.draftCost2}
-                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', parseFloat(e.target.value) || 0)}
-                                  step="1"
-                                  min="0"
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                  disabled={locks[selectedYear]}
-                                />
-                              </td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={displayData.tag2}
-                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'tag2', e.target.checked)}
-                                  className="h-3 w-3 text-teal-500 focus:ring-teal-500"
-                                  disabled={locks[selectedYear]}
-                                />
-                              </td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{displayData.cost2}</td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{displayData.remaining}</td>
-                              {!locks[selectedYear] && (
-                                <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                  <button
-                                    onClick={() => handleSaveRow(selectedYear, index)}
-                                    className="px-2 py-0.5 text-[10px] sm:text-xs bg-teal-500 text-white rounded hover:bg-teal-600 transition-all disabled:bg-gray-400"
-                                    disabled={!pendingChanges[selectedYear][index]}
-                                  >
-                                    Save
-                                  </button>
-                                </td>
-                              )}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="text-xs sm:text-sm">Loading keepers for {selectedYear}...</p>
-                )}
-              </div>
-            )}
-            {currentTab === 'prizes' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
-                <h2 className="text-lg sm:text-xl font-bold mb-2">Prizes</h2>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {['2023', '2024', '2025'].map(year => (
-                    <button
-                      key={year}
-                      className={`px-2 py-1 text-xs sm:text-sm rounded ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
-                      onClick={() => setSelectedYear(year)}
-                    >
-                      {year}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex flex-col lg:flex-row lg:space-x-2">
-                  <div className="flex-1 mb-2 lg:mb-0">
-                    <h3 className="text-base sm:text-lg font-semibold mb-1">Weekly High Scores</h3>
-                    {isAdminAuthenticated && (
+              )}
+              {currentTab === 'payouts' && (
+                <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
+                  <h2 className="text-lg sm:text-xl font-bold mb-2">Payouts</h2>
+                  {isAdminAuthenticated && (
+                    <div className="mb-3">
                       <form onSubmit={(e) => {
                         e.preventDefault();
-                        const week = parseInt(e.target.week.value);
-                        const team = e.target.team.value;
-                        const total = parseFloat(e.target.total.value);
-                        if (week < 1 || week > 14) {
-                          alert('Week must be between 1 and 14.');
+                        const category = e.target.category.value;
+                        const percentage = parseFloat(e.target.percentage.value);
+                        const prize = parseInt(e.target.prize.value);
+                        if (payouts.some(p => p.category === category)) {
+                          alert('Category already exists.');
                           return;
                         }
-                        if (prizes[selectedYear].weeklyHighScores.some(score => score.week === week)) {
-                          alert(`Week already exists for ${selectedYear} Weekly High Scores.`);
-                          return;
-                        }
-                        const updatedPrizes = {
-                          ...prizes,
-                          [selectedYear]: {
-                            ...prizes[selectedYear],
-                            weeklyHighScores: [...prizes[selectedYear].weeklyHighScores, { week, team, total }].sort((a, b) => a.week - b.week)
-                          }
-                        };
-                        updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update').then(result => {
+                        const updatedPayouts = [...payouts, { category, percentage, prize }];
+                        updateData('payouts.json', updatedPayouts, 'update').then(result => {
                           if (result) {
-                            setPrizes(updatedPrizes);
+                            setPayouts(updatedPayouts);
                             e.target.reset();
                           }
                         });
-                      }} className="space-y-2 max-w-xs mb-3">
+                      }} className="space-y-2 max-w-xs">
                         <div>
-                          <label className="text-xs font-medium">Week</label>
-                          <input
-                            type="number"
-                            name="week"
-                            placeholder="1–14"
-                            min="1"
-                            max="14"
-                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                            required
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium">Team</label>
+                          <label className="text-xs font-medium">Category</label>
                           <input
                             type="text"
-                            name="team"
-                            placeholder="Enter team"
+                            name="category"
+                            placeholder="Enter category"
                             className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
                             required
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-medium">Total</label>
+                          <label className="text-xs font-medium">Pot %</label>
                           <input
                             type="number"
-                            name="total"
-                            placeholder="Score"
+                            name="percentage"
+                            placeholder="e.g., 0.5"
                             step="0.01"
+                            min="0"
+                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium">Prize ($)</label>
+                          <input
+                            type="number"
+                            name="prize"
+                            placeholder="Enter prize"
                             min="0"
                             className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
                             required
@@ -871,306 +579,618 @@
                           type="submit" 
                           className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                         >
-                          Add Score
+                          Add Payout
                         </button>
                       </form>
-                    )}
-                    {prizes[selectedYear].weeklyHighScores.length > 0 ? (
-                      <div className="table-container">
-                        <table className="w-full border-collapse text-[10px] sm:text-xs">
-                          <thead>
-                            <tr className="bg-gray-100">
-                              <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Week</th>
-                              <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Team</th>
-                              <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Total</th>
-                              {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
+                    </div>
+                  )}
+                  {payouts.length > 0 ? (
+                    <div className="table-container">
+                      <table className="w-full border-collapse text-[10px] sm:text-xs">
+                        <thead>
+                          <tr className="bg-gray-100">
+                            <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Category</th>
+                            <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Pot %</th>
+                            <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Prize</th>
+                            {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {payouts.map((payout, index) => (
+                            <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
+                              <td className="border border-gray-300 p-0.5 sm:p-1">
+                                {isAdminAuthenticated ? (
+                                  <input
+                                    type="text"
+                                    value={payout.category}
+                                    onChange={(e) => handlePayoutChange(index, 'category', e.target.value)}
+                                    className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  />
+                                ) : (
+                                  payout.category
+                                )}
+                              </td>
+                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                {isAdminAuthenticated ? (
+                                  <input
+                                    type="number"
+                                    value={payout.percentage}
+                                    onChange={(e) => handlePayoutChange(index, 'percentage', e.target.value)}
+                                    step="0.01"
+                                    min="0"
+                                    className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  />
+                                ) : (
+                                  (payout.percentage * 100).toFixed(2)
+                                )}
+                              </td>
+                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                {isAdminAuthenticated ? (
+                                  <input
+                                    type="number"
+                                    value={payout.prize}
+                                    onChange={(e) => handlePayoutChange(index, 'prize', e.target.value)}
+                                    min="0"
+                                    className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                  />
+                                ) : (
+                                  `$${payout.prize}`
+                                )}
+                              </td>
+                              {isAdminAuthenticated && (
+                                <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                  <button
+                                    onClick={() => {
+                                      const updatedPayouts = payouts.filter((_, i) => i !== index);
+                                      updateData('payouts.json', updatedPayouts, 'delete', index).then(result => {
+                                        if (result) setPayouts(updatedPayouts);
+                                      });
+                                    }}
+                                    className="text-red-500 hover:text-red-700 text-xs"
+                                  >
+                                    Delete
+                                  </button>
+                                </td>
+                              )}
                             </tr>
-                          </thead>
-                          <tbody>
-                            {prizes[selectedYear].weeklyHighScores.map((score, index) => (
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-xs sm:text-sm">No payouts data available.</p>
+                  )}
+                </div>
+              )}
+              {currentTab === 'keepers' && (
+                <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
+                  <h2 className="text-lg sm:text-xl font-bold mb-2">Keepers</h2>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {['2022', '2023', '2024', '2025'].map(year => (
+                      <button
+                        key={year}
+                        className={`px-2 py-1 text-xs sm:text-sm rounded ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                        onClick={() => {
+                          setSelectedYear(year);
+                          initializeKeepers(year);
+                        }}
+                      >
+                        {year}
+                      </button>
+                    ))}
+                  </div>
+                  {isAdminAuthenticated && (
+                    <div className="mb-2">
+                      <button
+                        onClick={() => handleToggleLock(selectedYear)}
+                        className={`px-2 py-1 text-xs sm:text-sm rounded lock-button ${locks[selectedYear] ? 'bg-red-500 text-white' : 'bg-teal-500 text-white'}`}
+                      >
+                        {locks[selectedYear] ? `Unlock ${selectedYear}` : `Lock ${selectedYear}`}
+                      </button>
+                    </div>
+                  )}
+                  {keepers[selectedYear].length > 0 ? (
+                    <div className="table-container">
+                      <table className="w-full border-collapse text-[10px] sm:text-xs">
+                        <thead>
+                          <tr className="bg-gray-100">
+                            <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Team</th>
+                            <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K1</th>
+                            <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K1 $</th>
+                            <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Tag</th>
+                            <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K1 Cost</th>
+                            <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K2</th>
+                            <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K2 $</th>
+                            <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Tag</th>
+                            <th className="border border-gray-300 p-0.5 sm:p-1 text-center">K2 Cost</th>
+                            <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Auction $</th>
+                            {!locks[selectedYear] && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {keepers[selectedYear].map((keeper, index) => {
+                            const pending = pendingChanges[selectedYear][index] || {};
+                            const displayData = { ...keeper, ...pending };
+                            return (
                               <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
                                 <td className="border border-gray-300 p-0.5 sm:p-1">
-                                  {isAdminAuthenticated ? (
-                                    <input
-                                      type="number"
-                                      value={score.week}
-                                      onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'week', e.target.value)}
-                                      min="1"
-                                      max="14"
-                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    />
-                                  ) : (
-                                    score.week
-                                  )}
+                                  <input
+                                    type="text"
+                                    value={displayData.team}
+                                    onChange={(e) => handleKeeperChange(selectedYear, index, 'team', e.target.value)}
+                                    className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    disabled={locks[selectedYear]}
+                                  />
                                 </td>
                                 <td className="border border-gray-300 p-0.5 sm:p-1">
-                                  {isAdminAuthenticated ? (
-                                    <input
-                                      type="text"
-                                      value={score.team}
-                                      onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
-                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    />
-                                  ) : (
-                                    score.team
-                                  )}
+                                  <input
+                                    type="text"
+                                    value={displayData.keeper1}
+                                    onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper1', e.target.value)}
+                                    className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    disabled={locks[selectedYear]}
+                                  />
                                 </td>
+                                <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                  <input
+                                    type="number"
+                                    value={pending.draftCost1 !== undefined ? pending.draftCost1 : displayData.draftCost1}
+                                    onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
+                                    className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 no-spinner"
+                                    disabled={locks[selectedYear]}
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="0"
+                                  />
+                                </td>
+                                <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={displayData.tag1}
+                                    onChange={(e) => handleKeeperChange(selectedYear, index, 'tag1', e.target.checked)}
+                                    className="h-3 w-3 text-teal-500 focus:ring-teal-500"
+                                    disabled={locks[selectedYear]}
+                                  />
+                                </td>
+                                <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{displayData.cost1}</td>
                                 <td className="border border-gray-300 p-0.5 sm:p-1">
-                                  {isAdminAuthenticated ? (
-                                    <input
-                                      type="number"
-                                      value={score.total}
-                                      onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
-                                      step="0.01"
-                                      min="0"
-                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    />
-                                  ) : (
-                                    score.total
-                                  )}
+                                  <input
+                                    type="text"
+                                    value={displayData.keeper2}
+                                    onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper2', e.target.value)}
+                                    className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                    disabled={locks[selectedYear]}
+                                  />
                                 </td>
-                                {isAdminAuthenticated && (
+                                <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                  <input
+                                    type="number"
+                                    value={pending.draftCost2 !== undefined ? pending.draftCost2 : displayData.draftCost2}
+                                    onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
+                                    className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 no-spinner"
+                                    disabled={locks[selectedYear]}
+                                    min="0"
+                                    step="0.01"
+                                    placeholder="0"
+                                  />
+                                </td>
+                                <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                  <input
+                                    type="checkbox"
+                                    checked={displayData.tag2}
+                                    onChange={(e) => handleKeeperChange(selectedYear, index, 'tag2', e.target.checked)}
+                                    className="h-3 w-3 text-teal-500 focus:ring-teal-500"
+                                    disabled={locks[selectedYear]}
+                                  />
+                                </td>
+                                <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{displayData.cost2}</td>
+                                <td className="border border-gray-300 p-0.5 sm:p-1 text-center">{displayData.remaining}</td>
+                                {!locks[selectedYear] && (
                                   <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
                                     <button
-                                      onClick={() => {
-                                        const updatedPrizes = { ...prizes };
-                                        updatedPrizes[selectedYear].weeklyHighScores = updatedPrizes[selectedYear].weeklyHighScores.filter((_, i) => i !== index);
-                                        updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'delete', index).then(result => {
-                                          if (result) setPrizes(updatedPrizes);
-                                        });
-                                      }}
-                                      className="text-red-500 hover:text-red-700 text-xs"
+                                      onClick={() => handleSaveRow(selectedYear, index)}
+                                      className="px-2 py-0.5 text-[10px] sm:text-xs bg-teal-500 text-white rounded hover:bg-teal-600 transition-all disabled:bg-gray-400"
+                                      disabled={!pendingChanges[selectedYear][index]}
                                     >
-                                      Delete
+                                      Save
                                     </button>
                                   </td>
                                 )}
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <p className="text-xs sm:text-sm">No Weekly High Scores for {selectedYear}.</p>
-                    )}
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-xs sm:text-sm">Loading keepers for {selectedYear}...</p>
+                  )}
+                </div>
+              )}
+              {currentTab === 'prizes' && (
+                <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
+                  <h2 className="text-lg sm:text-xl font-bold mb-2">Prizes</h2>
+                  <div className="flex flex-wrap gap-2 mb-2">
+                    {['2023', '2024', '2025'].map(year => (
+                      <button
+                        key={year}
+                        className={`px-2 py-1 text-xs sm:text-sm rounded ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
+                        onClick={() => setSelectedYear(year)}
+                      >
+                        {year}
+                      </button>
+                    ))}
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-base sm:text-lg font-semibold mb-1">Survivor</h3>
-                    {isAdminAuthenticated && (
-                      <form onSubmit={(e) => {
-                        e.preventDefault();
-                        const week = parseInt(e.target.week.value) || 0;
-                        const type = e.target.type.value;
-                        const team = e.target.team.value;
-                        if (type === 'eliminated' && (week < 1 || week > 12)) {
-                          alert('Week must be between 1 and 12 for eliminations.');
-                          return;
-                        }
-                        if (prizes[selectedYear].survivor.some(entry => entry.week === week || (entry.winner && type === 'winner'))) {
-                          alert(`Week or Winner already exists for ${selectedYear} Survivor.`);
-                          return;
-                        }
-                        const newEntry = type === 'winner' ? { winner: team } : { week, eliminated: team };
-                        const updatedPrizes = {
-                          ...prizes,
-                          [selectedYear]: {
-                            ...prizes[selectedYear],
-                            survivor: [...prizes[selectedYear].survivor, newEntry].sort((a, b) => (a.week || 999) - (b.week || 999))
+                  <div className="flex flex-col lg:flex-row lg:space-x-2">
+                    <div className="flex-1 mb-2 lg:mb-0">
+                      <h3 className="text-base sm:text-lg font-semibold mb-1">Weekly High Scores</h3>
+                      {isAdminAuthenticated && (
+                        <form onSubmit={(e) => {
+                          e.preventDefault();
+                          const week = parseInt(e.target.week.value);
+                          const team = e.target.team.value;
+                          const total = parseFloat(e.target.total.value);
+                          if (week < 1 || week > 14) {
+                            alert('Week must be between 1 and 14.');
+                            return;
                           }
-                        };
-                        updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update').then(result => {
+                          if (prizes[selectedYear].weeklyHighScores.some(score => score.week === week)) {
+                            alert(`Week already exists for ${selectedYear} Weekly High Scores.`);
+                            return;
+                          }
+                          const updatedPrizes = {
+                            ...prizes,
+                            [selectedYear]: {
+                              ...prizes[selectedYear],
+                              weeklyHighScores: [...prizes[selectedYear].weeklyHighScores, { week, team, total }].sort((a, b) => a.week - b.week)
+                            }
+                          };
+                          updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update').then(result => {
+                            if (result) {
+                              setPrizes(updatedPrizes);
+                              e.target.reset();
+                            }
+                          });
+                        }} className="space-y-2 max-w-xs mb-3">
+                          <div>
+                            <label className="text-xs font-medium">Week</label>
+                            <input
+                              type="number"
+                              name="week"
+                              placeholder="1–14"
+                              min="1"
+                              max="14"
+                              className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium">Team</label>
+                            <input
+                              type="text"
+                              name="team"
+                              placeholder="Enter team"
+                              className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium">Total</label>
+                            <input
+                              type="number"
+                              name="total"
+                              placeholder="Score"
+                              step="0.01"
+                              min="0"
+                              className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              required
+                            />
+                          </div>
+                          <button 
+                            type="submit" 
+                            className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                          >
+                            Add Score
+                          </button>
+                        </form>
+                      )}
+                      {prizes[selectedYear].weeklyHighScores.length > 0 ? (
+                        <div className="table-container">
+                          <table className="w-full border-collapse text-[10px] sm:text-xs">
+                            <thead>
+                              <tr className="bg-gray-100">
+                                <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Week</th>
+                                <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Team</th>
+                                <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Total</th>
+                                {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {prizes[selectedYear].weeklyHighScores.map((score, index) => (
+                                <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
+                                  <td className="border border-gray-300 p-0.5 sm:p-1">
+                                    {isAdminAuthenticated ? (
+                                      <input
+                                        type="number"
+                                        value={score.week}
+                                        onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'week', e.target.value)}
+                                        min="1"
+                                        max="14"
+                                        className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                      />
+                                    ) : (
+                                      score.week
+                                    )}
+                                  </td>
+                                  <td className="border border-gray-300 p-0.5 sm:p-1">
+                                    {isAdminAuthenticated ? (
+                                      <input
+                                        type="text"
+                                        value={score.team}
+                                        onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
+                                        className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                      />
+                                    ) : (
+                                      score.team
+                                    )}
+                                  </td>
+                                  <td className="border border-gray-300 p-0.5 sm:p-1">
+                                    {isAdminAuthenticated ? (
+                                      <input
+                                        type="number"
+                                        value={score.total}
+                                        onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
+                                        step="0.01"
+                                        min="0"
+                                        className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                      />
+                                    ) : (
+                                      score.total
+                                    )}
+                                  </td>
+                                  {isAdminAuthenticated && (
+                                    <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                      <button
+                                        onClick={() => {
+                                          const updatedPrizes = { ...prizes };
+                                          updatedPrizes[selectedYear].weeklyHighScores = updatedPrizes[selectedYear].weeklyHighScores.filter((_, i) => i !== index);
+                                          updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'delete', index).then(result => {
+                                            if (result) setPrizes(updatedPrizes);
+                                          });
+                                        }}
+                                        className="text-red-500 hover:text-red-700 text-xs"
+                                      >
+                                        Delete
+                                      </button>
+                                    </td>
+                                  )}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <p className="text-xs sm:text-sm">No Weekly High Scores for {selectedYear}.</p>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-base sm:text-lg font-semibold mb-1">Survivor</h3>
+                      {isAdminAuthenticated && (
+                        <form onSubmit={(e) => {
+                          e.preventDefault();
+                          const week = parseInt(e.target.week.value) || 0;
+                          const type = e.target.type.value;
+                          const team = e.target.team.value;
+                          if (type === 'eliminated' && (week < 1 || week > 12)) {
+                            alert('Week must be between 1 and 12 for eliminations.');
+                            return;
+                          }
+                          if (prizes[selectedYear].survivor.some(entry => entry.week === week || (entry.winner && type === 'winner'))) {
+                            alert(`Week or Winner already exists for ${selectedYear} Survivor.`);
+                            return;
+                          }
+                          const newEntry = type === 'winner' ? { winner: team } : { week, eliminated: team };
+                          const updatedPrizes = {
+                            ...prizes,
+                            [selectedYear]: {
+                              ...prizes[selectedYear],
+                              survivor: [...prizes[selectedYear].survivor, newEntry].sort((a, b) => (a.week || 999) - (b.week || 999))
+                            }
+                          };
+                          updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'update').then(result => {
+                            if (result) {
+                              setPrizes(updatedPrizes);
+                              e.target.reset();
+                            }
+                          });
+                        }} className="space-y-2 max-w-xs mb-3">
+                          <div>
+                            <label className="text-xs font-medium">Week</label>
+                            <input
+                              type="number"
+                              name="week"
+                              placeholder="1–12 or blank"
+                              min="1"
+                              max="12"
+                              className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium">Type</label>
+                            <select
+                              name="type"
+                              className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              required
+                            >
+                              <option value="eliminated">Eliminated</option>
+                              <option value="winner">Winner</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs font-medium">Team</label>
+                            <input
+                              type="text"
+                              name="team"
+                              placeholder="Enter team"
+                              className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                              required
+                            />
+                          </div>
+                          <button 
+                            type="submit" 
+                            className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                          >
+                            Add Survivor
+                          </button>
+                        </form>
+                      )}
+                      {prizes[selectedYear].survivor.length > 0 ? (
+                        <div className="table-container">
+                          <table className="w-full border-collapse text-[10px] sm:text-xs">
+                            <thead>
+                              <tr className="bg-gray-100">
+                                <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Week</th>
+                                <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Eliminated</th>
+                                {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {prizes[selectedYear].survivor.map((entry, index) => (
+                                <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
+                                  <td className="border border-gray-300 p-0.5 sm:p-1">
+                                    {isAdminAuthenticated ? (
+                                      <input
+                                        type="number"
+                                        value={entry.week || ''}
+                                        onChange={(e) => handleSurvivorChange(selectedYear, index, 'week', e.target.value)}
+                                        min="1"
+                                        max="12"
+                                        className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                      />
+                                    ) : (
+                                      entry.week || (entry.winner && 'Winner')
+                                    )}
+                                  </td>
+                                  <td className="border border-gray-300 p-0.5 sm:p-1">
+                                    {isAdminAuthenticated ? (
+                                      <input
+                                        type="text"
+                                        value={entry.eliminated || entry.winner}
+                                        onChange={(e) => handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
+                                        className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                      />
+                                    ) : (
+                                      entry.eliminated || entry.winner
+                                    )}
+                                  </td>
+                                  {isAdminAuthenticated && (
+                                    <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
+                                      <select
+                                        value={entry.winner ? 'winner' : 'eliminated'}
+                                        onChange={(e) => handleSurvivorChange(selectedYear, index, 'type', e.target.value)}
+                                        className="p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                                      >
+                                        <option value="eliminated">Eliminated</option>
+                                        <option value="winner">Winner</option>
+                                      </select>
+                                      <button
+                                        onClick={() => {
+                                          const updatedPrizes = { ...prizes };
+                                          updatedPrizes[selectedYear].survivor = updatedPrizes[selectedYear].survivor.filter((_, i) => i !== index);
+                                          updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'delete', index).then(result => {
+                                            if (result) setPrizes(updatedPrizes);
+                                          });
+                                        }}
+                                        className="text-red-500 hover:text-red-700 text-xs ml-2"
+                                      >
+                                        Delete
+                                      </button>
+                                    </td>
+                                  )}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <p className="text-xs sm:text-sm">No Survivor data for {selectedYear}.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+              {currentTab === 'admin' && (
+                <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
+                  <h2 className="text-lg sm:text-xl font-bold mb-2">Admin Login</h2>
+                  <div className="max-w-xs mx-auto">
+                    <form onSubmit={handleAdminLogin} className="space-y-2">
+                      <div>
+                        <label className="text-xs font-medium">Password</label>
+                        <input
+                          type="password"
+                          value={adminPassword}
+                          onChange={(e) => setAdminPassword(e.target.value)}
+                          placeholder="Enter admin password"
+                          className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
+                        />
+                      </div>
+                      <button 
+                        type="submit" 
+                        className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                      >
+                        Login
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )}
+              <Modal
+                isOpen={modalState.isOpen}
+                onClose={() => setModalState({ isOpen: false, type: '', data: null })}
+                title={modalState.type === 'deleteRule' ? 'Delete Rule' : 'Delete Section'}
+              >
+                {modalState.type === 'deleteRule' && (
+                  <div>
+                    <p className="text-sm mb-2">Are you sure you want to delete this rule?</p>
+                    <button 
+                      onClick={() => {
+                        const updatedRules = { ...rules };
+                        updatedRules.sections[modalState.data.sectionIndex].items.splice(modalState.data.itemIndex, 1);
+                        updateData('rules.json', updatedRules, 'delete', { sectionIndex: modalState.data.sectionIndex, itemIndex: modalState.data.itemIndex }).then(result => {
                           if (result) {
-                            setPrizes(updatedPrizes);
-                            e.target.reset();
+                            setRules(updatedRules);
+                            setModalState({ isOpen: false, type: '', data: null });
                           }
                         });
-                      }} className="space-y-2 max-w-xs mb-3">
-                        <div>
-                          <label className="text-xs font-medium">Week</label>
-                          <input
-                            type="number"
-                            name="week"
-                            placeholder="1–12 or blank"
-                            min="1"
-                            max="12"
-                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium">Type</label>
-                          <select
-                            name="type"
-                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                            required
-                          >
-                            <option value="eliminated">Eliminated</option>
-                            <option value="winner">Winner</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="text-xs font-medium">Team</label>
-                          <input
-                            type="text"
-                            name="team"
-                            placeholder="Enter team"
-                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                            required
-                          />
-                        </div>
-                        <button 
-                          type="submit" 
-                          className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                        >
-                          Add Survivor
-                        </button>
-                      </form>
-                    )}
-                    {prizes[selectedYear].survivor.length > 0 ? (
-                      <div className="table-container">
-                        <table className="w-full border-collapse text-[10px] sm:text-xs">
-                          <thead>
-                            <tr className="bg-gray-100">
-                              <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Week</th>
-                              <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Eliminated</th>
-                              {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {prizes[selectedYear].survivor.map((entry, index) => (
-                              <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">
-                                  {isAdminAuthenticated ? (
-                                    <input
-                                      type="number"
-                                      value={entry.week || ''}
-                                      onChange={(e) => handleSurvivorChange(selectedYear, index, 'week', e.target.value)}
-                                      min="1"
-                                      max="12"
-                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    />
-                                  ) : (
-                                    entry.week || (entry.winner && 'Winner')
-                                  )}
-                                </td>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">
-                                  {isAdminAuthenticated ? (
-                                    <input
-                                      type="text"
-                                      value={entry.eliminated || entry.winner}
-                                      onChange={(e) => handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
-                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    />
-                                  ) : (
-                                    entry.eliminated || entry.winner
-                                  )}
-                                </td>
-                                {isAdminAuthenticated && (
-                                  <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                    <select
-                                      value={entry.winner ? 'winner' : 'eliminated'}
-                                      onChange={(e) => handleSurvivorChange(selectedYear, index, 'type', e.target.value)}
-                                      className="p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    >
-                                      <option value="eliminated">Eliminated</option>
-                                      <option value="winner">Winner</option>
-                                    </select>
-                                    <button
-                                      onClick={() => {
-                                        const updatedPrizes = { ...prizes };
-                                        updatedPrizes[selectedYear].survivor = updatedPrizes[selectedYear].survivor.filter((_, i) => i !== index);
-                                        updateData(`prizes_${selectedYear}.json`, updatedPrizes[selectedYear], 'delete', index).then(result => {
-                                          if (result) setPrizes(updatedPrizes);
-                                        });
-                                      }}
-                                      className="text-red-500 hover:text-red-700 text-xs ml-2"
-                                    >
-                                      Delete
-                                    </button>
-                                  </td>
-                                )}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <p className="text-xs sm:text-sm">No Survivor data for {selectedYear}.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-            {currentTab === 'admin' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
-                <h2 className="text-lg sm:text-xl font-bold mb-2">Admin Login</h2>
-                <div className="max-w-xs mx-auto">
-                  <form onSubmit={handleAdminLogin} className="space-y-2">
-                    <div>
-                      <label className="text-xs font-medium">Password</label>
-                      <input
-                        type="password"
-                        value={adminPassword}
-                        onChange={(e) => setAdminPassword(e.target.value)}
-                        placeholder="Enter admin password"
-                        className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      />
-                    </div>
-                    <button 
-                      type="submit" 
-                      className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                      }} 
+                      className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
                     >
-                      Login
+                      Delete
                     </button>
-                  </form>
-                </div>
-              </div>
-            )}
-            <Modal
-              isOpen={modalState.isOpen}
-              onClose={() => setModalState({ isOpen: false, type: '', data: null })}
-              title={modalState.type === 'deleteRule' ? 'Delete Rule' : 'Delete Section'}
-            >
-              {modalState.type === 'deleteRule' && (
-                <div>
-                  <p className="text-sm mb-2">Are you sure you want to delete this rule?</p>
-                  <button 
-                    onClick={() => {
-                      const updatedRules = { ...rules };
-                      updatedRules.sections[modalState.data.sectionIndex].items.splice(modalState.data.itemIndex, 1);
-                      updateData('rules.json', updatedRules, 'delete', { sectionIndex: modalState.data.sectionIndex, itemIndex: modalState.data.itemIndex }).then(result => {
-                        if (result) {
-                          setRules(updatedRules);
-                          setModalState({ isOpen: false, type: '', data: null });
-                        }
-                      });
-                    }} 
-                    className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-              {modalState.type === 'deleteSection' && (
-                <div>
-                  <p className="text-sm mb-2">Are you sure you want to delete this section?</p>
-                  <button 
-                    onClick={() => {
-                      const updatedRules = { ...rules };
-                      updatedRules.sections.splice(modalState.data.sectionIndex, 1);
-                      updateData('rules.json', updatedRules, 'delete', modalState.data.sectionIndex).then(result => {
-                        if (result) {
-                          setRules(updatedRules);
-                          setModalState({ isOpen: false, type: '', data: null });
-                        }
-                      });
-                    }} 
-                    className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-            </Modal>
+                  </div>
+                )}
+                {modalState.type === 'deleteSection' && (
+                  <div>
+                    <p className="text-sm mb-2">Are you sure you want to delete this section?</p>
+                    <button 
+                      onClick={() => {
+                        const updatedRules = { ...rules };
+                        updatedRules.sections.splice(modalState.data.sectionIndex, 1);
+                        updateData('rules.json', updatedRules, 'delete', modalState.data.sectionIndex).then(result => {
+                          if (result) {
+                            setRules(updatedRules);
+                            setModalState({ isOpen: false, type: '', data: null });
+                          }
+                        });
+                      }} 
+                      className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+              </Modal>
+            </>
           </main>
         </div>
       );
