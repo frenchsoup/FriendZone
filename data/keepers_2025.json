@@ -121,15 +121,15 @@
   },
   {
     "team": "CBuck",
-    "keeper1": "",
-    "draftCost1": 0,
-    "tag1": false,
-    "cost1": 0,
-    "keeper2": "",
-    "draftCost2": 0,
+    "keeper1": "Lamar",
+    "draftCost1": 40,
+    "tag1": true,
+    "cost1": 40,
+    "keeper2": "Burrow",
+    "draftCost2": 28,
     "tag2": false,
-    "cost2": 0,
-    "remaining": 200
+    "cost2": 36,
+    "remaining": 124
   },
   {
     "team": "DGatz",
