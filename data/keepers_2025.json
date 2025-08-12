@@ -1,15 +1,15 @@
 [
   {
     "team": "Yacob",
-    "keeper1": "",
-    "draftCost1": 0,
-    "tag1": false,
-    "cost1": 0,
-    "keeper2": "",
-    "draftCost2": 0,
+    "keeper1": "Achane",
+    "draftCost1": 5,
+    "tag1": true,
+    "cost1": 5,
+    "keeper2": "Collins",
+    "draftCost2": 6,
     "tag2": false,
-    "cost2": 0,
-    "remaining": 200
+    "cost2": 12,
+    "remaining": 183
   },
   {
     "team": "Byz",
