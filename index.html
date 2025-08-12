@@ -16,7 +16,8 @@
   <div id="root"></div>
   <script type="text/babel">
     // Keeper cost calculation
-    const calculateKeeperCost = (draftCost, tag) => {
+    const calculateKeeperCost = (draftCost, tag, keeperName) => {
+      if (keeperName === '' && draftCost === 0) return 0; // Empty name and $0 cost → $0
       if (draftCost === 0 && !tag) return 5; // Rule: $0 cost → $5 if not tagged
       if (draftCost === 0 && tag) return 0; // Will be validated to prevent $0
       if (tag) return Math.round(draftCost); // Ensure whole dollars
@@ -132,12 +133,23 @@
         }
       };
 
-      // Normalize input to remove leading zeros
+      // Normalize input to enforce integers
       const normalizeNumberInput = (value) => {
         if (value === '' || value == null) return '';
-        // Convert to string, remove leading zeros, and ensure valid number
+        // Convert to string, remove leading zeros, and ensure integer
         const strValue = String(value).replace(/^0+/, '');
-        return strValue === '' ? '0' : strValue;
+        const intValue = strValue === '' ? '' : Math.round(parseFloat(strValue) || 0);
+        return intValue.toString();
+      };
+
+      // Handle arrow key increments for integer steps
+      const handleArrowKey = (e, year, index, field) => {
+        if (e.keyCode === 38 || e.keyCode === 40) { // Up or Down arrow
+          e.preventDefault();
+          const currentValue = parseFloat(e.target.value) || 0;
+          const newValue = e.keyCode === 38 ? currentValue + 1 : Math.max(0, currentValue - 1);
+          handleKeeperChange(year, index, field, newValue.toString());
+        }
       };
 
       // Handle inline keeper updates (store in pendingChanges)
@@ -152,10 +164,10 @@
             remaining: 200
           };
 
-          if (field === 'draftCost1' || field === 'tag1') {
+          if (field === 'draftCost1' || field === 'tag1' || field === 'keeper1') {
             if (field === 'draftCost1') {
               const normalizedValue = normalizeNumberInput(value);
-              teamData.draftCost1 = normalizedValue === '' ? 0 : parseFloat(normalizedValue) || 0;
+              teamData.draftCost1 = normalizedValue === '' ? 0 : parseInt(normalizedValue) || 0;
               updatedPending[year][index].draftCost1 = normalizedValue; // Store normalized string for display
             }
             if (teamData.draftCost1 === 0 && value === true) {
@@ -164,12 +176,12 @@
             } else {
               teamData.tag1 = field === 'tag1' ? value : teamData.tag1;
             }
-            teamData.cost1 = calculateKeeperCost(teamData.draftCost1, teamData.tag1);
+            teamData.cost1 = calculateKeeperCost(teamData.draftCost1, teamData.tag1, teamData.keeper1);
           }
-          if (field === 'draftCost2' || field === 'tag2') {
+          if (field === 'draftCost2' || field === 'tag2' || field === 'keeper2') {
             if (field === 'draftCost2') {
               const normalizedValue = normalizeNumberInput(value);
-              teamData.draftCost2 = normalizedValue === '' ? 0 : parseFloat(normalizedValue) || 0;
+              teamData.draftCost2 = normalizedValue === '' ? 0 : parseInt(normalizedValue) || 0;
               updatedPending[year][index].draftCost2 = normalizedValue; // Store normalized string for display
             }
             if (teamData.draftCost2 === 0 && value === true) {
@@ -178,7 +190,7 @@
             } else {
               teamData.tag2 = field === 'tag2' ? value : teamData.tag2;
             }
-            teamData.cost2 = calculateKeeperCost(teamData.draftCost2, teamData.tag2);
+            teamData.cost2 = calculateKeeperCost(teamData.draftCost2, teamData.tag2, teamData.keeper2);
           }
           teamData.remaining = 200 - (teamData.cost1 + teamData.cost2);
           if (teamData.remaining < 0) {
@@ -736,11 +748,11 @@
                                     type="number"
                                     value={pending.draftCost1 !== undefined ? pending.draftCost1 : displayData.draftCost1}
                                     onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
+                                    onKeyDown={(e) => handleArrowKey(e, selectedYear, index, 'draftCost1')}
                                     className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 no-spinner"
                                     disabled={locks[selectedYear]}
                                     min="0"
-                                    step="0.01"
-                                    placeholder="0"
+                                    step="1"
                                   />
                                 </td>
                                 <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
@@ -767,11 +779,11 @@
                                     type="number"
                                     value={pending.draftCost2 !== undefined ? pending.draftCost2 : displayData.draftCost2}
                                     onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
+                                    onKeyDown={(e) => handleArrowKey(e, selectedYear, index, 'draftCost2')}
                                     className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 no-spinner"
                                     disabled={locks[selectedYear]}
                                     min="0"
-                                    step="0.01"
-                                    placeholder="0"
+                                    step="1"
                                   />
                                 </td>
                                 <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
