@@ -133,14 +133,14 @@
   },
   {
     "team": "DGatz",
-    "keeper1": "",
-    "draftCost1": 0,
-    "tag1": false,
-    "cost1": 0,
-    "keeper2": "",
-    "draftCost2": 0,
+    "keeper1": "Gibbs",
+    "draftCost1": 41,
+    "tag1": true,
+    "cost1": 41,
+    "keeper2": "Chase Brown",
+    "draftCost2": 6,
     "tag2": false,
-    "cost2": 0,
-    "remaining": 200
+    "cost2": 12,
+    "remaining": 147
   }
 ]
