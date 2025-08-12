@@ -61,15 +61,15 @@
   },
   {
     "team": "TLew",
-    "keeper1": "",
-    "draftCost1": 0,
+    "keeper1": "Penix",
+    "draftCost1": 2,
     "tag1": false,
-    "cost1": 0,
-    "keeper2": "",
-    "draftCost2": 0,
-    "tag2": false,
-    "cost2": 0,
-    "remaining": 200
+    "cost1": 7,
+    "keeper2": "Daniels ",
+    "draftCost2": 26,
+    "tag2": true,
+    "cost2": 26,
+    "remaining": 167
   },
   {
     "team": "ALeF",
@@ -133,14 +133,14 @@
   },
   {
     "team": "DGatz",
-    "keeper1": "Gibbs",
-    "draftCost1": 41,
-    "tag1": true,
-    "cost1": 41,
-    "keeper2": "Chase Brown",
-    "draftCost2": 6,
+    "keeper1": "",
+    "draftCost1": 0,
+    "tag1": false,
+    "cost1": 0,
+    "keeper2": "",
+    "draftCost2": 0,
     "tag2": false,
-    "cost2": 12,
-    "remaining": 147
+    "cost2": 0,
+    "remaining": 200
   }
 ]
