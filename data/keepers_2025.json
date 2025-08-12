@@ -25,15 +25,15 @@
   },
   {
     "team": "Mante",
-    "keeper1": "",
-    "draftCost1": 0,
-    "tag1": false,
-    "cost1": 0,
-    "keeper2": "",
-    "draftCost2": 0,
+    "keeper1": "London ",
+    "draftCost1": 19,
+    "tag1": true,
+    "cost1": 19,
+    "keeper2": "Bowers",
+    "draftCost2": 6,
     "tag2": false,
-    "cost2": 0,
-    "remaining": 200
+    "cost2": 12,
+    "remaining": 169
   },
   {
     "team": "Jordan",
