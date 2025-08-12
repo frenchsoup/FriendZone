@@ -135,10 +135,11 @@
 
       // Normalize input to enforce integers
       const normalizeNumberInput = (value) => {
-        if (value === '' || value == null) return '';
+        if (value === '' || value == null) return ''; // Allow empty input
         // Convert to string, remove leading zeros, and ensure integer
         const strValue = String(value).replace(/^0+/, '');
-        const intValue = strValue === '' ? '' : Math.round(parseFloat(strValue) || 0);
+        if (strValue === '') return ''; // Handle fully cleared input
+        const intValue = Math.round(parseFloat(strValue) || 0);
         return intValue.toString();
       };
 
@@ -724,7 +725,7 @@
                             <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[60px]">K2 $</th>
                             <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[40px]">Tag</th>
                             <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[60px]">K2 Cost</th>
-                            <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[60px]">Auction $</th>
+                            <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[80px]">Auction $</th>
                             {!locks[selectedYear] && <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[60px]">Actions</th>}
                           </tr>
                         </thead>
@@ -755,7 +756,7 @@
                                 <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
                                   <input
                                     type="number"
-                                    value={pending.draftCost1 !== undefined ? pending.draftCost1 : (displayData.draftCost1 || 0) === 0 ? '' : displayData.draftCost1}
+                                    value={pending.draftCost1 !== undefined ? pending.draftCost1 : (displayData.draftCost1 || '') === '' ? '' : displayData.draftCost1}
                                     onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
                                     onKeyDown={(e) => handleArrowKey(e, selectedYear, index, 'draftCost1')}
                                     className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 no-spinner"
@@ -786,7 +787,7 @@
                                 <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
                                   <input
                                     type="number"
-                                    value={pending.draftCost2 !== undefined ? pending.draftCost2 : (displayData.draftCost2 || 0) === 0 ? '' : displayData.draftCost2}
+                                    value={pending.draftCost2 !== undefined ? pending.draftCost2 : (displayData.draftCost2 || '') === '' ? '' : displayData.draftCost2}
                                     onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
                                     onKeyDown={(e) => handleArrowKey(e, selectedYear, index, 'draftCost2')}
                                     className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 no-spinner"
