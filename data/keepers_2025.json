@@ -121,18 +121,6 @@
   },
   {
     "team": "CBuck",
-    "keeper1": "Lamar",
-    "draftCost1": 40,
-    "tag1": true,
-    "cost1": 40,
-    "keeper2": "Burrow",
-    "draftCost2": 28,
-    "tag2": false,
-    "cost2": 36,
-    "remaining": 124
-  },
-  {
-    "team": "DGatz",
     "keeper1": "",
     "draftCost1": 0,
     "tag1": false,
@@ -142,5 +130,17 @@
     "tag2": false,
     "cost2": 0,
     "remaining": 200
+  },
+  {
+    "team": "DGatz",
+    "keeper1": "Gibbs",
+    "draftCost1": 41,
+    "tag1": true,
+    "cost1": 41,
+    "keeper2": "Chase Brown",
+    "draftCost2": 6,
+    "tag2": false,
+    "cost2": 12,
+    "remaining": 147
   }
 ]
