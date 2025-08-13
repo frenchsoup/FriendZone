@@ -64,9 +64,30 @@
           const files = [
             { path: '/data/rules.json', setter: setRules, default: { sections: [] } },
             { path: '/data/payouts.json', setter: setPayouts, default: [] },
-            { path: '/data/keepers_2022.json', setter: (data) => setKeepers(prev => ({ ...prev, 2022: data })), default: [] },
-            { path: '/data/keepers_2023.json', setter: (data) => setKeepers(prev => ({ ...prev, 2023: data })), default: [] },
-            { path: '/data/keepers_2024.json', setter: (data) => setKeepers(prev => ({ ...prev, 2024: data })), default: [] },
+            { path: '/data/keepers_2022.json', setter: (data) => setKeepers(prev => ({ ...prev, 2022: data.map(team => ({
+                ...team,
+                draftCost1: Math.round(team.draftCost1 || 0),
+                draftCost2: Math.round(team.draftCost2 || 0),
+                cost1: Math.round(calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
+                cost2: Math.round(calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
+                remaining: 200 - (Math.round(calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
+              })) })), default: [] },
+            { path: '/data/keepers_2023.json', setter: (data) => setKeepers(prev => ({ ...prev, 2023: data.map(team => ({
+                ...team,
+                draftCost1: Math.round(team.draftCost1 || 0),
+                draftCost2: Math.round(team.draftCost2 || 0),
+                cost1: Math.round(calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
+                cost2: Math.round(calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
+                remaining: 200 - (Math.round(calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
+              })) })), default: [] },
+            { path: '/data/keepers_2024.json', setter: (data) => setKeepers(prev => ({ ...prev, 2024: data.map(team => ({
+                ...team,
+                draftCost1: Math.round(team.draftCost1 || 0),
+                draftCost2: Math.round(team.draftCost2 || 0),
+                cost1: Math.round(calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
+                cost2: Math.round(calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
+                remaining: 200 - (Math.round(calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
+              })) })), default: [] },
             { path: '/data/keepers_2025.json', setter: (data) => setKeepers(prev => ({ ...prev, 2025: data })), default: [] },
             { path: '/data/prizes_2023.json', setter: (data) => setPrizes(prev => ({ ...prev, 2023: data })), default: { survivor: [], weeklyHighScores: [] } },
             { path: '/data/prizes_2024.json', setter: (data) => setPrizes(prev => ({ ...prev, 2024: data })), default: { survivor: [], weeklyHighScores: [] } },
@@ -133,10 +154,10 @@
         }
       };
 
-      // Normalize input to enforce integers
+      // Normalize input to enforce integers or empty string
       const normalizeNumberInput = (value) => {
-        if (value === '' || value == null) return '';
-        // Convert to string, remove leading zeros, and ensure integer
+        if (value === '' || value == null) return ''; // Allow empty input
+        // Remove leading zeros and ensure integer
         const strValue = String(value).replace(/^0+/, '');
         if (strValue === '') return ''; // Handle fully cleared input
         const intValue = Math.round(parseFloat(strValue) || 0);
@@ -160,38 +181,38 @@
           const updatedPending = { ...prev, [year]: { ...prev[year], [index]: { ...prev[year][index], [field]: value } } };
           const teamData = { ...keepers[year][index], ...updatedPending[year][index] } || {
             team: `Team ${index + 1}`,
-            keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
-            keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
+            keeper1: '', draftCost1: '', tag1: false, cost1: 0,
+            keeper2: '', draftCost2: '', tag2: false, cost2: 0,
             remaining: 200
           };
 
           if (field === 'draftCost1' || field === 'tag1' || field === 'keeper1') {
             if (field === 'draftCost1') {
               const normalizedValue = normalizeNumberInput(value);
-              teamData.draftCost1 = normalizedValue === '' ? 0 : parseInt(normalizedValue) || 0;
+              teamData.draftCost1 = normalizedValue === '' ? '' : parseInt(normalizedValue) || 0;
               updatedPending[year][index].draftCost1 = normalizedValue; // Store normalized string for display
             }
-            if (teamData.draftCost1 === 0 && value === true) {
+            if (teamData.draftCost1 === '' && value === true) {
               alert('No player can be kept for $0. Untag or set a draft cost.');
               teamData.tag1 = false;
             } else {
               teamData.tag1 = field === 'tag1' ? value : teamData.tag1;
             }
-            teamData.cost1 = calculateKeeperCost(teamData.draftCost1, teamData.tag1, teamData.keeper1);
+            teamData.cost1 = calculateKeeperCost(teamData.draftCost1 || 0, teamData.tag1, teamData.keeper1);
           }
           if (field === 'draftCost2' || field === 'tag2' || field === 'keeper2') {
             if (field === 'draftCost2') {
               const normalizedValue = normalizeNumberInput(value);
-              teamData.draftCost2 = normalizedValue === '' ? 0 : parseInt(normalizedValue) || 0;
+              teamData.draftCost2 = normalizedValue === '' ? '' : parseInt(normalizedValue) || 0;
               updatedPending[year][index].draftCost2 = normalizedValue; // Store normalized string for display
             }
-            if (teamData.draftCost2 === 0 && value === true) {
+            if (teamData.draftCost2 === '' && value === true) {
               alert('No player can be kept for $0. Untag or set a draft cost.');
               teamData.tag2 = false;
             } else {
               teamData.tag2 = field === 'tag2' ? value : teamData.tag2;
             }
-            teamData.cost2 = calculateKeeperCost(teamData.draftCost2, teamData.tag2, teamData.keeper2);
+            teamData.cost2 = calculateKeeperCost(teamData.draftCost2 || 0, teamData.tag2, teamData.keeper2);
           }
           teamData.remaining = 200 - (teamData.cost1 + teamData.cost2);
           if (teamData.remaining < 0) {
@@ -210,7 +231,12 @@
         if (!teamData) return;
 
         const updatedKeepers = { ...keepers };
-        updatedKeepers[year][index] = { ...keepers[year][index], ...teamData };
+        updatedKeepers[year][index] = { 
+          ...keepers[year][index], 
+          ...teamData,
+          draftCost1: teamData.draftCost1 === '' ? 0 : parseInt(teamData.draftCost1) || 0,
+          draftCost2: teamData.draftCost2 === '' ? 0 : parseInt(teamData.draftCost2) || 0
+        };
         const result = await updateData(`keepers_${year}.json`, updatedKeepers[year], 'update');
         if (result) {
           setKeepers(updatedKeepers);
@@ -227,8 +253,8 @@
         if (year === '2025' && keepers[year].length === 0) {
           const initialTeams = Array.from({ length: 12 }, (_, i) => ({
             team: `Team ${i + 1}`,
-            keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
-            keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
+            keeper1: '', draftCost1: '', tag1: false, cost1: 0,
+            keeper2: '', draftCost2: '', tag2: false, cost2: 0,
             remaining: 200
           }));
           setKeepers(prev => ({ ...prev, [year]: initialTeams }));
@@ -306,22 +332,6 @@
         const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
         if (result) {
           setPrizes(updatedPrizes);
-        }
-      };
-
-      // Handle inline rule updates
-      const handleRuleChange = async (sectionIndex, itemIndex, field, value) => {
-        if (!isAdminAuthenticated) return;
-        const updatedRules = { ...rules };
-        const item = updatedRules.sections[sectionIndex].items[itemIndex];
-        if (typeof item === 'string') {
-          updatedRules.sections[sectionIndex].items[itemIndex] = value;
-        } else {
-          updatedRules.sections[sectionIndex].items[itemIndex] = { ...item, [field]: field === 'subItems' ? value.split('\n').filter(i => i.trim()) : value };
-        }
-        const result = await updateData('rules.json', updatedRules, 'update');
-        if (result) {
-          setRules(updatedRules);
         }
       };
 
@@ -755,14 +765,12 @@
                                 </td>
                                 <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
                                   <input
-                                    type="number"
-                                    value={pending.draftCost1 !== undefined ? pending.draftCost1 : displayData.draftCost1 === 0 ? '' : displayData.draftCost1 || ''}
+                                    type="text"
+                                    value={displayData.draftCost1}
                                     onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
                                     onKeyDown={(e) => handleArrowKey(e, selectedYear, index, 'draftCost1')}
                                     className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 no-spinner"
                                     disabled={locks[selectedYear]}
-                                    min="0"
-                                    step="1"
                                   />
                                 </td>
                                 <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
@@ -786,14 +794,12 @@
                                 </td>
                                 <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
                                   <input
-                                    type="number"
-                                    value={pending.draftCost2 !== undefined ? pending.draftCost2 : displayData.draftCost2 === 0 ? '' : displayData.draftCost2 || ''}
+                                    type="text"
+                                    value={displayData.draftCost2}
                                     onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
                                     onKeyDown={(e) => handleArrowKey(e, selectedYear, index, 'draftCost2')}
                                     className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 no-spinner"
                                     disabled={locks[selectedYear]}
-                                    min="0"
-                                    step="1"
                                   />
                                 </td>
                                 <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
@@ -1151,16 +1157,23 @@
                       ) : (
                         <p className="text-xs sm:text-sm">No Survivor data for {selectedYear}.</p>
                       )}
-                      <div className="mt-3 card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
-                        <h4 className="text-sm font-semibold">Remaining Teams</h4>
+                      <div className="mt-3">
+                        <h4 className="text-sm font-semibold mb-2">Remaining Teams</h4>
                         {getRemainingTeams(selectedYear).length > 0 ? (
-                          <ul className="list-disc pl-5 text-xs sm:text-sm">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                             {getRemainingTeams(selectedYear).map((team, index) => (
-                              <li key={index}>{team}</li>
+                              <div
+                                key={index}
+                                className="bg-gray-100 text-gray-800 rounded-lg p-2 text-xs sm:text-sm shadow-sm hover:bg-teal-100 transition-all"
+                              >
+                                {team}
+                              </div>
                             ))}
-                          </ul>
+                          </div>
                         ) : (
-                          <p className="text-xs sm:text-sm">No teams remaining for {selectedYear}.</p>
+                          <p className="text-xs sm:text-sm bg-gray-100 text-gray-800 rounded-lg p-2 shadow-sm">
+                            No teams remaining for {selectedYear}.
+                          </p>
                         )}
                       </div>
                     </div>
