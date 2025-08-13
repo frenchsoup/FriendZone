@@ -85,15 +85,15 @@
   },
   {
     "team": "JLusa",
-    "keeper1": "",
-    "draftCost1": 0,
-    "tag1": false,
-    "cost1": 0,
-    "keeper2": "",
-    "draftCost2": 0,
+    "keeper1": "Kyler",
+    "draftCost1": 16,
+    "tag1": true,
+    "cost1": 16,
+    "keeper2": "Chubba",
+    "draftCost2": 4,
     "tag2": false,
-    "cost2": 0,
-    "remaining": 200
+    "cost2": 9,
+    "remaining": 175
   },
   {
     "team": "Ayer",
