@@ -1,15 +1,15 @@
 [
   {
     "team": "Yacob",
-    "keeper1": "",
-    "draftCost1": 0,
-    "tag1": false,
-    "cost1": 0,
-    "keeper2": "",
-    "draftCost2": 0,
+    "keeper1": "Achane",
+    "draftCost1": 5,
+    "tag1": true,
+    "cost1": 5,
+    "keeper2": "Collins",
+    "draftCost2": 6,
     "tag2": false,
-    "cost2": 0,
-    "remaining": 200
+    "cost2": 12,
+    "remaining": 183
   },
   {
     "team": "Byz",
@@ -25,27 +25,27 @@
   },
   {
     "team": "Mante",
-    "keeper1": "",
-    "draftCost1": 0,
-    "tag1": false,
-    "cost1": 0,
-    "keeper2": "",
-    "draftCost2": 0,
+    "keeper1": "London ",
+    "draftCost1": 19,
+    "tag1": true,
+    "cost1": 19,
+    "keeper2": "Bowers",
+    "draftCost2": 6,
     "tag2": false,
-    "cost2": 0,
-    "remaining": 200
+    "cost2": 12,
+    "remaining": 169
   },
   {
     "team": "Jordan",
-    "keeper1": "",
-    "draftCost1": 0,
+    "keeper1": "Bo Nix",
+    "draftCost1": 4,
     "tag1": false,
-    "cost1": 0,
-    "keeper2": "",
-    "draftCost2": 0,
-    "tag2": false,
-    "cost2": 0,
-    "remaining": 200
+    "cost1": 9,
+    "keeper2": "Bucky",
+    "draftCost2": 1,
+    "tag2": true,
+    "cost2": 1,
+    "remaining": 190
   },
   {
     "team": "Trudy",
@@ -61,15 +61,15 @@
   },
   {
     "team": "TLew",
-    "keeper1": "",
-    "draftCost1": 0,
+    "keeper1": "Penix",
+    "draftCost1": 2,
     "tag1": false,
-    "cost1": 0,
-    "keeper2": "",
-    "draftCost2": 0,
-    "tag2": false,
-    "cost2": 0,
-    "remaining": 200
+    "cost1": 7,
+    "keeper2": "Daniels ",
+    "draftCost2": 26,
+    "tag2": true,
+    "cost2": 26,
+    "remaining": 167
   },
   {
     "team": "ALeF",
@@ -85,15 +85,15 @@
   },
   {
     "team": "JLusa",
-    "keeper1": "",
-    "draftCost1": 0,
-    "tag1": false,
-    "cost1": 0,
-    "keeper2": "",
-    "draftCost2": 0,
+    "keeper1": "Kyler",
+    "draftCost1": 16,
+    "tag1": true,
+    "cost1": 16,
+    "keeper2": "Chubba",
+    "draftCost2": 4,
     "tag2": false,
-    "cost2": 0,
-    "remaining": 200
+    "cost2": 9,
+    "remaining": 175
   },
   {
     "team": "Ayer",
@@ -133,14 +133,14 @@
   },
   {
     "team": "DGatz",
-    "keeper1": "",
-    "draftCost1": 0,
-    "tag1": false,
-    "cost1": 0,
-    "keeper2": "",
-    "draftCost2": 0,
+    "keeper1": "Gibbs",
+    "draftCost1": 41,
+    "tag1": true,
+    "cost1": 41,
+    "keeper2": "Chase Brown",
+    "draftCost2": 6,
     "tag2": false,
-    "cost2": 0,
-    "remaining": 200
+    "cost2": 12,
+    "remaining": 147
   }
 ]
