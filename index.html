@@ -46,7 +46,14 @@
       const [adminPassword, setAdminPassword] = React.useState('');
       const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState(false);
       const [keepers, setKeepers] = React.useState({ 2022: [], 2023: [], 2024: [], 2025: [] });
-      const [prizes, setPrizes] = React.useState({ 2023: { survivor: [], weeklyHighScores: [] }, 2024: { survivor: [], weeklyHighScores: [] }, 2025: { survivor: [], weeklyHighScores: [] } });
+      const [prizes, setPrizes] = React.useState({ 
+        2023: { survivor: [], weeklyHighScores: [] }, 
+        2024: { survivor: [], weeklyHighScores: [] }, 
+        2025: { 
+          survivor: Array.from({ length: 12 }, (_, i) => i < 11 ? { week: i + 1, eliminated: '' } : { winner: '' }), 
+          weeklyHighScores: Array.from({ length: 14 }, (_, i) => ({ week: i + 1, team: '', total: '' })) 
+        } 
+      });
       const [rules, setRules] = React.useState({ sections: [] });
       const [payouts, setPayouts] = React.useState([]);
       const [locks, setLocks] = React.useState({ 2022: false, 2023: false, 2024: false, 2025: false });
@@ -91,7 +98,14 @@
             { path: '/data/keepers_2025.json', setter: (data) => setKeepers(prev => ({ ...prev, 2025: data })), default: [] },
             { path: '/data/prizes_2023.json', setter: (data) => setPrizes(prev => ({ ...prev, 2023: data })), default: { survivor: [], weeklyHighScores: [] } },
             { path: '/data/prizes_2024.json', setter: (data) => setPrizes(prev => ({ ...prev, 2024: data })), default: { survivor: [], weeklyHighScores: [] } },
-            { path: '/data/prizes_2025.json', setter: (data) => setPrizes(prev => ({ ...prev, 2025: data })), default: { survivor: [], weeklyHighScores: [] } },
+            { path: '/data/prizes_2025.json', setter: (data) => setPrizes(prev => {
+              const survivor = data.survivor.length > 0 ? data.survivor : Array.from({ length: 12 }, (_, i) => i < 11 ? { week: i + 1, eliminated: '' } : { winner: '' });
+              const weeklyHighScores = data.weeklyHighScores.length > 0 ? data.weeklyHighScores : Array.from({ length: 14 }, (_, i) => ({ week: i + 1, team: '', total: '' }));
+              return { ...prev, 2025: { survivor, weeklyHighScores } };
+            }), default: { 
+              survivor: Array.from({ length: 12 }, (_, i) => i < 11 ? { week: i + 1, eliminated: '' } : { winner: '' }), 
+              weeklyHighScores: Array.from({ length: 14 }, (_, i) => ({ week: i + 1, team: '', total: '' })) 
+            } },
             { path: '/data/locks.json', setter: setLocks, default: { 2022: false, 2023: false, 2024: false, 2025: false } },
           ];
 
@@ -273,7 +287,7 @@
         }
         const result = await updateData('payouts.json', updatedPayouts, 'update');
         if (result) {
-          setPayouts(updatedPayouts);
+          setPrizes(updatedPrizes);
         }
       };
 
@@ -282,17 +296,8 @@
         if (!isAdminAuthenticated) return;
         const updatedPrizes = { ...prizes };
         const score = { ...updatedPrizes[year].weeklyHighScores[index] };
-        score[field] = field === 'week' || field === 'total' ? parseFloat(value) || 0 : value;
-        if (score.week < 1 || score.week > 14) {
-          alert('Week must be between 1 and 14.');
-          return;
-        }
-        if (updatedPrizes[year].weeklyHighScores.some((s, i) => i !== index && s.week === score.week)) {
-          alert(`Week already exists for ${year} Weekly High Scores.`);
-          return;
-        }
+        score[field] = field === 'total' ? parseFloat(value) || '' : value;
         updatedPrizes[year].weeklyHighScores[index] = score;
-        updatedPrizes[year].weeklyHighScores.sort((a, b) => a.week - b.week);
         const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
         if (result) {
           setPrizes(updatedPrizes);
@@ -304,31 +309,10 @@
         if (!isAdminAuthenticated) return;
         const updatedPrizes = { ...prizes };
         const entry = { ...updatedPrizes[year].survivor[index] };
-        if (field === 'week') {
-          entry.week = parseInt(value) || 0;
-          if (entry.week && (entry.week < 1 || entry.week > 12)) {
-            alert('Week must be between 1 and 12 for eliminations.');
-            return;
-          }
-        } else if (field === 'type') {
-          if (value === 'winner') {
-            delete entry.week;
-            delete entry.eliminated;
-            entry.winner = entry.eliminated || entry.winner || '';
-          } else {
-            delete entry.winner;
-            entry.week = entry.week || 0;
-            entry.eliminated = entry.winner || entry.eliminated || '';
-          }
-        } else {
-          entry[field === 'team' ? (entry.winner ? 'winner' : 'eliminated') : field] = value;
-        }
-        if (updatedPrizes[year].survivor.some((e, i) => i !== index && (e.week === entry.week || (e.winner && entry.winner)))) {
-          alert(`Week or Winner already exists for ${year} Survivor.`);
-          return;
+        if (field === 'team') {
+          entry[entry.winner ? 'winner' : 'eliminated'] = value;
         }
         updatedPrizes[year].survivor[index] = entry;
-        updatedPrizes[year].survivor.sort((a, b) => (a.week || 999) - (b.week || 999));
         const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
         if (result) {
           setPrizes(updatedPrizes);
@@ -939,20 +923,7 @@
                             <tbody>
                               {prizes[selectedYear].weeklyHighScores.map((score, index) => (
                                 <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                                  <td className="border border-gray-300 p-0.5 sm:p-1">
-                                    {isAdminAuthenticated ? (
-                                      <input
-                                        type="number"
-                                        value={score.week}
-                                        onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'week', e.target.value)}
-                                        min="1"
-                                        max="14"
-                                        className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                      />
-                                    ) : (
-                                      score.week
-                                    )}
-                                  </td>
+                                  <td className="border border-gray-300 p-0.5 sm:p-1">{score.week}</td>
                                   <td className="border border-gray-300 p-0.5 sm:p-1">
                                     {isAdminAuthenticated ? (
                                       <select
@@ -1016,8 +987,8 @@
                           const week = parseInt(e.target.week.value) || 0;
                           const type = e.target.type.value;
                           const team = e.target.team.value;
-                          if (type === 'eliminated' && (week < 1 || week > 12)) {
-                            alert('Week must be between 1 and 12 for eliminations.');
+                          if (type === 'eliminated' && (week < 1 || week > 11)) {
+                            alert('Week must be between 1 and 11 for eliminations.');
                             return;
                           }
                           if (prizes[selectedYear].survivor.some(entry => entry.week === week || (entry.winner && type === 'winner'))) {
@@ -1044,9 +1015,9 @@
                             <input
                               type="number"
                               name="week"
-                              placeholder="1–12 or blank"
+                              placeholder="1–11 or blank"
                               min="1"
-                              max="12"
+                              max="11"
                               className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
                             />
                           </div>
@@ -1096,18 +1067,7 @@
                               {prizes[selectedYear].survivor.map((entry, index) => (
                                 <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
                                   <td className="border border-gray-300 p-0.5 sm:p-1">
-                                    {isAdminAuthenticated ? (
-                                      <input
-                                        type="number"
-                                        value={entry.week || ''}
-                                        onChange={(e) => handleSurvivorChange(selectedYear, index, 'week', e.target.value)}
-                                        min="1"
-                                        max="12"
-                                        className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                      />
-                                    ) : (
-                                      entry.week || (entry.winner && 'Winner')
-                                    )}
+                                    {entry.winner ? 'Winner' : entry.week}
                                   </td>
                                   <td className="border border-gray-300 p-0.5 sm:p-1">
                                     {isAdminAuthenticated ? (
