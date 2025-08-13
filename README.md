@@ -191,4 +191,8 @@ exports.handler = async (event) => {
     - Use consistent JSX syntax and close all tags
     - Follow Tailwind CSS conventions
     - Use the Netlify Function for data updates
+<<<<<<< HEAD
     - Test changes in the browser and check console for errors
+=======
+    - Test changes in the browser and check console for errors
+>>>>>>> 639ba520f7d890df803f8a943c19c78d24746cf4
