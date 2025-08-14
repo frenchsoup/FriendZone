@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,6 +13,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
 </head>
+
 <body class="bg-gray-900 text-gray-100">
   <div id="root"></div>
   <script type="text/babel" src="/sections/modal.js"></script>
@@ -51,35 +53,49 @@
           const files = [
             { path: '/data/rules.json', setter: setRules, default: { sections: [] } },
             { path: '/data/payouts.json', setter: setPayouts, default: [] },
-            { path: '/data/keepers_2022.json', setter: (data) => setKeepers(prev => ({ ...prev, 2022: data.map(team => ({
-                ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
-                cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
-                cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
-                remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
-              })) })), default: [] },
-            { path: '/data/keepers_2023.json', setter: (data) => setKeepers(prev => ({ ...prev, 2023: data.map(team => ({
-                ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
-                cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
-                cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
-                remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
-              })) })), default: [] },
-            { path: '/data/keepers_2024.json', setter: (data) => setKeepers(prev => ({ ...prev, 2024: data.map(team => ({
-                ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
-                cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
-                cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
-                remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
-              })) })), default: [] },
+            {
+              path: '/data/keepers_2022.json', setter: (data) => setKeepers(prev => ({
+                ...prev, 2022: data.map(team => ({
+                  ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
+                  cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
+                  cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
+                  remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
+                }))
+              })), default: []
+            },
+            {
+              path: '/data/keepers_2023.json', setter: (data) => setKeepers(prev => ({
+                ...prev, 2023: data.map(team => ({
+                  ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
+                  cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
+                  cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
+                  remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
+                }))
+              })), default: []
+            },
+            {
+              path: '/data/keepers_2024.json', setter: (data) => setKeepers(prev => ({
+                ...prev, 2024: data.map(team => ({
+                  ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
+                  cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
+                  cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
+                  remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
+                }))
+              })), default: []
+            },
             { path: '/data/keepers_2025.json', setter: (data) => setKeepers(prev => ({ ...prev, 2025: data })), default: [] },
             { path: '/data/prizes_2023.json', setter: (data) => setPrizes(prev => ({ ...prev, 2023: data })), default: { survivor: [], weeklyHighScores: [] } },
             { path: '/data/prizes_2024.json', setter: (data) => setPrizes(prev => ({ ...prev, 2024: data })), default: { survivor: [], weeklyHighScores: [] } },
-            { path: '/data/prizes_2025.json', setter: (data) => setPrizes(prev => {
-              const survivor = data.survivor.length > 0 ? data.survivor : Array.from({ length: 12 }, (_, i) => i < 11 ? { week: i + 1, eliminated: '' } : { week: 12, winner: '' });
-              const weeklyHighScores = data.weeklyHighScores.length > 0 ? data.weeklyHighScores : Array.from({ length: 14 }, (_, i) => ({ week: i + 1, team: '', total: '' }));
-              return { ...prev, 2025: { survivor, weeklyHighScores } };
-            }), default: { 
-              survivor: Array.from({ length: 12 }, (_, i) => i < 11 ? { week: i + 1, eliminated: '' } : { week: 12, winner: '' }), 
-              weeklyHighScores: Array.from({ length: 14 }, (_, i) => ({ week: i + 1, team: '', total: '' })) 
-            } },
+            {
+              path: '/data/prizes_2025.json', setter: (data) => setPrizes(prev => {
+                const survivor = data.survivor.length > 0 ? data.survivor : Array.from({ length: 12 }, (_, i) => i < 11 ? { week: i + 1, eliminated: '' } : { week: 12, winner: '' });
+                const weeklyHighScores = data.weeklyHighScores.length > 0 ? data.weeklyHighScores : Array.from({ length: 14 }, (_, i) => ({ week: i + 1, team: '', total: '' }));
+                return { ...prev, 2025: { survivor, weeklyHighScores } };
+              }), default: {
+                survivor: Array.from({ length: 12 }, (_, i) => i < 11 ? { week: i + 1, eliminated: '' } : { week: 12, winner: '' }),
+                weeklyHighScores: Array.from({ length: 14 }, (_, i) => ({ week: i + 1, team: '', total: '' }))
+              }
+            },
             { path: '/data/locks.json', setter: setLocks, default: { 2022: false, 2023: false, 2024: false, 2025: false } },
           ];
           for (const file of files) {
@@ -222,8 +238,8 @@
           const teamData = window.AppState.pendingChanges[year][index] || window.AppState.keepers[year][index];
           if (!teamData) return;
           const updatedKeepers = { ...window.AppState.keepers };
-          updatedKeepers[year][index] = { 
-            ...window.AppState.keepers[year][index], 
+          updatedKeepers[year][index] = {
+            ...window.AppState.keepers[year][index],
             ...teamData,
             draftCost1: teamData.draftCost1 === '' ? 0 : parseInt(teamData.draftCost1) || 0,
             draftCost2: teamData.draftCost2 === '' ? 0 : parseInt(teamData.draftCost2) || 0
@@ -289,8 +305,11 @@
             window.AppState.setPrizes(updatedPrizes);
           }
         },
-        getRemainingTeams: (year) => {
-          const survivorTeams = window.AppState.prizes[year].survivor.map(entry => entry.eliminated || entry.winner);
+        getRemainingTeams: (year, currentIndex = -1) => {
+          const survivorTeams = window.AppState.prizes[year].survivor
+            .filter((entry, index) => currentIndex === -1 || index <= currentIndex)
+            .map(entry => entry.eliminated || entry.winner)
+            .filter(team => team);
           return window.AppState.keepers[year]
             .map(team => team.team)
             .filter(team => team && !survivorTeams.includes(team))
@@ -337,8 +356,8 @@
             <div className="container mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div className="flex justify-between items-center w-full sm:w-auto">
                 <h1 className="text-xl sm:text-2xl font-bold">FriendZone FF</h1>
-                <button 
-                  className="sm:hidden text-xl focus:outline-none" 
+                <button
+                  className="sm:hidden text-xl focus:outline-none"
                   onClick={() => window.AppState.setIsMenuOpen(!window.AppState.isMenuOpen)}
                 >
                   ☰
@@ -347,7 +366,7 @@
               <ul className={`sm:flex sm:space-x-4 ${window.AppState.isMenuOpen ? 'block' : 'hidden'} sm:block mt-2 sm:mt-0 p-3 sm:p-0 sm:bg-transparent bg-gray-800 shadow-lg sm:shadow-none`}>
                 {['home', 'rules', 'payouts', 'keepers', 'prizes', window.AppState.isAdminAuthenticated ? 'logout' : 'admin'].map(tab => (
                   <li key={tab} className="my-2 sm:my-0">
-                    <button 
+                    <button
                       onClick={() => {
                         if (tab === 'logout') {
                           window.AppState.setIsAdminAuthenticated(false);
@@ -357,7 +376,7 @@
                           window.AppState.setCurrentTab(tab);
                         }
                         window.AppState.setIsMenuOpen(false);
-                      }} 
+                      }}
                       className={`w-full sm:w-auto text-left capitalize hover:text-teal-400 focus:outline-none ${window.AppState.currentTab === tab ? 'text-teal-400' : ''}`}
                     >
                       {tab}
@@ -379,4 +398,5 @@
     root.render(<App />);
   </script>
 </body>
+
 </html>
