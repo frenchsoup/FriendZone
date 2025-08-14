@@ -41,7 +41,7 @@ window.Keepers = () => {
               <th className="text-center py-2">Tag</th>
               <th className="text-right py-2">Cost</th>
               <th className="text-right py-2">Remaining</th>
-              {isAdminAuthenticated && !locks[selectedYear] && <th className="text-right py-2">Actions</th>}
+              {!locks[selectedYear] && <th className="text-right py-2">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -52,7 +52,7 @@ window.Keepers = () => {
                 <tr key={index} className="border-b">
                   <td className="py-2">{team.team}</td>
                   <td className="py-2">
-                    {isAdminAuthenticated && !locks[selectedYear] ? (
+                    {!locks[selectedYear] ? (
                       <input
                         type="text"
                         value={displayTeam.keeper1 || ''}
@@ -64,7 +64,7 @@ window.Keepers = () => {
                     )}
                   </td>
                   <td className="text-right py-2">
-                    {isAdminAuthenticated && !locks[selectedYear] ? (
+                    {!locks[selectedYear] ? (
                       <input
                         type="number"
                         value={displayTeam.draftCost1 || ''}
@@ -77,7 +77,7 @@ window.Keepers = () => {
                     )}
                   </td>
                   <td className="text-center py-2">
-                    {isAdminAuthenticated && !locks[selectedYear] ? (
+                    {!locks[selectedYear] ? (
                       <input
                         type="checkbox"
                         checked={displayTeam.tag1 || false}
@@ -90,7 +90,7 @@ window.Keepers = () => {
                   </td>
                   <td className="text-right py-2">{displayTeam.cost1 || 0}</td>
                   <td className="py-2">
-                    {isAdminAuthenticated && !locks[selectedYear] ? (
+                    {!locks[selectedYear] ? (
                       <input
                         type="text"
                         value={displayTeam.keeper2 || ''}
@@ -102,7 +102,7 @@ window.Keepers = () => {
                     )}
                   </td>
                   <td className="text-right py-2">
-                    {isAdminAuthenticated && !locks[selectedYear] ? (
+                    {!locks[selectedYear] ? (
                       <input
                         type="number"
                         value={displayTeam.draftCost2 || ''}
@@ -115,7 +115,7 @@ window.Keepers = () => {
                     )}
                   </td>
                   <td className="text-center py-2">
-                    {isAdminAuthenticated && !locks[selectedYear] ? (
+                    {!locks[selectedYear] ? (
                       <input
                         type="checkbox"
                         checked={displayTeam.tag2 || false}
@@ -128,7 +128,7 @@ window.Keepers = () => {
                   </td>
                   <td className="text-right py-2">{displayTeam.cost2 || 0}</td>
                   <td className="text-right py-2">{displayTeam.remaining || 200}</td>
-                  {isAdminAuthenticated && !locks[selectedYear] && (
+                  {!locks[selectedYear] && (
                     <td className="text-right py-2">
                       <button
                         onClick={() => window.AppState.handleSaveRow(selectedYear, index)}
