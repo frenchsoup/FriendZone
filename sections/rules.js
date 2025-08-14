@@ -1,30 +1,4 @@
-window.Rules = () => {
-  const { rules, setRules, isAdminAuthenticated, updateData, setModalState } = window.AppState;
-
-  const handleAddSection = async () => {
-    if (!isAdminAuthenticated) return;
-    const newSection = { title: 'New Section', items: ['New Rule'] };
-    const updatedRules = { sections: [...rules.sections, newSection] };
-    const result = await updateData('rules.json', updatedRules, 'update');
-    if (result) setRules(updatedRules);
-  };
-
-  const handleAddRule = async (sectionIndex) => {
-    if (!isAdminAuthenticated) return;
-    const updatedRules = { ...rules };
-    updatedRules.sections[sectionIndex].items.push('New Rule');
-    const result = await updateData('rules.json', updatedRules, 'update');
-    if (result) setRules(updatedRules);
-  };
-
-  const handleSectionTitleChange = async (sectionIndex, value) => {
-    if (!isAdminAuthenticated) return;
-    const updatedRules = { ...rules };
-    updatedRules.sections[sectionIndex].title = value;
-    const result = await updateData('rules.json', updatedRules, 'update');
-    if (result) setRules(updatedRules);
-  };
-
+window.Rules = ({ rules, setRules, isAdminAuthenticated, updateData, handleRuleChange, handleAddSection, handleAddRule, handleSectionTitleChange, setModalState }) => {
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Rules</h2>
@@ -60,7 +34,7 @@ window.Rules = () => {
                       <input
                         type="text"
                         value={item}
-                        onChange={(e) => window.AppState.handleRuleChange(sectionIndex, itemIndex, 'text', e.target.value)}
+                        onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'text', e.target.value)}
                         className="w-full bg-gray-100 p-1 rounded text-sm"
                       />
                     ) : (
@@ -68,12 +42,12 @@ window.Rules = () => {
                         <input
                           type="text"
                           value={item.text}
-                          onChange={(e) => window.AppState.handleRuleChange(sectionIndex, itemIndex, 'text', e.target.value)}
+                          onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'text', e.target.value)}
                           className="w-full bg-gray-100 p-1 rounded text-sm mb-2"
                         />
                         <textarea
                           value={item.subItems.join('\n')}
-                          onChange={(e) => window.AppState.handleRuleChange(sectionIndex, itemIndex, 'subItems', e.target.value)}
+                          onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'subItems', e.target.value)}
                           className="w-full bg-gray-100 p-1 rounded text-sm"
                           rows="3"
                         />

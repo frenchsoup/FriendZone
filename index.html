@@ -17,62 +17,126 @@
       const [keepers, setKeepers] = React.useState({});
       const [prizes, setPrizes] = React.useState({});
       const [locks, setLocks] = React.useState({});
+      const [rules, setRules] = React.useState({ sections: [] });
       const [pendingChanges, setPendingChanges] = React.useState({ keepers: {}, prizes: {} });
       const [selectedYear, setSelectedYear] = React.useState('2025');
       const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState(false);
       const [view, setView] = React.useState('home');
+      const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: {} });
 
-      const initializeKeepers = async (year) => {
-        if (!keepers[year]) {
-          const response = await fetch(`/.netlify/functions/get-data?filename=keepers_${year}.json`);
-          const data = await response.json();
-          if (data && data.teams) {
-            setKeepers(prev => ({ ...prev, [year]: data.teams }));
-          } else {
-            setKeepers(prev => ({
-              ...prev,
-              [year]: Array(12).fill().map((_, i) => ({
-                team: `Team ${i + 1}`,
-                keeper1: '',
-                draftCost1: 0,
-                tag1: false,
-                cost1: 0,
-                keeper2: '',
-                draftCost2: 0,
-                tag2: false,
-                cost2: 0,
-                remaining: 200,
-              })),
-            }));
-          }
-        }
-        if (!prizes[year]) {
-          const response = await fetch(`/.netlify/functions/get-data?filename=prizes_${year}.json`);
-          const data = await response.json();
-          if (data && data.weeklyHighScores && data.survivor) {
-            setPrizes(prev => ({ ...prev, [year]: data }));
-          } else {
-            setPrizes(prev => ({
-              ...prev,
-              [year]: {
-                weeklyHighScores: Array(17).fill().map((_, i) => ({
-                  week: i + 1,
-                  team: '',
-                  total: '',
+      const initializeData = async (year) => {
+        try {
+          if (!keepers[year]) {
+            const response = await fetch(`/.netlify/functions/get-data?filename=keepers_${year}.json`);
+            if (response.ok) {
+              const data = await response.json();
+              if (data && data.teams) {
+                setKeepers(prev => ({ ...prev, [year]: data.teams }));
+              } else {
+                setKeepers(prev => ({
+                  ...prev,
+                  [year]: Array(12).fill().map((_, i) => ({
+                    team: `Team ${i + 1}`,
+                    keeper1: '',
+                    draftCost1: 0,
+                    tag1: false,
+                    cost1: 0,
+                    keeper2: '',
+                    draftCost2: 0,
+                    tag2: false,
+                    cost2: 0,
+                    remaining: 200,
+                  })),
+                }));
+              }
+            } else {
+              console.warn(`No keepers data for ${year}, using default`);
+              setKeepers(prev => ({
+                ...prev,
+                [year]: Array(12).fill().map((_, i) => ({
+                  team: `Team ${i + 1}`,
+                  keeper1: '',
+                  draftCost1: 0,
+                  tag1: false,
+                  cost1: 0,
+                  keeper2: '',
+                  draftCost2: 0,
+                  tag2: false,
+                  cost2: 0,
+                  remaining: 200,
                 })),
-                survivor: Array(12).fill().map((_, i) => ({
-                  week: i + 1,
-                  eliminated: '',
-                  winner: i === 11 ? '' : undefined,
-                })),
-              },
-            }));
+              }));
+            }
           }
-        }
-        if (!locks[year]) {
-          const response = await fetch(`/.netlify/functions/get-data?filename=locks.json`);
-          const data = await response.json();
-          setLocks(data || {});
+          if (!prizes[year]) {
+            const response = await fetch(`/.netlify/functions/get-data?filename=prizes_${year}.json`);
+            if (response.ok) {
+              const data = await response.json();
+              if (data && data.weeklyHighScores && data.survivor) {
+                setPrizes(prev => ({ ...prev, [year]: data }));
+              } else {
+                setPrizes(prev => ({
+                  ...prev,
+                  [year]: {
+                    weeklyHighScores: Array(17).fill().map((_, i) => ({
+                      week: i + 1,
+                      team: '',
+                      total: '',
+                    })),
+                    survivor: Array(12).fill().map((_, i) => ({
+                      week: i + 1,
+                      eliminated: '',
+                      winner: i === 11 ? '' : undefined,
+                    })),
+                  },
+                }));
+              }
+            } else {
+              console.warn(`No prizes data for ${year}, using default`);
+              setPrizes(prev => ({
+                ...prev,
+                [year]: {
+                  weeklyHighScores: Array(17).fill().map((_, i) => ({
+                    week: i + 1,
+                    team: '',
+                    total: '',
+                  })),
+                  survivor: Array(12).fill().map((_, i) => ({
+                    week: i + 1,
+                    eliminated: '',
+                    winner: i === 11 ? '' : undefined,
+                  })),
+                },
+              }));
+            }
+          }
+          if (!locks[year]) {
+            const response = await fetch(`/.netlify/functions/get-data?filename=locks.json`);
+            if (response.ok) {
+              const data = await response.json();
+              setLocks(data || {});
+            } else {
+              console.warn('No locks data, using default');
+              setLocks(prev => ({ ...prev, [year]: false }));
+            }
+          }
+          if (!rules.sections.length) {
+            const response = await fetch(`/.netlify/functions/get-data?filename=rules.json`);
+            if (response.ok) {
+              const data = await response.json();
+              if (data && data.sections) {
+                setRules(data);
+              } else {
+                console.warn('No rules data, using default');
+                setRules({ sections: [] });
+              }
+            } else {
+              console.warn('No rules data, using default');
+              setRules({ sections: [] });
+            }
+          }
+        } catch (error) {
+          console.error('Error initializing data:', error);
         }
       };
 
@@ -173,11 +237,80 @@
         }
       };
 
-      const updateData = async (filename, data, action) => {
+      const handleRuleChange = async (sectionIndex, itemIndex, field, value) => {
+        if (!isAdminAuthenticated) return;
+        const updatedRules = { ...rules };
+        const item = updatedRules.sections[sectionIndex].items[itemIndex];
+        if (field === 'subItems') {
+          updatedRules.sections[sectionIndex].items[itemIndex] = {
+            ...item,
+            subItems: value.split('\n').filter(line => line.trim()),
+          };
+        } else {
+          if (typeof item === 'string') {
+            updatedRules.sections[sectionIndex].items[itemIndex] = value;
+          } else {
+            updatedRules.sections[sectionIndex].items[itemIndex] = { ...item, [field]: value };
+          }
+        }
+        const result = await updateData('rules.json', updatedRules, 'update');
+        if (result) setRules(updatedRules);
+      };
+
+      const handleAddSection = async () => {
+        if (!isAdminAuthenticated) return;
+        const newSection = { title: 'New Section', items: ['New Rule'] };
+        const updatedRules = { sections: [...rules.sections, newSection] };
+        const result = await updateData('rules.json', updatedRules, 'update');
+        if (result) setRules(updatedRules);
+      };
+
+      const handleAddRule = async (sectionIndex) => {
+        if (!isAdminAuthenticated) return;
+        const updatedRules = { ...rules };
+        updatedRules.sections[sectionIndex].items.push('New Rule');
+        const result = await updateData('rules.json', updatedRules, 'update');
+        if (result) setRules(updatedRules);
+      };
+
+      const handleSectionTitleChange = async (sectionIndex, value) => {
+        if (!isAdminAuthenticated) return;
+        const updatedRules = { ...rules };
+        updatedRules.sections[sectionIndex].title = value;
+        const result = await updateData('rules.json', updatedRules, 'update');
+        if (result) setRules(updatedRules);
+      };
+
+      const handleDeleteSection = async (sectionIndex) => {
+        if (!isAdminAuthenticated) return;
+        const updatedRules = {
+          sections: rules.sections.filter((_, index) => index !== sectionIndex),
+        };
+        const result = await updateData('rules.json', updatedRules, 'update');
+        if (result) {
+          setRules(updatedRules);
+          setModalState({ isOpen: false, type: '', data: {} });
+        }
+      };
+
+      const handleDeleteRule = async (sectionIndex, itemIndex) => {
+        if (!isAdminAuthenticated) return;
+        const updatedRules = { ...rules };
+        updatedRules.sections[sectionIndex].items = updatedRules.sections[sectionIndex].items.filter(
+          (_, index) => index !== itemIndex
+        );
+        const result = await updateData('rules.json', updatedRules, 'update');
+        if (result) {
+          setRules(updatedRules);
+          setModalState({ isOpen: false, type: '', data: {} });
+        }
+      };
+
+      const updateData = async (filename, data, action, index) => {
         try {
           const response = await fetch('/.netlify/functions/update-data', {
             method: 'POST',
-            body: JSON.stringify({ filename, data, action }),
+            body: JSON.stringify({ file: filename, data, action, index }),
           });
           return response.ok;
         } catch (error) {
@@ -201,9 +334,7 @@
         if (!isAdminAuthenticated) return;
         const updatedLocks = { ...locks, [year]: !locks[year] };
         const result = await updateData('locks.json', updatedLocks, 'update');
-        if (result) {
-          setLocks(updatedLocks);
-        }
+        if (result) setLocks(updatedLocks);
       };
 
       const handleArrowKey = (e, year, index, field) => {
@@ -233,8 +364,42 @@
       };
 
       React.useEffect(() => {
-        initializeKeepers(selectedYear);
+        initializeData(selectedYear);
       }, [selectedYear]);
+
+      const Modal = () => {
+        if (!modalState.isOpen) return null;
+        const { type, data } = modalState;
+        return (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-bold mb-4">
+                {type === 'deleteSection' ? 'Delete Section' : 'Delete Rule'}
+              </h3>
+              <p className="text-sm mb-4">
+                Are you sure you want to delete this {type === 'deleteSection' ? 'section' : 'rule'}?
+              </p>
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setModalState({ isOpen: false, type: '', data: {} })}
+                  className="px-4 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (type === 'deleteSection') handleDeleteSection(data.sectionIndex);
+                    if (type === 'deleteRule') handleDeleteRule(data.sectionIndex, data.itemIndex);
+                  }}
+                  className="px-4 py-2 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      };
 
       return (
         <div className="min-h-screen">
@@ -259,7 +424,17 @@
           </nav>
           <main className="px-4 sm:px-6 py-4">
             {view === 'home' && window.Home && <window.Home />}
-            {view === 'rules' && window.Rules && <window.Rules />}
+            {view === 'rules' && window.Rules && <window.Rules
+              rules={rules}
+              setRules={setRules}
+              isAdminAuthenticated={isAdminAuthenticated}
+              updateData={updateData}
+              handleRuleChange={handleRuleChange}
+              handleAddSection={handleAddSection}
+              handleAddRule={handleAddRule}
+              handleSectionTitleChange={handleSectionTitleChange}
+              setModalState={setModalState}
+            />}
             {view === 'payouts' && window.Payouts && <window.Payouts />}
             {view === 'keepers' && window.Keepers && <window.Keepers
               keepers={keepers}
@@ -269,7 +444,7 @@
               pendingChanges={pendingChanges}
               isAdminAuthenticated={isAdminAuthenticated}
               handleToggleLock={handleToggleLock}
-              initializeKeepers={initializeKeepers}
+              initializeData={initializeData}
               handleKeeperChange={handleKeeperChange}
               handleSaveRow={handleSaveRow}
               handleArrowKey={handleArrowKey}
@@ -289,6 +464,7 @@
             />}
             {view === 'admin' && window.Admin && <window.Admin />}
           </main>
+          <Modal />
         </div>
       );
     };
