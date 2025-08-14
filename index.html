@@ -28,7 +28,7 @@
       const initializeData = async (year) => {
         try {
           const baseUrl = '/.netlify/functions/get-data?filename=';
-          if (!keepers[year]) {
+          if (!keepers[year] || keepers[year].every(team => team.team.startsWith('Team '))) {
             const response = await fetch(`${baseUrl}keepers_${year}.json`);
             let data = {};
             if (response.ok) {
@@ -37,8 +37,8 @@
             } else {
               console.warn(`Failed to fetch keepers_${year}.json, status: ${response.status}`);
             }
-            setKeepers(prev => ({
-              ...prev,
+            const newKeepers = {
+              ...keepers,
               [year]: (data.teams && Array.isArray(data.teams) && data.teams.length > 0)
                 ? data.teams
                 : Array(12).fill().map((_, i) => ({
@@ -47,7 +47,9 @@
                     keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
                     remaining: 200,
                   })),
-            }));
+            };
+            setKeepers(newKeepers);
+            console.log('Set keepers state:', newKeepers);
           }
           if (!prizes[year]) {
             const response = await fetch(`${baseUrl}prizes_${year}.json`);
@@ -142,6 +144,7 @@
         const result = await updateData(`keepers_${year}.json`, updatedKeepers[year], 'update');
         if (result) {
           setKeepers(updatedKeepers);
+          console.log('Saved keepers state:', updatedKeepers);
           const updatedPending = { ...pendingChanges };
           updatedPending.keepers[year][index] = {};
           setPendingChanges(updatedPending);
@@ -362,6 +365,7 @@
       };
 
       React.useEffect(() => {
+        console.log('Running useEffect with selectedYear:', selectedYear);
         initializeData(selectedYear);
       }, [selectedYear]);
 

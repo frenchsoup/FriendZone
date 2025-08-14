@@ -9,10 +9,29 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, pendingChange
     remaining: 200,
   }));
 
+  // Optional: Uncomment to restore year selection
+  /*
+  const years = ['2024', '2025'];
+  */
+
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Keepers</h2>
       <div className="flex justify-between items-center">
+        {/* Optional: Uncomment to restore year selection
+        <select
+          value={selectedYear}
+          onChange={(e) => {
+            setSelectedYear(e.target.value);
+            initializeData(e.target.value);
+          }}
+          className="bg-gray-800 text-white p-2 rounded"
+        >
+          {years.map(year => (
+            <option key={year} value={year}>{year}</option>
+          ))}
+        </select>
+        */}
         <span className="text-white">{selectedYear}</span>
         {isAdminAuthenticated && (
           <button
