@@ -4,7 +4,6 @@ exports.handler = async function (event) {
   try {
     const { filename } = event.queryStringParameters;
     const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-
     const repoOwner = 'frenchsoup';
     const repoName = 'FriendZone';
     const path = `data/${filename}`;
@@ -24,15 +23,11 @@ exports.handler = async function (event) {
     } catch (error) {
       if (error.status === 404) {
         const defaultContent =
-          filename === 'locks.json'
-            ? { 2022: false, 2023: false, 2024: false, 2025: false }
-            : filename === 'rules.json'
-            ? { sections: [] }
-            : filename.startsWith('keepers_') || filename.startsWith('prizes_')
-            ? filename.startsWith('keepers_')
-              ? { teams: [] }
-              : { weeklyHighScores: [], survivor: [] }
-            : {};
+          filename === 'locks.json' ? { 2022: false, 2023: false, 2024: false, 2025: false } :
+          filename === 'rules.json' ? { sections: [] } :
+          filename === 'payouts.json' ? [] :
+          filename.startsWith('keepers_') ? { teams: [] } :
+          filename.startsWith('prizes_') ? { weeklyHighScores: [], survivor: [] } : {};
         return {
           statusCode: 200,
           headers: { 'Content-Type': 'application/json' },
