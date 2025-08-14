@@ -43,9 +43,9 @@
     "cost1": 9,
     "keeper2": "Bucky",
     "draftCost2": 1,
-    "tag2": true,
-    "cost2": 1,
-    "remaining": 190
+    "tag2": false,
+    "cost2": 6,
+    "remaining": 185
   },
   {
     "team": "Trudy",
