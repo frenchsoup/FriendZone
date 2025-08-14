@@ -37,8 +37,8 @@
             } else {
               console.warn(`Failed to fetch keepers_${year}.json, status: ${response.status}`);
             }
-            setKeepers(prev => ({
-              ...prev,
+            const newKeepers = {
+              ...keepers,
               [year]: (data.teams && Array.isArray(data.teams) && data.teams.length > 0)
                 ? data.teams
                 : Array(12).fill().map((_, i) => ({
@@ -47,7 +47,9 @@
                     keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
                     remaining: 200,
                   })),
-            }));
+            };
+            setKeepers(newKeepers);
+            console.log('Updated keepers state:', newKeepers);
           }
           if (!prizes[year]) {
             const response = await fetch(`${baseUrl}prizes_${year}.json`);
@@ -274,7 +276,7 @@
           (_, index) => index !== itemIndex
         );
         const result = await updateData('rules.json', updatedRules, 'update');
-        if (result) {
+        ifresult) {
           setRules(updatedRules);
           setModalState({ isOpen: false, type: '', data: {} });
         }
