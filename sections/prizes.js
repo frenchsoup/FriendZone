@@ -1,6 +1,4 @@
-window.Prizes = () => {
-  const { prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges, handleWeeklyScoreChange, handleWeeklyScoreSave, handleSurvivorChange, handleSurvivorSave, getRemainingTeams } = React.useContext(window.AppStateContext);
-
+window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges, handleWeeklyScoreChange, handleWeeklyScoreSave, handleSurvivorChange, handleSurvivorSave, getRemainingTeams }) => {
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Prizes</h2>

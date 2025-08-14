@@ -1,6 +1,4 @@
-window.Keepers = () => {
-  const { keepers, locks, selectedYear, setSelectedYear, pendingChanges, isAdminAuthenticated, handleToggleLock, initializeKeepers, handleKeeperChange, handleSaveRow, handleArrowKey } = React.useContext(window.AppStateContext);
-
+window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, pendingChanges, isAdminAuthenticated, handleToggleLock, initializeKeepers, handleKeeperChange, handleSaveRow, handleArrowKey }) => {
   React.useEffect(() => {
     initializeKeepers(selectedYear);
   }, [selectedYear]);

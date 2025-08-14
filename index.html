@@ -13,15 +13,14 @@
 <body class="bg-gray-900 text-gray-100">
   <div id="root"></div>
   <script type="text/babel">
-    const AppStateContext = React.createContext(null);
-
-    const useAppState = () => {
+    const App = () => {
       const [keepers, setKeepers] = React.useState({});
       const [prizes, setPrizes] = React.useState({});
       const [locks, setLocks] = React.useState({});
       const [pendingChanges, setPendingChanges] = React.useState({ keepers: {}, prizes: {} });
       const [selectedYear, setSelectedYear] = React.useState('2025');
       const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState(false);
+      const [view, setView] = React.useState('home');
 
       const initializeKeepers = async (year) => {
         if (!keepers[year]) {
@@ -188,14 +187,14 @@
       };
 
       const getRemainingTeams = (year, currentIndex = -1) => {
-        const survivorTeams = prizes[year].survivor
-          .filter((entry, index) => currentIndex === -1 || index <= currentIndex)
+        const survivorTeams = prizes[year]?.survivor
+          ?.filter((entry, index) => currentIndex === -1 || index <= currentIndex)
           .map(entry => entry.eliminated || entry.winner)
-          .filter(team => team);
+          .filter(team => team) || [];
         return keepers[year]
-          .map(team => team.team)
+          ?.map(team => team.team)
           .filter(team => team && !survivorTeams.includes(team))
-          .sort();
+          .sort() || [];
       };
 
       const handleToggleLock = async (year) => {
@@ -218,40 +217,10 @@
         }
       };
 
-      return {
-        keepers,
-        setKeepers,
-        prizes,
-        setPrizes,
-        locks,
-        setLocks,
-        pendingChanges,
-        setPendingChanges,
-        selectedYear,
-        setSelectedYear,
-        isAdminAuthenticated,
-        setIsAdminAuthenticated,
-        initializeKeepers,
-        handleKeeperChange,
-        handleSaveRow,
-        handleWeeklyScoreChange,
-        handleWeeklyScoreSave,
-        handleSurvivorChange,
-        handleSurvivorSave,
-        updateData,
-        getRemainingTeams,
-        handleToggleLock,
-        handleArrowKey,
-      };
-    };
-
-    const App = () => {
-      const appState = useAppState();
-
       const handleLogin = () => {
         const password = prompt('Enter admin password:');
         if (password === 'friendzone2025') {
-          appState.setIsAdminAuthenticated(true);
+          setIsAdminAuthenticated(true);
           alert('Login successful!');
         } else {
           alert('Incorrect password');
@@ -259,51 +228,69 @@
       };
 
       const handleLogout = () => {
-        appState.setIsAdminAuthenticated(false);
+        setIsAdminAuthenticated(false);
         alert('Logged out');
       };
 
-      return (
-        <AppStateContext.Provider value={appState}>
-          <div className="min-h-screen">
-            <nav className="bg-gray-800 p-4 flex justify-between items-center">
-              <div className="flex space-x-4">
-                <a href="#" onClick={() => window.App.setView('home')} className="text-white hover:text-teal-400">Home</a>
-                <a href="#" onClick={() => window.App.setView('rules')} className="text-white hover:text-teal-400">Rules</a>
-                <a href="#" onClick={() => window.App.setView('payouts')} className="text-white hover:text-teal-400">Payouts</a>
-                <a href="#" onClick={() => window.App.setView('keepers')} className="text-white hover:text-teal-400">Keepers</a>
-                <a href="#" onClick={() => window.App.setView('prizes')} className="text-white hover:text-teal-400">Prizes</a>
-                {appState.isAdminAuthenticated && (
-                  <a href="#" onClick={() => window.App.setView('admin')} className="text-white hover:text-teal-400">Admin</a>
-                )}
-              </div>
-              <div>
-                {!appState.isAdminAuthenticated ? (
-                  <button onClick={handleLogin} className="text-white hover:text-teal-400">Login</button>
-                ) : (
-                  <button onClick={handleLogout} className="text-white hover:text-teal-400">Logout</button>
-                )}
-              </div>
-            </nav>
-            <main className="px-4 sm:px-6 py-4">
-              {window.App.view === 'home' && <window.Home />}
-              {window.App.view === 'rules' && <window.Rules />}
-              {window.App.view === 'payouts' && <window.Payouts />}
-              {window.App.view === 'keepers' && <window.Keepers />}
-              {window.App.view === 'prizes' && <window.Prizes />}
-              {window.App.view === 'admin' && <window.Admin />}
-            </main>
-          </div>
-        </AppStateContext.Provider>
-      );
-    };
+      React.useEffect(() => {
+        initializeKeepers(selectedYear);
+      }, [selectedYear]);
 
-    window.App = {
-      view: 'home',
-      setView: (view) => {
-        window.App.view = view;
-        ReactDOM.render(<App />, document.getElementById('root'));
-      },
+      return (
+        <div className="min-h-screen">
+          <nav className="bg-gray-800 p-4 flex justify-between items-center">
+            <div className="flex space-x-4">
+              <a href="#" onClick={() => setView('home')} className="text-white hover:text-teal-400">Home</a>
+              <a href="#" onClick={() => setView('rules')} className="text-white hover:text-teal-400">Rules</a>
+              <a href="#" onClick={() => setView('payouts')} className="text-white hover:text-teal-400">Payouts</a>
+              <a href="#" onClick={() => setView('keepers')} className="text-white hover:text-teal-400">Keepers</a>
+              <a href="#" onClick={() => setView('prizes')} className="text-white hover:text-teal-400">Prizes</a>
+              {isAdminAuthenticated && (
+                <a href="#" onClick={() => setView('admin')} className="text-white hover:text-teal-400">Admin</a>
+              )}
+            </div>
+            <div>
+              {!isAdminAuthenticated ? (
+                <button onClick={handleLogin} className="text-white hover:text-teal-400">Login</button>
+              ) : (
+                <button onClick={handleLogout} className="text-white hover:text-teal-400">Logout</button>
+              )}
+            </div>
+          </nav>
+          <main className="px-4 sm:px-6 py-4">
+            {view === 'home' && window.Home && <window.Home />}
+            {view === 'rules' && window.Rules && <window.Rules />}
+            {view === 'payouts' && window.Payouts && <window.Payouts />}
+            {view === 'keepers' && window.Keepers && <window.Keepers
+              keepers={keepers}
+              locks={locks}
+              selectedYear={selectedYear}
+              setSelectedYear={setSelectedYear}
+              pendingChanges={pendingChanges}
+              isAdminAuthenticated={isAdminAuthenticated}
+              handleToggleLock={handleToggleLock}
+              initializeKeepers={initializeKeepers}
+              handleKeeperChange={handleKeeperChange}
+              handleSaveRow={handleSaveRow}
+              handleArrowKey={handleArrowKey}
+            />}
+            {view === 'prizes' && window.Prizes && <window.Prizes
+              prizes={prizes}
+              keepers={keepers}
+              selectedYear={selectedYear}
+              setSelectedYear={setSelectedYear}
+              isAdminAuthenticated={isAdminAuthenticated}
+              pendingChanges={pendingChanges}
+              handleWeeklyScoreChange={handleWeeklyScoreChange}
+              handleWeeklyScoreSave={handleWeeklyScoreSave}
+              handleSurvivorChange={handleSurvivorChange}
+              handleSurvivorSave={handleSurvivorSave}
+              getRemainingTeams={getRemainingTeams}
+            />}
+            {view === 'admin' && window.Admin && <window.Admin />}
+          </main>
+        </div>
+      );
     };
 
     // Ensure components are defined before rendering
