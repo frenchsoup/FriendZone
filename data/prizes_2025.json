@@ -1,4 +1,124 @@
 {
-  "survivor": [],
-  "weeklyHighScores": []
+  "survivor": [
+    {
+      "week": 1,
+      "eliminated": "ALeF"
+    },
+    {
+      "week": 2,
+      "eliminated": ""
+    },
+    {
+      "week": 3,
+      "eliminated": ""
+    },
+    {
+      "week": 4,
+      "eliminated": ""
+    },
+    {
+      "week": 5,
+      "eliminated": ""
+    },
+    {
+      "week": 6,
+      "eliminated": ""
+    },
+    {
+      "week": 7,
+      "eliminated": ""
+    },
+    {
+      "week": 8,
+      "eliminated": ""
+    },
+    {
+      "week": 9,
+      "eliminated": ""
+    },
+    {
+      "week": 10,
+      "eliminated": ""
+    },
+    {
+      "week": 11,
+      "eliminated": ""
+    },
+    {
+      "week": 12,
+      "winner": ""
+    }
+  ],
+  "weeklyHighScores": [
+    {
+      "week": 1,
+      "team": "",
+      "total": ""
+    },
+    {
+      "week": 2,
+      "team": "",
+      "total": ""
+    },
+    {
+      "week": 3,
+      "team": "",
+      "total": ""
+    },
+    {
+      "week": 4,
+      "team": "",
+      "total": ""
+    },
+    {
+      "week": 5,
+      "team": "",
+      "total": ""
+    },
+    {
+      "week": 6,
+      "team": "",
+      "total": ""
+    },
+    {
+      "week": 7,
+      "team": "",
+      "total": ""
+    },
+    {
+      "week": 8,
+      "team": "",
+      "total": ""
+    },
+    {
+      "week": 9,
+      "team": "",
+      "total": ""
+    },
+    {
+      "week": 10,
+      "team": "",
+      "total": ""
+    },
+    {
+      "week": 11,
+      "team": "",
+      "total": ""
+    },
+    {
+      "week": 12,
+      "team": "",
+      "total": ""
+    },
+    {
+      "week": 13,
+      "team": "",
+      "total": ""
+    },
+    {
+      "week": 14,
+      "team": "",
+      "total": ""
+    }
+  ]
 }
