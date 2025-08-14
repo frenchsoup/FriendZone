@@ -1,11 +1,11 @@
 [
-  { "category": "Playoff Champ", "percentage": 0.35, "prize": 840 },
-  { "category": "Playoff Runner Up", "percentage": 0.17, "prize": 400 },
-  { "category": "Playoff 3rd Place", "percentage": 0.08, "prize": 200 },
-  { "category": "Regular Season Champ", "percentage": 0.08, "prize": 200 },
-  { "category": "Weekly High Score (Weeks 1-14)", "percentage": 0.23, "prize": 560 },
-  { "category": "Survivor (Week 13 Winner)", "percentage": 0.08, "prize": 200 },
-  { "category": "Ceiling (Most Points in a Week)", "percentage": 0.00, "prize": 0 },
-  { "category": "Streak (Most Consecutive Wins)", "percentage": 0.00, "prize": 0 },
-  { "category": "Unlucky (Most Points in a Loss)", "percentage": 0.00, "prize": 0 }
+  { "category": "Playoff Champ", "percentage": 35, "prize": 840 },
+  { "category": "Playoff Runner Up", "percentage": 17, "prize": 400 },
+  { "category": "Playoff 3rd Place", "percentage": 8, "prize": 200 },
+  { "category": "Regular Season Champ", "percentage": 8, "prize": 200 },
+  { "category": "Weekly High Score (Weeks 1-14)", "percentage": 23, "prize": 560 },
+  { "category": "Survivor (Week 13 Winner)", "percentage": 8, "prize": 200 },
+  { "category": "Ceiling (Most Points in a Week)", "percentage": 0, "prize": 0 },
+  { "category": "Streak (Most Consecutive Wins)", "percentage": 0, "prize": 0 },
+  { "category": "Unlucky (Most Points in a Loss)", "percentage": 0, "prize": 0 }
 ]
