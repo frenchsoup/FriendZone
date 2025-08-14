@@ -1,5 +1,5 @@
 window.Keepers = () => {
-  const { keepers, locks, selectedYear, setSelectedYear, pendingChanges, isAdminAuthenticated, handleToggleLock, initializeKeepers, handleKeeperChange, handleSaveRow } = React.useContext(window.AppStateContext);
+  const { keepers, locks, selectedYear, setSelectedYear, pendingChanges, isAdminAuthenticated, handleToggleLock, initializeKeepers, handleKeeperChange, handleSaveRow, handleArrowKey } = React.useContext(window.AppStateContext);
 
   React.useEffect(() => {
     initializeKeepers(selectedYear);
@@ -52,7 +52,7 @@ window.Keepers = () => {
               </tr>
             </thead>
             <tbody>
-              {keepers[selectedYear].map((team, index) => {
+              {keepers[selectedYear]?.map((team, index) => {
                 const pending = pendingChanges.keepers[selectedYear]?.[index] || {};
                 const displayTeam = { ...team, ...pending };
                 return (
@@ -74,9 +74,10 @@ window.Keepers = () => {
                       {!locks[selectedYear] ? (
                         <input
                           type="number"
+                          name={`draftCost1-${index}`}
                           value={displayTeam.draftCost1 || ''}
                           onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
-                          onKeyDown={(e) => window.AppState.handleArrowKey(e, selectedYear, index, 'draftCost1')}
+                          onKeyDown={(e) => handleArrowKey(e, selectedYear, index, 'draftCost1')}
                           className="w-14 sm:w-16 bg-gray-100 p-1 rounded text-xs sm:text-sm text-right no-spinner"
                         />
                       ) : (
@@ -112,9 +113,10 @@ window.Keepers = () => {
                       {!locks[selectedYear] ? (
                         <input
                           type="number"
+                          name={`draftCost2-${index}`}
                           value={displayTeam.draftCost2 || ''}
                           onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
-                          onKeyDown={(e) => window.AppState.handleArrowKey(e, selectedYear, index, 'draftCost2')}
+                          onKeyDown={(e) => handleArrowKey(e, selectedYear, index, 'draftCost2')}
                           className="w-14 sm:w-16 bg-gray-100 p-1 rounded text-xs sm:text-sm text-right no-spinner"
                         />
                       ) : (
@@ -147,7 +149,7 @@ window.Keepers = () => {
                     )}
                   </tr>
                 );
-              })}
+              }) || <tr><td colSpan="11">Loading...</td></tr>}
             </tbody>
           </table>
         </div>

@@ -33,7 +33,7 @@ window.Prizes = () => {
                 </tr>
               </thead>
               <tbody>
-                {prizes[selectedYear].weeklyHighScores.map((score, index) => {
+                {prizes[selectedYear]?.weeklyHighScores?.map((score, index) => {
                   const pending = pendingChanges.prizes[selectedYear]?.weeklyHighScores?.[index] || {};
                   const displayScore = { ...score, ...pending };
                   return (
@@ -79,7 +79,7 @@ window.Prizes = () => {
                       )}
                     </tr>
                   );
-                })}
+                }) || <tr><td colSpan="4">Loading...</td></tr>}
               </tbody>
             </table>
           </div>
@@ -96,7 +96,7 @@ window.Prizes = () => {
                 </tr>
               </thead>
               <tbody>
-                {prizes[selectedYear].survivor.map((entry, index) => {
+                {prizes[selectedYear]?.survivor?.map((entry, index) => {
                   const pending = pendingChanges.prizes[selectedYear]?.survivor?.[index] || {};
                   const displayEntry = { ...entry, ...pending };
                   return (
@@ -139,7 +139,7 @@ window.Prizes = () => {
                       )}
                     </tr>
                   );
-                })}
+                }) || <tr><td colSpan="3">Loading...</td></tr>}
               </tbody>
             </table>
             <div className="mt-4">

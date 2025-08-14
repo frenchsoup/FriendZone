@@ -207,6 +207,17 @@
         }
       };
 
+      const handleArrowKey = (e, year, index, field) => {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          e.preventDefault();
+          const newIndex = e.key === 'ArrowUp' ? index - 1 : index + 1;
+          if (newIndex >= 0 && newIndex < keepers[year].length) {
+            const input = document.querySelector(`input[name="${field}-${newIndex}"]`);
+            if (input) input.focus();
+          }
+        }
+      };
+
       return {
         keepers,
         setKeepers,
@@ -230,6 +241,7 @@
         updateData,
         getRemainingTeams,
         handleToggleLock,
+        handleArrowKey,
       };
     };
 
@@ -294,7 +306,13 @@
       },
     };
 
-    ReactDOM.render(<App />, document.getElementById('root'));
+    // Ensure components are defined before rendering
+    const checkComponentsLoaded = setInterval(() => {
+      if (window.Home && window.Rules && window.Payouts && window.Keepers && window.Prizes && window.Admin) {
+        clearInterval(checkComponentsLoaded);
+        ReactDOM.render(<App />, document.getElementById('root'));
+      }
+    }, 100);
   </script>
   <script src="/sections/home.js" type="text/babel"></script>
   <script src="/sections/rules.js" type="text/babel"></script>
