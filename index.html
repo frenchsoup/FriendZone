@@ -293,10 +293,12 @@
           const updatedPrizes = { ...window.AppState.prizes };
           const entry = { ...updatedPrizes[year].survivor[index] };
           if (field === 'team') {
-            if (entry.winner !== undefined) {
+            if (index === 11) {
               entry.winner = value;
+              entry.eliminated = '';
             } else {
               entry.eliminated = value;
+              entry.winner = '';
             }
           }
           updatedPrizes[year].survivor[index] = entry;

@@ -4,16 +4,20 @@ window.Prizes = () => {
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Prizes</h2>
-      <div className="flex justify-center mb-4">
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(e.target.value)}
-          className="bg-gray-800 text-white p-2 rounded text-sm"
-        >
-          {['2023', '2024', '2025'].map(year => (
-            <option key={year} value={year}>{year}</option>
-          ))}
-        </select>
+      <div className="flex justify-center mb-4 space-x-2">
+        {['2023', '2024', '2025'].map(year => (
+          <button
+            key={year}
+            onClick={() => setSelectedYear(year)}
+            className={`px-3 py-1 text-sm rounded transition-all ${
+              selectedYear === year
+                ? 'bg-teal-500 text-white'
+                : 'bg-gray-700 text-gray-200 hover:bg-teal-600 hover:text-white'
+            }`}
+          >
+            {year}
+          </button>
+        ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <div className="table-container">
@@ -34,7 +38,7 @@ window.Prizes = () => {
                     <td className="py-2 px-2 sm:px-3">
                       {isAdminAuthenticated ? (
                         <select
-                          value={score.team}
+                          value={score.team || ''}
                           onChange={(e) => window.AppState.handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
                           className="w-full bg-gray-100 p-1 rounded text-sm"
                         >
@@ -51,7 +55,7 @@ window.Prizes = () => {
                       {isAdminAuthenticated ? (
                         <input
                           type="number"
-                          value={score.total}
+                          value={score.total || ''}
                           onChange={(e) => window.AppState.handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
                           className="w-full sm:w-16 bg-gray-100 p-1 rounded text-sm text-right no-spinner"
                         />
@@ -91,7 +95,7 @@ window.Prizes = () => {
                     <td className="py-2 px-2 sm:px-3">
                       {isAdminAuthenticated ? (
                         <select
-                          value={entry.eliminated || entry.winner || ''}
+                          value={index === 11 ? (entry.winner || '') : (entry.eliminated || '')}
                           onChange={(e) => window.AppState.handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
                           className="w-full bg-gray-100 p-1 rounded text-sm"
                         >
@@ -101,13 +105,25 @@ window.Prizes = () => {
                           ))}
                         </select>
                       ) : (
-                        <span>{entry.eliminated || entry.winner || ''}</span>
+                        <span>{index === 11 ? (entry.winner || '') : (entry.eliminated || '')}</span>
                       )}
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            <div className="mt-4">
+              <h4 className="text-sm font-semibold text-gray-800">Remaining Teams</h4>
+              <ul className="list-disc pl-5 text-sm text-gray-800">
+                {window.AppState.getRemainingTeams(selectedYear).length > 0 ? (
+                  window.AppState.getRemainingTeams(selectedYear).map(team => (
+                    <li key={team}>{team}</li>
+                  ))
+                ) : (
+                  <li>No teams remaining</li>
+                )}
+              </ul>
+            </div>
           </div>
         </div>
       </div>
