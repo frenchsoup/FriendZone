@@ -1,64 +1,85 @@
+/* Base styles */
 body {
   font-family: 'Inter', sans-serif;
+  @apply bg-gray-900 text-gray-100;
 }
 
+/* Responsive table container */
 .table-container {
-  overflow-x: auto;
+  @apply overflow-x-auto;
   -webkit-overflow-scrolling: touch;
 }
 
+/* Navigation */
 nav a, nav button {
-  transition: all 0.2s ease-in-out;
+  @apply transition-all duration-200 ease-in-out;
 }
 
 nav a:hover, nav button:hover {
-  transform: scale(1.05);
+  @apply scale-105 text-teal-400;
 }
 
+/* Cards */
 .card {
-  transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  @apply transition-all duration-200 ease-in-out bg-white text-gray-800 rounded-lg shadow-md;
 }
 
 .card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  @apply translate-y-[-2px] shadow-xl;
 }
 
+/* Mobile navigation */
 .mobile-nav {
-  z-index: 50;
+  @apply z-50 sticky top-0;
 }
 
+/* Table row striping */
 .table-row-even {
-  background-color: #ffffff;
+  @apply bg-white;
 }
 
 .table-row-odd {
-  background-color: #f9fafb;
+  @apply bg-gray-50;
 }
 
+/* Modal */
 .modal {
-  z-index: 100;
+  @apply z-[100] fixed inset-0 flex items-center justify-center bg-black bg-opacity-50;
 }
 
+.modal > div {
+  @apply max-w-[90%] sm:max-w-md w-full;
+}
+
+/* Inputs, selects, and textareas */
 input, select, textarea {
-  transition: all 0.2s ease-in-out;
+  @apply transition-all duration-200 ease-in-out rounded border border-gray-300 bg-gray-100 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400;
 }
 
 input:focus, select:focus, textarea:focus {
-  box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.3);
+  @apply ring-2 ring-teal-400 ring-opacity-50;
 }
 
-input:disabled {
-  background-color: #f3f4f6;
-  cursor: not-allowed;
+input:disabled, select:disabled, textarea:disabled {
+  @apply bg-gray-200 cursor-not-allowed opacity-75;
 }
 
+/* Buttons */
+button:not(.lock-button) {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+button:not(.lock-button):hover {
+  @apply scale-105;
+}
+
+/* Lock button specific styling */
 .lock-button {
-  transition: all 0.2s ease-in-out;
+  @apply transition-all duration-200 ease-in-out rounded px-2 py-1 text-sm;
 }
 
 .lock-button:hover {
-  transform: scale(1.05);
+  @apply scale-105;
 }
 
 /* Hide spinners for number inputs */
@@ -67,6 +88,56 @@ input[type="number"].no-spinner::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+
 input[type="number"].no-spinner {
   -moz-appearance: textfield;
+}
+
+/* Responsive typography */
+h1, h2, h3 {
+  @apply font-bold;
+}
+
+h1 {
+  @apply text-xl sm:text-2xl;
+}
+
+h2 {
+  @apply text-lg sm:text-xl;
+}
+
+h3 {
+  @apply text-base sm:text-lg;
+}
+
+/* Table enhancements */
+table {
+  @apply w-full text-sm border-collapse;
+}
+
+th, td {
+  @apply px-2 py-2 sm:px-3 sm:py-3;
+}
+
+th {
+  @apply text-left font-semibold text-gray-700;
+}
+
+td {
+  @apply text-gray-800;
+}
+
+/* Responsive padding for main content */
+main {
+  @apply px-4 sm:px-6 py-4;
+}
+
+/* Animation for fade-in */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
