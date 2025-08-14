@@ -2,7 +2,7 @@
   "survivor": [
     {
       "week": 1,
-      "eliminated": "ALeF",
+      "eliminated": "",
       "winner": ""
     },
     {
@@ -53,8 +53,8 @@
   "weeklyHighScores": [
     {
       "week": 1,
-      "team": "Ayer",
-      "total": 152
+      "team": "",
+      "total": ""
     },
     {
       "week": 2,
