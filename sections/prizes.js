@@ -1,5 +1,5 @@
 window.Prizes = () => {
-  const { prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated } = window.AppState;
+  const { prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges } = window.AppState;
 
   return (
     <div className="space-y-4">
@@ -27,44 +27,59 @@ window.Prizes = () => {
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-2 px-2 sm:px-3 w-[20%]">Week</th>
-                  <th className="text-left py-2 px-2 sm:px-3 w-[50%]">Team</th>
-                  <th className="text-right py-2 px-2 sm:px-3 w-[30%]">Total</th>
+                  <th className="text-left py-2 px-2 sm:px-3 w-[40%]">Team</th>
+                  <th className="text-right py-2 px-2 sm:px-3 w-[20%]">Total</th>
+                  {isAdminAuthenticated && <th className="text-right py-2 px-2 sm:px-3 w-[20%]">Actions</th>}
                 </tr>
               </thead>
               <tbody>
-                {prizes[selectedYear].weeklyHighScores.map((score, index) => (
-                  <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
-                    <td className="py-2 px-2 sm:px-3">{score.week}</td>
-                    <td className="py-2 px-2 sm:px-3">
-                      {isAdminAuthenticated ? (
-                        <select
-                          value={score.team || ''}
-                          onChange={(e) => window.AppState.handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
-                          className="w-full bg-gray-100 p-1 rounded text-sm"
-                        >
-                          <option value="">Select Team</option>
-                          {window.AppState.getRemainingTeams(selectedYear).map(team => (
-                            <option key={team} value={team}>{team}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span>{score.team || ''}</span>
+                {prizes[selectedYear].weeklyHighScores.map((score, index) => {
+                  const pending = pendingChanges.prizes[selectedYear]?.weeklyHighScores?.[index] || {};
+                  const displayScore = { ...score, ...pending };
+                  return (
+                    <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
+                      <td className="py-2 px-2 sm:px-3">{score.week}</td>
+                      <td className="py-2 px-2 sm:px-3">
+                        {isAdminAuthenticated ? (
+                          <select
+                            value={displayScore.team || ''}
+                            onChange={(e) => window.AppState.handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
+                            className="w-full bg-gray-100 p-1 rounded text-sm"
+                          >
+                            <option value="">Select Team</option>
+                            {window.AppState.getRemainingTeams(selectedYear).map(team => (
+                              <option key={team} value={team}>{team}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span>{score.team || ''}</span>
+                        )}
+                      </td>
+                      <td className="text-right py-2 px-2 sm:px-3">
+                        {isAdminAuthenticated ? (
+                          <input
+                            type="number"
+                            value={displayScore.total || ''}
+                            onChange={(e) => window.AppState.handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
+                            className="w-full sm:w-16 bg-gray-100 p-1 rounded text-sm text-right no-spinner"
+                          />
+                        ) : (
+                          <span>{score.total || ''}</span>
+                        )}
+                      </td>
+                      {isAdminAuthenticated && (
+                        <td className="text-right py-2 px-2 sm:px-3">
+                          <button
+                            onClick={() => window.AppState.handleWeeklyScoreSave(selectedYear, index)}
+                            className="px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                          >
+                            Save
+                          </button>
+                        </td>
                       )}
-                    </td>
-                    <td className="text-right py-2 px-2 sm:px-3">
-                      {isAdminAuthenticated ? (
-                        <input
-                          type="number"
-                          value={score.total || ''}
-                          onChange={(e) => window.AppState.handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
-                          className="w-full sm:w-16 bg-gray-100 p-1 rounded text-sm text-right no-spinner"
-                        />
-                      ) : (
-                        <span>{score.total || ''}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -76,40 +91,55 @@ window.Prizes = () => {
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-2 px-2 sm:px-3 w-[20%]">Week</th>
-                  <th className="text-left py-2 px-2 sm:px-3 w-[80%]">Team</th>
+                  <th className="text-left py-2 px-2 sm:px-3 w-[60%]">Team</th>
+                  {isAdminAuthenticated && <th className="text-right py-2 px-2 sm:px-3 w-[20%]">Actions</th>}
                 </tr>
               </thead>
               <tbody>
-                {prizes[selectedYear].survivor.map((entry, index) => (
-                  <tr
-                    key={index}
-                    className={`border-b ${
-                      index === 11
-                        ? 'bg-teal-100 font-semibold text-gray-900'
-                        : index % 2 === 0
-                        ? 'table-row-even'
-                        : 'table-row-odd'
-                    }`}
-                  >
-                    <td className="py-2 px-2 sm:px-3">{index === 11 ? 'Winner' : entry.week}</td>
-                    <td className="py-2 px-2 sm:px-3">
-                      {isAdminAuthenticated ? (
-                        <select
-                          value={index === 11 ? (entry.winner || '') : (entry.eliminated || '')}
-                          onChange={(e) => window.AppState.handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
-                          className="w-full bg-gray-100 p-1 rounded text-sm"
-                        >
-                          <option value="">Select Team</option>
-                          {window.AppState.getRemainingTeams(selectedYear, index).map(team => (
-                            <option key={team} value={team}>{team}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span>{index === 11 ? (entry.winner || '') : (entry.eliminated || '')}</span>
+                {prizes[selectedYear].survivor.map((entry, index) => {
+                  const pending = pendingChanges.prizes[selectedYear]?.survivor?.[index] || {};
+                  const displayEntry = { ...entry, ...pending };
+                  return (
+                    <tr
+                      key={index}
+                      className={`border-b ${
+                        index === 11
+                          ? 'bg-teal-100 font-semibold text-gray-900'
+                          : index % 2 === 0
+                          ? 'table-row-even'
+                          : 'table-row-odd'
+                      }`}
+                    >
+                      <td className="py-2 px-2 sm:px-3">{index === 11 ? 'Winner' : entry.week}</td>
+                      <td className="py-2 px-2 sm:px-3">
+                        {isAdminAuthenticated ? (
+                          <select
+                            value={index === 11 ? (displayEntry.winner || '') : (displayEntry.eliminated || '')}
+                            onChange={(e) => window.AppState.handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
+                            className="w-full bg-gray-100 p-1 rounded text-sm"
+                          >
+                            <option value="">Select Team</option>
+                            {window.AppState.getRemainingTeams(selectedYear, index).map(team => (
+                              <option key={team} value={team}>{team}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span>{index === 11 ? (entry.winner || '') : (entry.eliminated || '')}</span>
+                        )}
+                      </td>
+                      {isAdminAuthenticated && (
+                        <td className="text-right py-2 px-2 sm:px-3">
+                          <button
+                            onClick={() => window.AppState.handleSurvivorSave(selectedYear, index)}
+                            className="px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                          >
+                            Save
+                          </button>
+                        </td>
                       )}
-                    </td>
-                  </tr>
-                ))}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
             <div className="mt-4">

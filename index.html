@@ -1,406 +1,313 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FriendZone Fantasy Football League</title>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <title>FriendZone Fantasy Football</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@17/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <link rel="stylesheet" href="/styles.css">
 </head>
-
 <body class="bg-gray-900 text-gray-100">
   <div id="root"></div>
-  <script type="text/babel" src="/sections/modal.js"></script>
-  <script type="text/babel" src="/sections/home.js"></script>
-  <script type="text/babel" src="/sections/rules.js"></script>
-  <script type="text/babel" src="/sections/payouts.js"></script>
-  <script type="text/babel" src="/sections/keepers.js"></script>
-  <script type="text/babel" src="/sections/prizes.js"></script>
-  <script type="text/babel" src="/sections/admin.js"></script>
   <script type="text/babel">
-    const App = () => {
-      const [currentTab, setCurrentTab] = React.useState('home');
-      const [adminPassword, setAdminPassword] = React.useState('');
-      const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState(false);
-      const [keepers, setKeepers] = React.useState({ 2022: [], 2023: [], 2024: [], 2025: [] });
-      const [prizes, setPrizes] = React.useState({
-        2023: { survivor: [], weeklyHighScores: [] },
-        2024: { survivor: [], weeklyHighScores: [] },
-        2025: {
-          survivor: Array.from({ length: 12 }, (_, i) => i < 11 ? { week: i + 1, eliminated: '' } : { week: 12, winner: '' }),
-          weeklyHighScores: Array.from({ length: 14 }, (_, i) => ({ week: i + 1, team: '', total: '' }))
-        }
-      });
-      const [rules, setRules] = React.useState({ sections: [] });
-      const [payouts, setPayouts] = React.useState([]);
-      const [locks, setLocks] = React.useState({ 2022: false, 2023: false, 2024: false, 2025: false });
+    const AppState = () => {
+      const [keepers, setKeepers] = React.useState({});
+      const [prizes, setPrizes] = React.useState({});
+      const [locks, setLocks] = React.useState({});
+      const [pendingChanges, setPendingChanges] = React.useState({ keepers: {}, prizes: {} });
       const [selectedYear, setSelectedYear] = React.useState('2025');
-      const [isMenuOpen, setIsMenuOpen] = React.useState(false);
-      const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: null });
-      const [pendingChanges, setPendingChanges] = React.useState({ 2022: {}, 2023: {}, 2024: {}, 2025: {} });
+      const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState(false);
 
-      const ADMIN_PASSWORD = 'friendzone2025';
-
-      // Fetch data
-      React.useEffect(() => {
-        const fetchData = async () => {
-          const files = [
-            { path: '/data/rules.json', setter: setRules, default: { sections: [] } },
-            { path: '/data/payouts.json', setter: setPayouts, default: [] },
-            {
-              path: '/data/keepers_2022.json', setter: (data) => setKeepers(prev => ({
-                ...prev, 2022: data.map(team => ({
-                  ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
-                  cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
-                  cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
-                  remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
-                }))
-              })), default: []
-            },
-            {
-              path: '/data/keepers_2023.json', setter: (data) => setKeepers(prev => ({
-                ...prev, 2023: data.map(team => ({
-                  ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
-                  cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
-                  cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
-                  remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
-                }))
-              })), default: []
-            },
-            {
-              path: '/data/keepers_2024.json', setter: (data) => setKeepers(prev => ({
-                ...prev, 2024: data.map(team => ({
-                  ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
-                  cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
-                  cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
-                  remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
-                }))
-              })), default: []
-            },
-            { path: '/data/keepers_2025.json', setter: (data) => setKeepers(prev => ({ ...prev, 2025: data })), default: [] },
-            { path: '/data/prizes_2023.json', setter: (data) => setPrizes(prev => ({ ...prev, 2023: data })), default: { survivor: [], weeklyHighScores: [] } },
-            { path: '/data/prizes_2024.json', setter: (data) => setPrizes(prev => ({ ...prev, 2024: data })), default: { survivor: [], weeklyHighScores: [] } },
-            {
-              path: '/data/prizes_2025.json', setter: (data) => setPrizes(prev => {
-                const survivor = data.survivor.length > 0 ? data.survivor : Array.from({ length: 12 }, (_, i) => i < 11 ? { week: i + 1, eliminated: '' } : { week: 12, winner: '' });
-                const weeklyHighScores = data.weeklyHighScores.length > 0 ? data.weeklyHighScores : Array.from({ length: 14 }, (_, i) => ({ week: i + 1, team: '', total: '' }));
-                return { ...prev, 2025: { survivor, weeklyHighScores } };
-              }), default: {
-                survivor: Array.from({ length: 12 }, (_, i) => i < 11 ? { week: i + 1, eliminated: '' } : { week: 12, winner: '' }),
-                weeklyHighScores: Array.from({ length: 14 }, (_, i) => ({ week: i + 1, team: '', total: '' }))
-              }
-            },
-            { path: '/data/locks.json', setter: setLocks, default: { 2022: false, 2023: false, 2024: false, 2025: false } },
-          ];
-          for (const file of files) {
-            try {
-              const res = await fetch(file.path);
-              if (res.ok) {
-                const data = await res.json();
-                file.setter(data);
-              } else {
-                file.setter(file.default);
-                console.warn(`Failed to load ${file.path}. Using default value.`);
-              }
-            } catch (err) {
-              file.setter(file.default);
-              console.warn(`Error fetching ${file.path}:`, err);
-            }
-          }
-        };
-        fetchData();
-      }, []);
-
-      // Share state and handlers globally
-      window.AppState = {
-        currentTab, setCurrentTab,
-        adminPassword, setAdminPassword,
-        isAdminAuthenticated, setIsAdminAuthenticated,
-        keepers, setKeepers,
-        prizes, setPrizes,
-        rules, setRules,
-        payouts, setPayouts,
-        locks, setLocks,
-        selectedYear, setSelectedYear,
-        isMenuOpen, setIsMenuOpen,
-        modalState, setModalState,
-        pendingChanges, setPendingChanges,
-        ADMIN_PASSWORD: 'friendzone2025',
-        calculateKeeperCost: (draftCost, tag, keeperName) => {
-          if (keeperName === '' && draftCost === 0) return 0;
-          if (draftCost === 0 && !tag) return 5;
-          if (draftCost === 0 && tag) return 0;
-          if (tag) return Math.round(draftCost);
-          return Math.round(draftCost * 1.1 + 5);
-        },
-        updateData: async (file, data, action, index = null) => {
-          try {
-            const res = await fetch('/.netlify/functions/update-data', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ file, data, action, index })
-            });
-            if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-            return await res.json();
-          } catch (err) {
-            console.error('Error updating data:', err);
-            alert('Failed to update data. Please try again.');
-            return null;
-          }
-        },
-        normalizeNumberInput: (value) => {
-          if (value === '' || value == null) return '';
-          const strValue = String(value).replace(/^0+/, '');
-          if (strValue === '') return '';
-          const intValue = Math.round(parseFloat(strValue) || 0);
-          return intValue.toString();
-        },
-        handleArrowKey: (e, year, index, field) => {
-          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-            e.preventDefault();
-            const currentValue = parseFloat(e.target.value) || 0;
-            const newValue = e.key === 'ArrowUp' ? currentValue + 1 : Math.max(0, currentValue - 1);
-            window.AppState.handleKeeperChange(year, index, field, newValue.toString());
-          }
-        },
-        handleAdminLogin: (e) => {
-          e.preventDefault();
-          if (window.AppState.adminPassword === window.AppState.ADMIN_PASSWORD) {
-            window.AppState.setIsAdminAuthenticated(true);
-            window.AppState.setCurrentTab('home');
+      const initializeKeepers = async (year) => {
+        if (!keepers[year]) {
+          const response = await fetch(`/.netlify/functions/get-data?filename=keepers_${year}.json`);
+          const data = await response.json();
+          if (data && data.teams) {
+            setKeepers(prev => ({ ...prev, [year]: data.teams }));
           } else {
-            alert('Incorrect password');
-          }
-        },
-        handleToggleLock: async (year) => {
-          const updatedLocks = { ...window.AppState.locks, [year]: !window.AppState.locks[year] };
-          const result = await window.AppState.updateData('locks.json', updatedLocks, 'update');
-          if (result) {
-            window.AppState.setLocks(updatedLocks);
-            if (updatedLocks[year]) {
-              window.AppState.setPendingChanges(prev => ({ ...prev, [year]: {} }));
-            }
-          }
-        },
-        handleKeeperChange: (year, index, field, value) => {
-          if (window.AppState.locks[year]) return;
-          window.AppState.setPendingChanges(prev => {
-            const updatedPending = { ...prev, [year]: { ...prev[year], [index]: { ...prev[year][index], [field]: value } } };
-            const teamData = { ...window.AppState.keepers[year][index], ...updatedPending[year][index] } || {
-              team: `Team ${index + 1}`, keeper1: '', draftCost1: '', tag1: false, cost1: 0,
-              keeper2: '', draftCost2: '', tag2: false, cost2: 0, remaining: 200
-            };
-            if (field === 'draftCost1' || field === 'tag1' || field === 'keeper1') {
-              if (field === 'draftCost1') {
-                const normalizedValue = window.AppState.normalizeNumberInput(value);
-                teamData.draftCost1 = normalizedValue === '' ? '' : parseInt(normalizedValue) || 0;
-                updatedPending[year][index].draftCost1 = normalizedValue;
-              }
-              if (teamData.draftCost1 === '' && value === true) {
-                alert('No player can be kept for $0. Untag or set a draft cost.');
-                teamData.tag1 = false;
-              } else {
-                teamData.tag1 = field === 'tag1' ? value : teamData.tag1;
-              }
-              teamData.cost1 = window.AppState.calculateKeeperCost(teamData.draftCost1 || 0, teamData.tag1, teamData.keeper1);
-            }
-            if (field === 'draftCost2' || field === 'tag2' || field === 'keeper2') {
-              if (field === 'draftCost2') {
-                const normalizedValue = window.AppState.normalizeNumberInput(value);
-                teamData.draftCost2 = normalizedValue === '' ? '' : parseInt(normalizedValue) || 0;
-                updatedPending[year][index].draftCost2 = normalizedValue;
-              }
-              if (teamData.draftCost2 === '' && value === true) {
-                alert('No player can be kept for $0. Untag or set a draft cost.');
-                teamData.tag2 = false;
-              } else {
-                teamData.tag2 = field === 'tag2' ? value : teamData.tag2;
-              }
-              teamData.cost2 = window.AppState.calculateKeeperCost(teamData.draftCost2 || 0, teamData.tag2, teamData.keeper2);
-            }
-            teamData.remaining = 200 - (teamData.cost1 + teamData.cost2);
-            if (teamData.remaining < 0) {
-              alert('Total keeper cost exceeds $200 budget.');
-              return prev;
-            }
-            updatedPending[year][index] = teamData;
-            return updatedPending;
-          });
-        },
-        handleSaveRow: async (year, index) => {
-          if (window.AppState.locks[year]) return;
-          const teamData = window.AppState.pendingChanges[year][index] || window.AppState.keepers[year][index];
-          if (!teamData) return;
-          const updatedKeepers = { ...window.AppState.keepers };
-          updatedKeepers[year][index] = {
-            ...window.AppState.keepers[year][index],
-            ...teamData,
-            draftCost1: teamData.draftCost1 === '' ? 0 : parseInt(teamData.draftCost1) || 0,
-            draftCost2: teamData.draftCost2 === '' ? 0 : parseInt(teamData.draftCost2) || 0
-          };
-          const result = await window.AppState.updateData(`keepers_${year}.json`, updatedKeepers[year], 'update');
-          if (result) {
-            window.AppState.setKeepers(updatedKeepers);
-            window.AppState.setPendingChanges(prev => {
-              const updatedPending = { ...prev, [year]: { ...prev[year] } };
-              delete updatedPending[year][index];
-              return updatedPending;
-            });
-          }
-        },
-        initializeKeepers: (year) => {
-          if (year === '2025' && window.AppState.keepers[year].length === 0) {
-            const initialTeams = Array.from({ length: 12 }, (_, i) => ({
-              team: `Team ${i + 1}`, keeper1: '', draftCost1: '', tag1: false, cost1: 0,
-              keeper2: '', draftCost2: '', tag2: false, cost2: 0, remaining: 200
+            setKeepers(prev => ({
+              ...prev,
+              [year]: Array(12).fill().map((_, i) => ({
+                team: `Team ${i + 1}`,
+                keeper1: '',
+                draftCost1: 0,
+                tag1: false,
+                cost1: 0,
+                keeper2: '',
+                draftCost2: 0,
+                tag2: false,
+                cost2: 0,
+                remaining: 200,
+              })),
             }));
-            window.AppState.setKeepers(prev => ({ ...prev, [year]: initialTeams }));
-            window.AppState.updateData(`keepers_${year}.json`, initialTeams, 'update');
           }
-        },
-        handlePayoutChange: async (index, field, value) => {
-          if (!window.AppState.isAdminAuthenticated) return;
-          const updatedPayouts = [...window.AppState.payouts];
-          updatedPayouts[index] = { ...updatedPayouts[index], [field]: field === 'percentage' || field === 'prize' ? parseFloat(value) || 0 : value };
-          if (updatedPayouts.some((p, i) => i !== index && p.category === updatedPayouts[index].category)) {
-            alert('Category already exists.');
-            return;
-          }
-          const result = await window.AppState.updateData('payouts.json', updatedPayouts, 'update');
-          if (result) {
-            window.AppState.setPayouts(updatedPayouts);
-          }
-        },
-        handleWeeklyScoreChange: async (year, index, field, value) => {
-          if (!window.AppState.isAdminAuthenticated) return;
-          const updatedPrizes = { ...window.AppState.prizes };
-          const score = { ...updatedPrizes[year].weeklyHighScores[index] };
-          score[field] = field === 'total' ? parseFloat(value) || '' : value;
-          updatedPrizes[year].weeklyHighScores[index] = score;
-          const result = await window.AppState.updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
-          if (result) {
-            window.AppState.setPrizes(updatedPrizes);
-          }
-        },
-        handleSurvivorChange: async (year, index, field, value) => {
-          if (!window.AppState.isAdminAuthenticated) return;
-          const updatedPrizes = { ...window.AppState.prizes };
-          const entry = { ...updatedPrizes[year].survivor[index] };
-          if (field === 'team') {
-            if (index === 11) {
-              entry.winner = value;
-              entry.eliminated = '';
-            } else {
-              entry.eliminated = value;
-              entry.winner = '';
-            }
-          }
-          updatedPrizes[year].survivor[index] = entry;
-          window.AppState.setPrizes(updatedPrizes); // Update state immediately
-          const result = await window.AppState.updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
-          if (!result) {
-            console.error('Failed to save survivor change, reverting state');
-            window.AppState.setPrizes(window.AppState.prizes); // Revert on failure
-          }
-        },
-        getRemainingTeams: (year, currentIndex = -1) => {
-          const survivorTeams = window.AppState.prizes[year].survivor
-            .filter((entry, index) => currentIndex === -1 || index <= currentIndex)
-            .map(entry => entry.eliminated || entry.winner)
-            .filter(team => team);
-          return window.AppState.keepers[year]
-            .map(team => team.team)
-            .filter(team => team && !survivorTeams.includes(team))
-            .sort();
-        },
-        handleRuleChange: async (sectionIndex, itemIndex, field, value) => {
-          if (!window.AppState.isAdminAuthenticated) return;
-          const updatedRules = { ...window.AppState.rules };
-          const item = updatedRules.sections[sectionIndex].items[itemIndex];
-          if (typeof item === 'string') {
-            if (field === 'text') {
-              updatedRules.sections[sectionIndex].items[itemIndex] = value;
-            }
+        }
+        if (!prizes[year]) {
+          const response = await fetch(`/.netlify/functions/get-data?filename=prizes_${year}.json`);
+          const data = await response.json();
+          if (data && data.weeklyHighScores && data.survivor) {
+            setPrizes(prev => ({ ...prev, [year]: data }));
           } else {
-            if (field === 'text') {
-              item.text = value;
-            } else if (field === 'subItems') {
-              item.subItems = value.split('\n').filter(subItem => subItem.trim());
-            }
+            setPrizes(prev => ({
+              ...prev,
+              [year]: {
+                weeklyHighScores: Array(17).fill().map((_, i) => ({
+                  week: i + 1,
+                  team: '',
+                  total: '',
+                })),
+                survivor: Array(12).fill().map((_, i) => ({
+                  week: i + 1,
+                  eliminated: '',
+                  winner: i === 11 ? '' : undefined,
+                })),
+              },
+            }));
           }
-          const result = await window.AppState.updateData('rules.json', updatedRules, 'update');
-          if (result) {
-            window.AppState.setRules(updatedRules);
-          }
-        },
+        }
+        if (!locks[year]) {
+          const response = await fetch(`/.netlify/functions/get-data?filename=locks.json`);
+          const data = await response.json();
+          setLocks(data || {});
+        }
       };
 
-      // Render tab
-      const renderTab = () => {
-        switch (window.AppState.currentTab) {
-          case 'home': return <window.Home />;
-          case 'rules': return <window.Rules />;
-          case 'payouts': return <window.Payouts />;
-          case 'keepers': return <window.Keepers />;
-          case 'prizes': return <window.Prizes />;
-          case 'admin': return <window.Admin />;
-          default: return null;
+      const handleKeeperChange = (year, index, field, value) => {
+        const updatedPending = { ...pendingChanges };
+        updatedPending.keepers[year] = updatedPending.keepers[year] || {};
+        updatedPending.keepers[year][index] = {
+          ...updatedPending.keepers[year][index],
+          ...keepers[year][index],
+          [field]: value,
+        };
+        setPendingChanges(updatedPending);
+      };
+
+      const handleSaveRow = async (year, index) => {
+        const updatedKeepers = { ...keepers };
+        const pending = pendingChanges.keepers[year]?.[index] || {};
+        const team = { ...updatedKeepers[year][index], ...pending };
+        const cost1 = team.tag1 ? (parseInt(team.draftCost1) || 0) + 5 : parseInt(team.draftCost1) || 0;
+        const cost2 = team.tag2 ? (parseInt(team.draftCost2) || 0) + 5 : parseInt(team.draftCost2) || 0;
+        if ((team.tag1 && !team.draftCost1) || (team.tag2 && !team.draftCost2)) {
+          alert('Tagged keepers must have a draft cost greater than 0');
+          return;
         }
+        team.cost1 = cost1;
+        team.cost2 = cost2;
+        team.remaining = 200 - cost1 - cost2;
+        updatedKeepers[year][index] = team;
+        const result = await updateData(`keepers_${year}.json`, updatedKeepers[year], 'update');
+        if (result) {
+          setKeepers(updatedKeepers);
+          const updatedPending = { ...pendingChanges };
+          updatedPending.keepers[year][index] = {};
+          setPendingChanges(updatedPending);
+        }
+      };
+
+      const handleWeeklyScoreChange = (year, index, field, value) => {
+        if (!isAdminAuthenticated) return;
+        const updatedPending = { ...pendingChanges };
+        updatedPending.prizes[year] = updatedPending.prizes[year] || {};
+        updatedPending.prizes[year].weeklyHighScores = updatedPending.prizes[year].weeklyHighScores || [];
+        updatedPending.prizes[year].weeklyHighScores[index] = {
+          ...updatedPending.prizes[year].weeklyHighScores[index],
+          ...prizes[year].weeklyHighScores[index],
+          [field]: value,
+        };
+        setPendingChanges(updatedPending);
+      };
+
+      const handleWeeklyScoreSave = async (year, index) => {
+        if (!isAdminAuthenticated) return;
+        const updatedPrizes = { ...prizes };
+        updatedPrizes[year].weeklyHighScores[index] = {
+          ...updatedPrizes[year].weeklyHighScores[index],
+          ...pendingChanges.prizes[year]?.weeklyHighScores[index],
+        };
+        const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
+        if (result) {
+          setPrizes(updatedPrizes);
+          const updatedPending = { ...pendingChanges };
+          updatedPending.prizes[year].weeklyHighScores[index] = {};
+          setPendingChanges(updatedPending);
+        } else {
+          console.error('Failed to save weekly score');
+        }
+      };
+
+      const handleSurvivorChange = (year, index, field, value) => {
+        if (!isAdminAuthenticated) return;
+        const updatedPending = { ...pendingChanges };
+        updatedPending.prizes[year] = updatedPending.prizes[year] || {};
+        updatedPending.prizes[year].survivor = updatedPending.prizes[year].survivor || [];
+        updatedPending.prizes[year].survivor[index] = {
+          ...updatedPending.prizes[year].survivor[index],
+          ...prizes[year].survivor[index],
+          [index === 11 ? 'winner' : 'eliminated']: value,
+          [index === 11 ? 'eliminated' : 'winner']: '',
+        };
+        setPendingChanges(updatedPending);
+      };
+
+      const handleSurvivorSave = async (year, index) => {
+        if (!isAdminAuthenticated) return;
+        const updatedPrizes = { ...prizes };
+        updatedPrizes[year].survivor[index] = {
+          ...updatedPrizes[year].survivor[index],
+          ...pendingChanges.prizes[year]?.survivor[index],
+        };
+        const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
+        if (result) {
+          setPrizes(updatedPrizes);
+          const updatedPending = { ...pendingChanges };
+          updatedPending.prizes[year].survivor[index] = {};
+          setPendingChanges(updatedPending);
+        } else {
+          console.error('Failed to save survivor change');
+        }
+      };
+
+      const updateData = async (filename, data, action) => {
+        try {
+          const response = await fetch('/.netlify/functions/update-data', {
+            method: 'POST',
+            body: JSON.stringify({ filename, data, action }),
+          });
+          return response.ok;
+        } catch (error) {
+          console.error('Error updating data:', error);
+          return false;
+        }
+      };
+
+      const getRemainingTeams = (year, currentIndex = -1) => {
+        const survivorTeams = prizes[year].survivor
+          .filter((entry, index) => currentIndex === -1 || index <= currentIndex)
+          .map(entry => entry.eliminated || entry.winner)
+          .filter(team => team);
+        return keepers[year]
+          .map(team => team.team)
+          .filter(team => team && !survivorTeams.includes(team))
+          .sort();
+      };
+
+      const handleToggleLock = async (year) => {
+        if (!isAdminAuthenticated) return;
+        const updatedLocks = { ...locks, [year]: !locks[year] };
+        const result = await updateData('locks.json', updatedLocks, 'update');
+        if (result) {
+          setLocks(updatedLocks);
+        }
+      };
+
+      return {
+        keepers,
+        setKeepers,
+        prizes,
+        setPrizes,
+        locks,
+        setLocks,
+        pendingChanges,
+        setPendingChanges,
+        selectedYear,
+        setSelectedYear,
+        isAdminAuthenticated,
+        setIsAdminAuthenticated,
+        initializeKeepers,
+        handleKeeperChange,
+        handleSaveRow,
+        handleWeeklyScoreChange,
+        handleWeeklyScoreSave,
+        handleSurvivorChange,
+        handleSurvivorSave,
+        updateData,
+        getRemainingTeams,
+        handleToggleLock,
+      };
+    };
+
+    const App = () => {
+      const {
+        selectedYear,
+        setSelectedYear,
+        isAdminAuthenticated,
+        setIsAdminAuthenticated,
+        initializeKeepers,
+      } = window.AppState;
+
+      React.useEffect(() => {
+        initializeKeepers(selectedYear);
+      }, [selectedYear]);
+
+      const handleLogin = () => {
+        const password = prompt('Enter admin password:');
+        if (password === 'friendzone2025') {
+          setIsAdminAuthenticated(true);
+          alert('Login successful!');
+        } else {
+          alert('Incorrect password');
+        }
+      };
+
+      const handleLogout = () => {
+        setIsAdminAuthenticated(false);
+        alert('Logged out');
       };
 
       return (
-        <div className="min-h-screen bg-gray-900">
-          <nav className="bg-gray-800 text-white p-3 shadow-lg mobile-nav">
-            <div className="container mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between">
-              <div className="flex justify-between items-center w-full sm:w-auto">
-                <h1 className="text-xl sm:text-2xl font-bold">FriendZone FF</h1>
-                <button
-                  className="sm:hidden text-xl focus:outline-none"
-                  onClick={() => window.AppState.setIsMenuOpen(!window.AppState.isMenuOpen)}
-                >
-                  ☰
-                </button>
-              </div>
-              <ul className={`sm:flex sm:space-x-4 ${window.AppState.isMenuOpen ? 'block' : 'hidden'} sm:block mt-2 sm:mt-0 p-3 sm:p-0 sm:bg-transparent bg-gray-800 shadow-lg sm:shadow-none`}>
-                {['home', 'rules', 'payouts', 'keepers', 'prizes', window.AppState.isAdminAuthenticated ? 'logout' : 'admin'].map(tab => (
-                  <li key={tab} className="my-2 sm:my-0">
-                    <button
-                      onClick={() => {
-                        if (tab === 'logout') {
-                          window.AppState.setIsAdminAuthenticated(false);
-                          window.AppState.setAdminPassword('');
-                          window.AppState.setCurrentTab('home');
-                        } else {
-                          window.AppState.setCurrentTab(tab);
-                        }
-                        window.AppState.setIsMenuOpen(false);
-                      }}
-                      className={`w-full sm:w-auto text-left capitalize hover:text-teal-400 focus:outline-none ${window.AppState.currentTab === tab ? 'text-teal-400' : ''}`}
-                    >
-                      {tab}
-                    </button>
-                  </li>
-                ))}
-              </ul>
+        <div className="min-h-screen">
+          <nav className="bg-gray-800 p-4 flex justify-between items-center">
+            <div className="flex space-x-4">
+              <a href="#" onClick={() => window.App.setView('home')} className="text-white hover:text-teal-400">Home</a>
+              <a href="#" onClick={() => window.App.setView('rules')} className="text-white hover:text-teal-400">Rules</a>
+              <a href="#" onClick={() => window.App.setView('payouts')} className="text-white hover:text-teal-400">Payouts</a>
+              <a href="#" onClick={() => window.App.setView('keepers')} className="text-white hover:text-teal-400">Keepers</a>
+              <a href="#" onClick={() => window.App.setView('prizes')} className="text-white hover:text-teal-400">Prizes</a>
+              {isAdminAuthenticated && (
+                <a href="#" onClick={() => window.App.setView('admin')} className="text-white hover:text-teal-400">Admin</a>
+              )}
+            </div>
+            <div>
+              {!isAdminAuthenticated ? (
+                <button onClick={handleLogin} className="text-white hover:text-teal-400">Login</button>
+              ) : (
+                <button onClick={handleLogout} className="text-white hover:text-teal-400">Logout</button>
+              )}
             </div>
           </nav>
-          <main className="container mx-auto pt-16 sm:pt-4 pb-4 px-3 sm:px-4">
-            {renderTab()}
-            <window.Modal />
+          <main className="px-4 sm:px-6 py-4">
+            {window.App.view === 'home' && <window.Home />}
+            {window.App.view === 'rules' && <window.Rules />}
+            {window.App.view === 'payouts' && <window.Payouts />}
+            {window.App.view === 'keepers' && <window.Keepers />}
+            {window.App.view === 'prizes' && <window.Prizes />}
+            {window.App.view === 'admin' && <window.Admin />}
           </main>
         </div>
       );
     };
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
-</body>
+    window.AppState = AppState();
+    window.App = {
+      view: 'home',
+      setView: (view) => {
+        window.App.view = view;
+        ReactDOM.render(<App />, document.getElementById('root'));
+      },
+    };
 
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+  <script src="/sections/home.js" type="text/babel"></script>
+  <script src="/sections/rules.js" type="text/babel"></script>
+  <script src="/sections/payouts.js" type="text/babel"></script>
+  <script src="/sections/keepers.js" type="text/babel"></script>
+  <script src="/sections/prizes.js" type="text/babel"></script>
+  <script src="/sections/admin.js" type="text/babel"></script>
+</body>
 </html>
