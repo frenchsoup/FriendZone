@@ -1,7 +1,6 @@
-const { Octokit } = require('@octokit/rest');
-
 exports.handler = async function (event) {
   try {
+    const { Octokit } = await import('@octokit/rest');
     const { filename } = event.queryStringParameters;
     const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
     const repoOwner = 'frenchsoup';
