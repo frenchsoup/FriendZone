@@ -113,16 +113,21 @@ window.Prizes = () => {
               </tbody>
             </table>
             <div className="mt-4">
-              <h4 className="text-sm font-semibold text-gray-800">Remaining Teams</h4>
-              <ul className="list-disc pl-5 text-sm text-gray-800">
+              <h4 className="text-sm font-semibold text-gray-800 mb-2">Remaining Teams</h4>
+              <div className="flex flex-wrap gap-2">
                 {window.AppState.getRemainingTeams(selectedYear).length > 0 ? (
                   window.AppState.getRemainingTeams(selectedYear).map(team => (
-                    <li key={team}>{team}</li>
+                    <span
+                      key={team}
+                      className="inline-block bg-teal-500 text-white text-xs font-medium px-2 py-1 rounded-full"
+                    >
+                      {team}
+                    </span>
                   ))
                 ) : (
-                  <li>No teams remaining</li>
+                  <span className="text-sm text-gray-600">No teams remaining</span>
                 )}
-              </ul>
+              </div>
             </div>
           </div>
         </div>

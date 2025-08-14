@@ -302,9 +302,11 @@
             }
           }
           updatedPrizes[year].survivor[index] = entry;
+          window.AppState.setPrizes(updatedPrizes); // Update state immediately
           const result = await window.AppState.updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
-          if (result) {
-            window.AppState.setPrizes(updatedPrizes);
+          if (!result) {
+            console.error('Failed to save survivor change, reverting state');
+            window.AppState.setPrizes(window.AppState.prizes); // Revert on failure
           }
         },
         getRemainingTeams: (year, currentIndex = -1) => {

@@ -8,20 +8,26 @@ window.Keepers = () => {
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Keepers</h2>
-      <div className="flex justify-center mb-4">
-        <select
-          value={selectedYear}
-          onChange={(e) => setSelectedYear(e.target.value)}
-          className="bg-gray-800 text-white p-2 rounded text-sm"
-        >
-          {['2022', '2023', '2024', '2025'].map(year => (
-            <option key={year} value={year}>{year}</option>
-          ))}
-        </select>
+      <div className="flex justify-center mb-4 space-x-2">
+        {['2022', '2023', '2024', '2025'].map(year => (
+          <button
+            key={year}
+            onClick={() => setSelectedYear(year)}
+            className={`px-3 py-1 text-sm rounded transition-all ${
+              selectedYear === year
+                ? 'bg-teal-500 text-white'
+                : 'bg-gray-700 text-gray-200 hover:bg-teal-600 hover:text-white'
+            }`}
+          >
+            {year}
+          </button>
+        ))}
         {isAdminAuthenticated && (
           <button
             onClick={() => handleToggleLock(selectedYear)}
-            className={`ml-2 px-2 py-1 text-sm rounded ${locks[selectedYear] ? 'bg-red-500 hover:bg-red-600' : 'bg-teal-500 hover:bg-teal-600'} text-white transition-all lock-button`}
+            className={`ml-2 px-2 py-1 text-sm rounded ${
+              locks[selectedYear] ? 'bg-red-500 hover:bg-red-600' : 'bg-teal-500 hover:bg-teal-600'
+            } text-white transition-all lock-button`}
           >
             {locks[selectedYear] ? 'Unlock' : 'Lock'}
           </button>
