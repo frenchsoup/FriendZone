@@ -7,66 +7,32 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <style>
-    .table-container { overflow-x: auto; }
-    .table-row-even { background-color: #f9fafb; }
-    .table-row-odd { background-color: #ffffff; }
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type=number] { -moz-appearance: textfield; }
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fade-in {
-      animation: fadeIn 0.5s ease-out forwards;
-    }
-  </style>
+  <link rel="stylesheet" href="/styles.css">
 </head>
-<body className="bg-gray-900 text-gray-100">
+<body class="bg-gray-900 text-gray-100">
   <div id="root"></div>
+  <script src="/sections/modal.html"></script>
+  <script src="/sections/home.html"></script>
+  <script src="/sections/rules.html"></script>
+  <script src="/sections/payouts.html"></script>
+  <script src="/sections/keepers.html"></script>
+  <script src="/sections/prizes.html"></script>
+  <script src="/sections/admin.html"></script>
   <script type="text/babel">
-    // Keeper cost calculation
-    const calculateKeeperCost = (draftCost, tag, keeperName) => {
-      if (keeperName === '' && draftCost === 0) return 0; // Empty name and $0 cost → $0
-      if (draftCost === 0 && !tag) return 5; // Rule: $0 cost → $5 if not tagged
-      if (draftCost === 0 && tag) return 0; // Will be validated to prevent $0
-      if (tag) return Math.round(draftCost); // Ensure whole dollars
-      return Math.round(draftCost * 1.1 + 5); // Round to whole dollars
-    };
-
-    // Modal component
-    const Modal = ({ isOpen, onClose, title, children }) => {
-      if (!isOpen) return null;
-      return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal">
-          <div className="bg-white text-gray-800 rounded-lg p-2 sm:p-3 max-w-sm w-full">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-sm sm:text-base font-semibold">{title}</h3>
-              <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-lg">\u00D7</button>
-            </div>
-            {children}
-          </div>
-        </div>
-      );
-    };
-
-    // Main App component
     const App = () => {
       const [currentTab, setCurrentTab] = React.useState('home');
       const [adminPassword, setAdminPassword] = React.useState('');
       const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState(false);
       const [keepers, setKeepers] = React.useState({ 2022: [], 2023: [], 2024: [], 2025: [] });
-      const [prizes, setPrizes] = React.useState({ 
-        2023: { survivor: [], weeklyHighScores: [] }, 
-        2024: { survivor: [], weeklyHighScores: [] }, 
-        2025: { 
-          survivor: Array.from({ length: 12 }, (_, i) => i < 11 ? { week: i + 1, eliminated: '' } : { week: 12, winner: '' }), 
-          weeklyHighScores: Array.from({ length: 14 }, (_, i) => ({ week: i + 1, team: '', total: '' })) 
-        } 
+      const [prizes, setPrizes] = React.useState({
+        2023: { survivor: [], weeklyHighScores: [] },
+        2024: { survivor: [], weeklyHighScores: [] },
+        2025: {
+          survivor: Array.from({ length: 12 }, (_, i) => i < 11 ? { week: i + 1, eliminated: '' } : { week: 12, winner: '' }),
+          weeklyHighScores: Array.from({ length: 14 }, (_, i) => ({ week: i + 1, team: '', total: '' }))
+        }
       });
       const [rules, setRules] = React.useState({ sections: [] });
       const [payouts, setPayouts] = React.useState([]);
@@ -76,38 +42,31 @@
       const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: null });
       const [pendingChanges, setPendingChanges] = React.useState({ 2022: {}, 2023: {}, 2024: {}, 2025: {} });
 
-      // Hardcoded password (replace with environment variable in production)
       const ADMIN_PASSWORD = 'friendzone2025';
 
-      // Fetch data on mount
+      // Fetch data
       React.useEffect(() => {
         const fetchData = async () => {
           const files = [
             { path: '/data/rules.json', setter: setRules, default: { sections: [] } },
             { path: '/data/payouts.json', setter: setPayouts, default: [] },
             { path: '/data/keepers_2022.json', setter: (data) => setKeepers(prev => ({ ...prev, 2022: data.map(team => ({
-                ...team,
-                draftCost1: Math.round(team.draftCost1 || 0),
-                draftCost2: Math.round(team.draftCost2 || 0),
-                cost1: Math.round(calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
-                cost2: Math.round(calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
-                remaining: 200 - (Math.round(calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
+                ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
+                cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
+                cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
+                remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
               })) })), default: [] },
             { path: '/data/keepers_2023.json', setter: (data) => setKeepers(prev => ({ ...prev, 2023: data.map(team => ({
-                ...team,
-                draftCost1: Math.round(team.draftCost1 || 0),
-                draftCost2: Math.round(team.draftCost2 || 0),
-                cost1: Math.round(calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
-                cost2: Math.round(calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
-                remaining: 200 - (Math.round(calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
+                ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
+                cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
+                cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
+                remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
               })) })), default: [] },
             { path: '/data/keepers_2024.json', setter: (data) => setKeepers(prev => ({ ...prev, 2024: data.map(team => ({
-                ...team,
-                draftCost1: Math.round(team.draftCost1 || 0),
-                draftCost2: Math.round(team.draftCost2 || 0),
-                cost1: Math.round(calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
-                cost2: Math.round(calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
-                remaining: 200 - (Math.round(calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
+                ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
+                cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
+                cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
+                remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
               })) })), default: [] },
             { path: '/data/keepers_2025.json', setter: (data) => setKeepers(prev => ({ ...prev, 2025: data })), default: [] },
             { path: '/data/prizes_2023.json', setter: (data) => setPrizes(prev => ({ ...prev, 2023: data })), default: { survivor: [], weeklyHighScores: [] } },
@@ -122,7 +81,6 @@
             } },
             { path: '/data/locks.json', setter: setLocks, default: { 2022: false, 2023: false, 2024: false, 2025: false } },
           ];
-
           for (const file of files) {
             try {
               const res = await fetch(file.path);
@@ -142,229 +100,233 @@
         fetchData();
       }, []);
 
-      // Handle admin login
-      const handleAdminLogin = (e) => {
-        e.preventDefault();
-        if (adminPassword === ADMIN_PASSWORD) {
-          setIsAdminAuthenticated(true);
-        } else {
-          alert('Incorrect password');
-        }
-      };
-
-      // Update data via Netlify function
-      const updateData = async (file, data, action, index = null) => {
-        try {
-          const res = await fetch('/.netlify/functions/update-data', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ file, data, action, index })
-          });
-          if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
-          return await res.json();
-        } catch (err) {
-          console.error('Error updating data:', err);
-          alert('Failed to update data. Please try again.');
-          return null;
-        }
-      };
-
-      // Toggle lock for a year
-      const handleToggleLock = async (year) => {
-        const updatedLocks = { ...locks, [year]: !locks[year] };
-        const result = await updateData('locks.json', updatedLocks, 'update');
-        if (result) {
-          setLocks(updatedLocks);
-          // Clear pending changes for the year if locking
-          if (updatedLocks[year]) {
-            setPendingChanges(prev => ({ ...prev, [year]: {} }));
+      // Share state and handlers globally
+      window.AppState = {
+        currentTab, setCurrentTab,
+        adminPassword, setAdminPassword,
+        isAdminAuthenticated, setIsAdminAuthenticated,
+        keepers, setKeepers,
+        prizes, setPrizes,
+        rules, setRules,
+        payouts, setPayouts,
+        locks, setLocks,
+        selectedYear, setSelectedYear,
+        isMenuOpen, setIsMenuOpen,
+        modalState, setModalState,
+        pendingChanges, setPendingChanges,
+        ADMIN_PASSWORD: 'friendzone2025',
+        calculateKeeperCost: (draftCost, tag, keeperName) => {
+          if (keeperName === '' && draftCost === 0) return 0;
+          if (draftCost === 0 && !tag) return 5;
+          if (draftCost === 0 && tag) return 0;
+          if (tag) return Math.round(draftCost);
+          return Math.round(draftCost * 1.1 + 5);
+        },
+        updateData: async (file, data, action, index = null) => {
+          try {
+            const res = await fetch('/.netlify/functions/update-data', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ file, data, action, index })
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+            return await res.json();
+          } catch (err) {
+            console.error('Error updating data:', err);
+            alert('Failed to update data. Please try again.');
+            return null;
           }
-        }
-      };
-
-      // Normalize input to enforce integers or empty string
-      const normalizeNumberInput = (value) => {
-        if (value === '' || value == null) return ''; // Allow empty input
-        // Remove leading zeros and ensure integer
-        const strValue = String(value).replace(/^0+/, '');
-        if (strValue === '') return ''; // Handle fully cleared input
-        const intValue = Math.round(parseFloat(strValue) || 0);
-        return intValue.toString();
-      };
-
-      // Handle arrow key increments for integer steps
-      const handleArrowKey = (e, year, index, field) => {
-        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { // Up or Down arrow
+        },
+        normalizeNumberInput: (value) => {
+          if (value === '' || value == null) return '';
+          const strValue = String(value).replace(/^0+/, '');
+          if (strValue === '') return '';
+          const intValue = Math.round(parseFloat(strValue) || 0);
+          return intValue.toString();
+        },
+        handleArrowKey: (e, year, index, field) => {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            const currentValue = parseFloat(e.target.value) || 0;
+            const newValue = e.key === 'ArrowUp' ? currentValue + 1 : Math.max(0, currentValue - 1);
+            window.AppState.handleKeeperChange(year, index, field, newValue.toString());
+          }
+        },
+        handleAdminLogin: (e) => {
           e.preventDefault();
-          const currentValue = parseFloat(e.target.value) || 0;
-          const newValue = e.key === 'ArrowUp' ? currentValue + 1 : Math.max(0, currentValue - 1);
-          handleKeeperChange(year, index, field, newValue.toString());
-        }
-      };
-
-      // Handle inline keeper updates (store in pendingChanges)
-      const handleKeeperChange = (year, index, field, value) => {
-        if (locks[year]) return; // No edits if year is locked
-        setPendingChanges(prev => {
-          const updatedPending = { ...prev, [year]: { ...prev[year], [index]: { ...prev[year][index], [field]: value } } };
-          const teamData = { ...keepers[year][index], ...updatedPending[year][index] } || {
-            team: `Team ${index + 1}`,
-            keeper1: '', draftCost1: '', tag1: false, cost1: 0,
-            keeper2: '', draftCost2: '', tag2: false, cost2: 0,
-            remaining: 200
-          };
-
-          if (field === 'draftCost1' || field === 'tag1' || field === 'keeper1') {
-            if (field === 'draftCost1') {
-              const normalizedValue = normalizeNumberInput(value);
-              teamData.draftCost1 = normalizedValue === '' ? '' : parseInt(normalizedValue) || 0;
-              updatedPending[year][index].draftCost1 = normalizedValue; // Store normalized string for display
-            }
-            if (teamData.draftCost1 === '' && value === true) {
-              alert('No player can be kept for $0. Untag or set a draft cost.');
-              teamData.tag1 = false;
-            } else {
-              teamData.tag1 = field === 'tag1' ? value : teamData.tag1;
-            }
-            teamData.cost1 = calculateKeeperCost(teamData.draftCost1 || 0, teamData.tag1, teamData.keeper1);
+          if (window.AppState.adminPassword === window.AppState.ADMIN_PASSWORD) {
+            window.AppState.setIsAdminAuthenticated(true);
+            window.AppState.setCurrentTab('home');
+          } else {
+            alert('Incorrect password');
           }
-          if (field === 'draftCost2' || field === 'tag2' || field === 'keeper2') {
-            if (field === 'draftCost2') {
-              const normalizedValue = normalizeNumberInput(value);
-              teamData.draftCost2 = normalizedValue === '' ? '' : parseInt(normalizedValue) || 0;
-              updatedPending[year][index].draftCost2 = normalizedValue; // Store normalized string for display
+        },
+        handleToggleLock: async (year) => {
+          const updatedLocks = { ...window.AppState.locks, [year]: !window.AppState.locks[year] };
+          const result = await window.AppState.updateData('locks.json', updatedLocks, 'update');
+          if (result) {
+            window.AppState.setLocks(updatedLocks);
+            if (updatedLocks[year]) {
+              window.AppState.setPendingChanges(prev => ({ ...prev, [year]: {} }));
             }
-            if (teamData.draftCost2 === '' && value === true) {
-              alert('No player can be kept for $0. Untag or set a draft cost.');
-              teamData.tag2 = false;
-            } else {
-              teamData.tag2 = field === 'tag2' ? value : teamData.tag2;
+          }
+        },
+        handleKeeperChange: (year, index, field, value) => {
+          if (window.AppState.locks[year]) return;
+          window.AppState.setPendingChanges(prev => {
+            const updatedPending = { ...prev, [year]: { ...prev[year], [index]: { ...prev[year][index], [field]: value } } };
+            const teamData = { ...window.AppState.keepers[year][index], ...updatedPending[year][index] } || {
+              team: `Team ${index + 1}`, keeper1: '', draftCost1: '', tag1: false, cost1: 0,
+              keeper2: '', draftCost2: '', tag2: false, cost2: 0, remaining: 200
+            };
+            if (field === 'draftCost1' || field === 'tag1' || field === 'keeper1') {
+              if (field === 'draftCost1') {
+                const normalizedValue = window.AppState.normalizeNumberInput(value);
+                teamData.draftCost1 = normalizedValue === '' ? '' : parseInt(normalizedValue) || 0;
+                updatedPending[year][index].draftCost1 = normalizedValue;
+              }
+              if (teamData.draftCost1 === '' && value === true) {
+                alert('No player can be kept for $0. Untag or set a draft cost.');
+                teamData.tag1 = false;
+              } else {
+                teamData.tag1 = field === 'tag1' ? value : teamData.tag1;
+              }
+              teamData.cost1 = window.AppState.calculateKeeperCost(teamData.draftCost1 || 0, teamData.tag1, teamData.keeper1);
             }
-            teamData.cost2 = calculateKeeperCost(teamData.draftCost2 || 0, teamData.tag2, teamData.keeper2);
-          }
-          teamData.remaining = 200 - (teamData.cost1 + teamData.cost2);
-          if (teamData.remaining < 0) {
-            alert('Total keeper cost exceeds $200 budget.');
-            return prev; // Don't update pending changes
-          }
-          updatedPending[year][index] = teamData;
-          return updatedPending;
-        });
-      };
-
-      // Handle saving a row
-      const handleSaveRow = async (year, index) => {
-        if (locks[year]) return;
-        const teamData = pendingChanges[year][index] || keepers[year][index];
-        if (!teamData) return;
-
-        const updatedKeepers = { ...keepers };
-        updatedKeepers[year][index] = { 
-          ...keepers[year][index], 
-          ...teamData,
-          draftCost1: teamData.draftCost1 === '' ? 0 : parseInt(teamData.draftCost1) || 0,
-          draftCost2: teamData.draftCost2 === '' ? 0 : parseInt(teamData.draftCost2) || 0
-        };
-        const result = await updateData(`keepers_${year}.json`, updatedKeepers[year], 'update');
-        if (result) {
-          setKeepers(updatedKeepers);
-          setPendingChanges(prev => {
-            const updatedPending = { ...prev, [year]: { ...prev[year] } };
-            delete updatedPending[year][index];
+            if (field === 'draftCost2' || field === 'tag2' || field === 'keeper2') {
+              if (field === 'draftCost2') {
+                const normalizedValue = window.AppState.normalizeNumberInput(value);
+                teamData.draftCost2 = normalizedValue === '' ? '' : parseInt(normalizedValue) || 0;
+                updatedPending[year][index].draftCost2 = normalizedValue;
+              }
+              if (teamData.draftCost2 === '' && value === true) {
+                alert('No player can be kept for $0. Untag or set a draft cost.');
+                teamData.tag2 = false;
+              } else {
+                teamData.tag2 = field === 'tag2' ? value : teamData.tag2;
+              }
+              teamData.cost2 = window.AppState.calculateKeeperCost(teamData.draftCost2 || 0, teamData.tag2, teamData.keeper2);
+            }
+            teamData.remaining = 200 - (teamData.cost1 + teamData.cost2);
+            if (teamData.remaining < 0) {
+              alert('Total keeper cost exceeds $200 budget.');
+              return prev;
+            }
+            updatedPending[year][index] = teamData;
             return updatedPending;
           });
-        }
-      };
-
-      // Initialize 12 teams for 2025 if empty
-      const initializeKeepers = (year) => {
-        if (year === '2025' && keepers[year].length === 0) {
-          const initialTeams = Array.from({ length: 12 }, (_, i) => ({
-            team: `Team ${i + 1}`,
-            keeper1: '', draftCost1: '', tag1: false, cost1: 0,
-            keeper2: '', draftCost2: '', tag2: false, cost2: 0,
-            remaining: 200
-          }));
-          setKeepers(prev => ({ ...prev, [year]: initialTeams }));
-          updateData(`keepers_${year}.json`, initialTeams, 'update');
-        }
-      };
-
-      // Handle inline payouts updates
-      const handlePayoutChange = async (index, field, value) => {
-        if (!isAdminAuthenticated) return;
-        const updatedPayouts = [...payouts];
-        updatedPayouts[index] = { ...updatedPayouts[index], [field]: field === 'percentage' || field === 'prize' ? parseFloat(value) || 0 : value };
-        if (updatedPayouts.some((p, i) => i !== index && p.category === updatedPayouts[index].category)) {
-          alert('Category already exists.');
-          return;
-        }
-        const result = await updateData('payouts.json', updatedPayouts, 'update');
-        if (result) {
-          setPayouts(updatedPayouts);
-        }
-      };
-
-      // Handle inline weekly high score updates
-      const handleWeeklyScoreChange = async (year, index, field, value) => {
-        if (!isAdminAuthenticated) return;
-        const updatedPrizes = { ...prizes };
-        const score = { ...updatedPrizes[year].weeklyHighScores[index] };
-        score[field] = field === 'total' ? parseFloat(value) || '' : value;
-        updatedPrizes[year].weeklyHighScores[index] = score;
-        const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
-        if (result) {
-          setPrizes(updatedPrizes);
-        }
-      };
-
-      // Handle inline survivor updates
-      const handleSurvivorChange = async (year, index, field, value) => {
-        if (!isAdminAuthenticated) return;
-        const updatedPrizes = { ...prizes };
-        const entry = { ...updatedPrizes[year].survivor[index] };
-        if (field === 'team') {
-          if (entry.winner !== undefined) {
-            entry.winner = value;
+        },
+        handleSaveRow: async (year, index) => {
+          if (window.AppState.locks[year]) return;
+          const teamData = window.AppState.pendingChanges[year][index] || window.AppState.keepers[year][index];
+          if (!teamData) return;
+          const updatedKeepers = { ...window.AppState.keepers };
+          updatedKeepers[year][index] = { 
+            ...window.AppState.keepers[year][index], 
+            ...teamData,
+            draftCost1: teamData.draftCost1 === '' ? 0 : parseInt(teamData.draftCost1) || 0,
+            draftCost2: teamData.draftCost2 === '' ? 0 : parseInt(teamData.draftCost2) || 0
+          };
+          const result = await window.AppState.updateData(`keepers_${year}.json`, updatedKeepers[year], 'update');
+          if (result) {
+            window.AppState.setKeepers(updatedKeepers);
+            window.AppState.setPendingChanges(prev => {
+              const updatedPending = { ...prev, [year]: { ...prev[year] } };
+              delete updatedPending[year][index];
+              return updatedPending;
+            });
+          }
+        },
+        initializeKeepers: (year) => {
+          if (year === '2025' && window.AppState.keepers[year].length === 0) {
+            const initialTeams = Array.from({ length: 12 }, (_, i) => ({
+              team: `Team ${i + 1}`, keeper1: '', draftCost1: '', tag1: false, cost1: 0,
+              keeper2: '', draftCost2: '', tag2: false, cost2: 0, remaining: 200
+            }));
+            window.AppState.setKeepers(prev => ({ ...prev, [year]: initialTeams }));
+            window.AppState.updateData(`keepers_${year}.json`, initialTeams, 'update');
+          }
+        },
+        handlePayoutChange: async (index, field, value) => {
+          if (!window.AppState.isAdminAuthenticated) return;
+          const updatedPayouts = [...window.AppState.payouts];
+          updatedPayouts[index] = { ...updatedPayouts[index], [field]: field === 'percentage' || field === 'prize' ? parseFloat(value) || 0 : value };
+          if (updatedPayouts.some((p, i) => i !== index && p.category === updatedPayouts[index].category)) {
+            alert('Category already exists.');
+            return;
+          }
+          const result = await window.AppState.updateData('payouts.json', updatedPayouts, 'update');
+          if (result) {
+            window.AppState.setPayouts(updatedPayouts);
+          }
+        },
+        handleWeeklyScoreChange: async (year, index, field, value) => {
+          if (!window.AppState.isAdminAuthenticated) return;
+          const updatedPrizes = { ...window.AppState.prizes };
+          const score = { ...updatedPrizes[year].weeklyHighScores[index] };
+          score[field] = field === 'total' ? parseFloat(value) || '' : value;
+          updatedPrizes[year].weeklyHighScores[index] = score;
+          const result = await window.AppState.updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
+          if (result) {
+            window.AppState.setPrizes(updatedPrizes);
+          }
+        },
+        handleSurvivorChange: async (year, index, field, value) => {
+          if (!window.AppState.isAdminAuthenticated) return;
+          const updatedPrizes = { ...window.AppState.prizes };
+          const entry = { ...updatedPrizes[year].survivor[index] };
+          if (field === 'team') {
+            if (entry.winner !== undefined) {
+              entry.winner = value;
+            } else {
+              entry.eliminated = value;
+            }
+          }
+          updatedPrizes[year].survivor[index] = entry;
+          const result = await window.AppState.updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
+          if (result) {
+            window.AppState.setPrizes(updatedPrizes);
+          }
+        },
+        getRemainingTeams: (year) => {
+          const survivorTeams = window.AppState.prizes[year].survivor.map(entry => entry.eliminated || entry.winner);
+          return window.AppState.keepers[year]
+            .map(team => team.team)
+            .filter(team => team && !survivorTeams.includes(team))
+            .sort();
+        },
+        handleRuleChange: async (sectionIndex, itemIndex, field, value) => {
+          if (!window.AppState.isAdminAuthenticated) return;
+          const updatedRules = { ...window.AppState.rules };
+          const item = updatedRules.sections[sectionIndex].items[itemIndex];
+          if (typeof item === 'string') {
+            if (field === 'text') {
+              updatedRules.sections[sectionIndex].items[itemIndex] = value;
+            }
           } else {
-            entry.eliminated = value;
+            if (field === 'text') {
+              item.text = value;
+            } else if (field === 'subItems') {
+              item.subItems = value.split('\n').filter(subItem => subItem.trim());
+            }
           }
-        }
-        updatedPrizes[year].survivor[index] = entry;
-        const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
-        if (result) {
-          setPrizes(updatedPrizes);
-        }
+          const result = await window.AppState.updateData('rules.json', updatedRules, 'update');
+          if (result) {
+            window.AppState.setRules(updatedRules);
+          }
+        },
       };
 
-      // Compute remaining teams for Survivor
-      const getRemainingTeams = (year) => {
-        const survivorTeams = prizes[year].survivor.map(entry => entry.eliminated || entry.winner);
-        return keepers[year]
-          .map(team => team.team)
-          .filter(team => team && !survivorTeams.includes(team))
-          .sort();
-      };
-
-      // Handle rule updates
-      const handleRuleChange = async (sectionIndex, itemIndex, field, value) => {
-        if (!isAdminAuthenticated) return;
-        const updatedRules = { ...rules };
-        const item = updatedRules.sections[sectionIndex].items[itemIndex];
-        if (typeof item === 'string') {
-          if (field === 'text') {
-            updatedRules.sections[sectionIndex].items[itemIndex] = value;
-          }
-        } else {
-          if (field === 'text') {
-            item.text = value;
-          } else if (field === 'subItems') {
-            item.subItems = value.split('\n').filter(subItem => subItem.trim());
-          }
-        }
-        const result = await updateData('rules.json', updatedRules, 'update');
-        if (result) {
-          setRules(updatedRules);
+      // Render tab
+      const renderTab = () => {
+        switch (window.AppState.currentTab) {
+          case 'home': return <window.Home />;
+          case 'rules': return <window.Rules />;
+          case 'payouts': return <window.Payouts />;
+          case 'keepers': return <window.Keepers />;
+          case 'prizes': return <window.Prizes />;
+          case 'admin': return <window.Admin />;
+          default: return null;
         }
       };
 
@@ -376,25 +338,26 @@
                 <h1 className="text-xl sm:text-2xl font-bold">FriendZone FF</h1>
                 <button 
                   className="sm:hidden text-xl focus:outline-none" 
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  onClick={() => window.AppState.setIsMenuOpen(!window.AppState.isMenuOpen)}
                 >
                   ☰
                 </button>
               </div>
-              <ul className={`sm:flex sm:space-x-4 ${isMenuOpen ? 'block' : 'hidden'} sm:block mt-2 sm:mt-0 p-3 sm:p-0 sm:bg-transparent bg-gray-800 shadow-lg sm:shadow-none`}>
-                {['home', 'rules', 'payouts', 'keepers', 'prizes', isAdminAuthenticated ? 'logout' : 'admin'].map(tab => (
+              <ul className={`sm:flex sm:space-x-4 ${window.AppState.isMenuOpen ? 'block' : 'hidden'} sm:block mt-2 sm:mt-0 p-3 sm:p-0 sm:bg-transparent bg-gray-800 shadow-lg sm:shadow-none`}>
+                {['home', 'rules', 'payouts', 'keepers', 'prizes', window.AppState.isAdminAuthenticated ? 'logout' : 'admin'].map(tab => (
                   <li key={tab} className="my-2 sm:my-0">
                     <button 
                       onClick={() => {
                         if (tab === 'logout') {
-                          setIsAdminAuthenticated(false);
-                          setAdminPassword('');
+                          window.AppState.setIsAdminAuthenticated(false);
+                          window.AppState.setAdminPassword('');
+                          window.AppState.setCurrentTab('home');
                         } else {
-                          setCurrentTab(tab);
+                          window.AppState.setCurrentTab(tab);
                         }
-                        setIsMenuOpen(false);
+                        window.AppState.setIsMenuOpen(false);
                       }} 
-                      className={`w-full sm:w-auto text-left capitalize hover:text-teal-400 focus:outline-none ${currentTab === tab ? 'text-teal-400' : ''}`}
+                      className={`w-full sm:w-auto text-left capitalize hover:text-teal-400 focus:outline-none ${window.AppState.currentTab === tab ? 'text-teal-400' : ''}`}
                     >
                       {tab}
                     </button>
@@ -404,752 +367,13 @@
             </div>
           </nav>
           <main className="container mx-auto pt-16 sm:pt-4 pb-4 px-3 sm:px-4">
-            {currentTab === 'home' && (
-              <div className="space-y-4">
-                <h2 className="text-lg sm:text-xl font-bold text-white text-center">FriendZone Fantasy Football Champions</h2>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div className="card bg-white text-gray-800 rounded-lg shadow-md hover:scale-105 transition-transform duration-200 animate-fade-in">
-                    <div className="bg-gradient-to-r from-teal-500 to-teal-700 text-white rounded-t-lg p-4 flex items-center">
-                      <span className="text-lg mr-2">🏈</span>
-                      <h3 className="text-lg sm:text-xl font-bold">2023 Season</h3>
-                    </div>
-                    <div className="p-4 space-y-3">
-                      <div className="flex items-center border-l-4 border-teal-500 pl-2">
-                        <span className="text-sm sm:text-base font-medium mr-2">🏆 1st Place:</span>
-                        <span className="text-sm sm:text-base font-semibold">Alex Bzydrya</span>
-                      </div>
-                      <div className="flex items-center border-l-4 border-teal-500 pl-2">
-                        <span className="text-sm sm:text-base font-medium mr-2">🥈 2nd Place:</span>
-                        <span className="text-sm sm:text-base font-semibold">Jake LeFevre</span>
-                      </div>
-                      <div className="flex items-center border-l-4 border-teal-500 pl-2">
-                        <span className="text-sm sm:text-base font-medium mr-2">🥉 3rd Place:</span>
-                        <span className="text-sm sm:text-base font-semibold">Jordan Picard</span>
-                      </div>
-                      <div className="flex items-center border-l-4 border-teal-500 pl-2">
-                        <span className="text-sm sm:text-base font-medium mr-2">⭐ Regular Season:</span>
-                        <span className="text-sm sm:text-base font-semibold">Jake LeFevre</span>
-                      </div>
-                      <div className="flex items-center border-l-4 border-teal-500 pl-2">
-                        <span className="text-sm sm:text-base font-medium mr-2">🛡️ Survivor:</span>
-                        <span className="text-sm sm:text-base font-semibold">Alex Bzydyra</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="card bg-white text-gray-800 rounded-lg shadow-md hover:scale-105 transition-transform duration-200 animate-fade-in">
-                    <div className="bg-gradient-to-r from-teal-500 to-teal-700 text-white rounded-t-lg p-4 flex items-center">
-                      <span className="text-lg mr-2">🏈</span>
-                      <h3 className="text-lg sm:text-xl font-bold">2024 Season</h3>
-                    </div>
-                    <div className="p-4 space-y-3">
-                      <div className="flex items-center border-l-4 border-teal-500 pl-2">
-                        <span className="text-sm sm:text-base font-medium mr-2">🏆 1st Place:</span>
-                        <span className="text-sm sm:text-base font-semibold">Chris Ayer</span>
-                      </div>
-                      <div className="flex items-center border-l-4 border-teal-500 pl-2">
-                        <span className="text-sm sm:text-base font-medium mr-2">🥈 2nd Place:</span>
-                        <span className="text-sm sm:text-base font-semibold">Alex LeFevre</span>
-                      </div>
-                      <div className="flex items-center border-l-4 border-teal-500 pl-2">
-                        <span className="text-sm sm:text-base font-medium mr-2">🥉 3rd Place:</span>
-                        <span className="text-sm sm:text-base font-semibold">Connor Buckley</span>
-                      </div>
-                      <div className="flex items-center border-l-4 border-teal-500 pl-2">
-                        <span className="text-sm sm:text-base font-medium mr-2">⭐ Regular Season:</span>
-                        <span className="text-sm sm:text-base font-semibold">Zach D'Agata</span>
-                      </div>
-                      <div className="flex items-center border-l-4 border-teal-500 pl-2">
-                        <span className="text-sm sm:text-base font-medium mr-2">🛡️ Survivor:</span>
-                        <span className="text-sm sm:text-base font-semibold">Connor Buckley</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-            {currentTab === 'rules' && (
-              <div className="space-y-3">
-                <h2 className="text-lg sm:text-xl font-bold text-white">Rules</h2>
-                {isAdminAuthenticated && (
-                  <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3 mb-3">
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      const title = e.target.title.value;
-                      if (rules.sections.some(section => section.title === title)) {
-                        alert('Section title already exists.');
-                        return;
-                      }
-                      const updatedRules = { sections: [...rules.sections, { title, items: [] }] };
-                      updateData('rules.json', updatedRules, 'update').then(result => {
-                        if (result) {
-                          setRules(updatedRules);
-                          e.target.reset();
-                        }
-                      });
-                    }} className="space-y-2 max-w-xs">
-                      <div>
-                        <label className="text-xs font-medium">Section Title</label>
-                        <input
-                          type="text"
-                          name="title"
-                          placeholder="Enter section title"
-                          className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                          required
-                        />
-                      </div>
-                      <button 
-                        type="submit" 
-                        className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                      >
-                        Add Section
-                      </button>
-                    </form>
-                  </div>
-                )}
-                {rules.sections.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {rules.sections.map((section, sectionIndex) => (
-                      <div key={sectionIndex} className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
-                        <div className="flex justify-between items-center mb-2">
-                          <h3 className="text-sm sm:text-base font-semibold text-teal-600">{section.title}</h3>
-                          {isAdminAuthenticated && (
-                            <button
-                              onClick={() => setModalState({ isOpen: true, type: 'deleteSection', data: { sectionIndex } })}
-                              className="text-red-500 hover:text-red-700 text-xs"
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </div>
-                        {isAdminAuthenticated && (
-                          <form onSubmit={(e) => {
-                            e.preventDefault();
-                            const text = e.target.text.value;
-                            const subItems = e.target.subItems.value ? e.target.subItems.value.split('\n').filter(item => item.trim()) : [];
-                            const newItem = subItems.length ? { text, subItems } : text;
-                            const updatedRules = { ...rules };
-                            updatedRules.sections[sectionIndex].items.push(newItem);
-                            updateData('rules.json', updatedRules, 'update').then(result => {
-                              if (result) {
-                                setRules(updatedRules);
-                                e.target.reset();
-                              }
-                            });
-                          }} className="space-y-2 max-w-xs mt-2 mb-3">
-                            <div>
-                              <label className="text-xs font-medium">Rule Text</label>
-                              <input
-                                type="text"
-                                name="text"
-                                placeholder="Enter rule"
-                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                required
-                              />
-                            </div>
-                            <div>
-                              <label className="text-xs font-medium">Sub-items (one per line)</label>
-                              <textarea
-                                name="subItems"
-                                placeholder="Enter sub-items"
-                                className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                rows="2"
-                              />
-                            </div>
-                            <button 
-                              type="submit" 
-                              className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                            >
-                              Add Rule
-                            </button>
-                          </form>
-                        )}
-                        <ul className="list-disc pl-5 space-y-1 text-sm sm:text-base">
-                          {section.items.map((item, itemIndex) => (
-                            <li key={itemIndex} className="flex justify-between items-start">
-                              <div>
-                                {typeof item === 'string' ? (
-                                  isAdminAuthenticated ? (
-                                    <input
-                                      type="text"
-                                      value={item}
-                                      onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'text', e.target.value)}
-                                      className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    />
-                                  ) : (
-                                    item
-                                  )
-                                ) : (
-                                  <>
-                                    {isAdminAuthenticated ? (
-                                      <input
-                                        type="text"
-                                        value={item.text}
-                                        onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'text', e.target.value)}
-                                        className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                      />
-                                    ) : (
-                                      item.text
-                                    )}
-                                    {item.subItems && (
-                                      <ul className="list-disc pl-5 mt-1 space-y-1">
-                                        {isAdminAuthenticated ? (
-                                          <textarea
-                                            value={item.subItems.join('\n')}
-                                            onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'subItems', e.target.value)}
-                                            className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                            rows="2"
-                                          />
-                                        ) : (
-                                          item.subItems.map((subItem, subIndex) => (
-                                            <li key={subIndex} className="text-xs sm:text-sm">{subItem}</li>
-                                          ))
-                                        )}
-                                      </ul>
-                                    )}
-                                  </>
-                                )}
-                              </div>
-                              {isAdminAuthenticated && (
-                                <div className="flex space-x-1">
-                                  <button
-                                    onClick={() => setModalState({ isOpen: true, type: 'deleteRule', data: { sectionIndex, itemIndex } })}
-                                    className="text-red-500 hover:text-red-700 text-xs"
-                                  >
-                                    Delete
-                                  </button>
-                                </div>
-                              )}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
-                    <p className="text-xs sm:text-sm">No rules data available.</p>
-                  </div>
-                )}
-              </div>
-            )}
-            {currentTab === 'payouts' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
-                <h2 className="text-lg sm:text-xl font-bold mb-2">Payouts</h2>
-                {isAdminAuthenticated && (
-                  <div className="mb-3">
-                    <form onSubmit={(e) => {
-                      e.preventDefault();
-                      const category = e.target.category.value;
-                      const percentage = parseFloat(e.target.percentage.value);
-                      const prize = parseInt(e.target.prize.value);
-                      if (payouts.some(p => p.category === category)) {
-                        alert('Category already exists.');
-                        return;
-                      }
-                      const updatedPayouts = [...payouts, { category, percentage, prize }];
-                      updateData('payouts.json', updatedPayouts, 'update').then(result => {
-                        if (result) {
-                          setPayouts(updatedPayouts);
-                          e.target.reset();
-                        }
-                      });
-                    }} className="space-y-2 max-w-xs">
-                      <div>
-                        <label className="text-xs font-medium">Category</label>
-                        <input
-                          type="text"
-                          name="category"
-                          placeholder="Enter category"
-                          className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium">Pot %</label>
-                        <input
-                          type="number"
-                          name="percentage"
-                          placeholder="e.g., 0.5"
-                          step="0.01"
-                          min="0"
-                          className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="text-xs font-medium">Prize ($)</label>
-                        <input
-                          type="number"
-                          name="prize"
-                          placeholder="Enter prize"
-                          min="0"
-                          className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                          required
-                        />
-                      </div>
-                      <button 
-                        type="submit" 
-                        className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                      >
-                        Add Payout
-                      </button>
-                    </form>
-                  </div>
-                )}
-                {payouts.length > 0 ? (
-                  <div className="table-container">
-                    <table className="w-full border-collapse text-[10px] sm:text-xs">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Category</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Pot %</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Prize</th>
-                          {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {payouts.map((payout, index) => (
-                          <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                            <td className="border border-gray-300 p-0.5 sm:p-1">
-                              {isAdminAuthenticated ? (
-                                <input
-                                  type="text"
-                                  value={payout.category}
-                                  onChange={(e) => handlePayoutChange(index, 'category', e.target.value)}
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                              ) : (
-                                payout.category
-                              )}
-                            </td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                              {isAdminAuthenticated ? (
-                                <input
-                                  type="number"
-                                  value={payout.percentage}
-                                  onChange={(e) => handlePayoutChange(index, 'percentage', e.target.value)}
-                                  step="0.01"
-                                  min="0"
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                              ) : (
-                                (payout.percentage * 100).toFixed(2)
-                              )}
-                            </td>
-                            <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                              {isAdminAuthenticated ? (
-                                <input
-                                  type="number"
-                                  value={payout.prize}
-                                  onChange={(e) => handlePayoutChange(index, 'prize', e.target.value)}
-                                  min="0"
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                />
-                              ) : (
-                                `$${payout.prize}`
-                              )}
-                            </td>
-                            {isAdminAuthenticated && (
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                <button
-                                  onClick={() => {
-                                    const updatedPayouts = payouts.filter((_, i) => i !== index);
-                                    updateData('payouts.json', updatedPayouts, 'delete', index).then(result => {
-                                      if (result) setPayouts(updatedPayouts);
-                                    });
-                                  }}
-                                  className="text-red-500 hover:text-red-700 text-xs"
-                                >
-                                  Delete
-                                </button>
-                              </td>
-                            )}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="text-xs sm:text-sm">No payouts data available.</p>
-                )}
-              </div>
-            )}
-            {currentTab === 'keepers' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
-                <h2 className="text-lg sm:text-xl font-bold mb-2">Keepers</h2>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {['2022', '2023', '2024', '2025'].map(year => (
-                    <button
-                      key={year}
-                      className={`px-2 py-1 text-xs sm:text-sm rounded ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
-                      onClick={() => {
-                        setSelectedYear(year);
-                        initializeKeepers(year);
-                      }}
-                    >
-                      {year}
-                    </button>
-                  ))}
-                </div>
-                {isAdminAuthenticated && (
-                  <div className="mb-2">
-                    <button
-                      onClick={() => handleToggleLock(selectedYear)}
-                      className={`px-2 py-1 text-xs sm:text-sm rounded lock-button ${locks[selectedYear] ? 'bg-red-500 text-white' : 'bg-teal-500 text-white'}`}
-                    >
-                      {locks[selectedYear] ? `Unlock ${selectedYear}` : `Lock ${selectedYear}`}
-                    </button>
-                  </div>
-                )}
-                {keepers[selectedYear].length > 0 ? (
-                  <div className="table-container">
-                    <table className="w-full border-collapse text-[10px] sm:text-xs">
-                      <thead>
-                        <tr className="bg-gray-100">
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-left min-w-[100px]">Team</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[80px]">K1</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[60px]">K1 $</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[40px]">Tag</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[60px]">K1 Cost</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[80px]">K2</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[60px]">K2 $</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[40px]">Tag</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[60px]">K2 Cost</th>
-                          <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[80px]">Auction $</th>
-                          {!locks[selectedYear] && <th className="border border-gray-300 p-0.5 sm:p-1 text-center min-w-[60px]">Actions</th>}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {keepers[selectedYear].map((keeper, index) => {
-                          const pending = pendingChanges[selectedYear][index] || {};
-                          const displayData = { ...keeper, ...pending };
-                          return (
-                            <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                              <td className="border border-gray-300 p-0.5 sm:p-1">
-                                <input
-                                  type="text"
-                                  value={displayData.team}
-                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'team', e.target.value)}
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                  disabled={locks[selectedYear]}
-                                />
-                              </td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1">
-                                <input
-                                  type="text"
-                                  value={displayData.keeper1}
-                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper1', e.target.value)}
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                  disabled={locks[selectedYear]}
-                                />
-                              </td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                <input
-                                  type="text"
-                                  value={displayData.draftCost1}
-                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
-                                  onKeyDown={(e) => handleArrowKey(e, selectedYear, index, 'draftCost1')}
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 no-spinner"
-                                  disabled={locks[selectedYear]}
-                                />
-                              </td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={displayData.tag1}
-                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'tag1', e.target.checked)}
-                                  className="h-3 w-3 text-teal-500 focus:ring-teal-500"
-                                  disabled={locks[selectedYear]}
-                                />
-                              </td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${displayData.cost1}</td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1">
-                                <input
-                                  type="text"
-                                  value={displayData.keeper2}
-                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper2', e.target.value)}
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                  disabled={locks[selectedYear]}
-                                />
-                              </td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                <input
-                                  type="text"
-                                  value={displayData.draftCost2}
-                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
-                                  onKeyDown={(e) => handleArrowKey(e, selectedYear, index, 'draftCost2')}
-                                  className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500 no-spinner"
-                                  disabled={locks[selectedYear]}
-                                />
-                              </td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                <input
-                                  type="checkbox"
-                                  checked={displayData.tag2}
-                                  onChange={(e) => handleKeeperChange(selectedYear, index, 'tag2', e.target.checked)}
-                                  className="h-3 w-3 text-teal-500 focus:ring-teal-500"
-                                  disabled={locks[selectedYear]}
-                                />
-                              </td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${displayData.cost2}</td>
-                              <td className="border border-gray-300 p-0.5 sm:p-1 text-center">${displayData.remaining}</td>
-                              {!locks[selectedYear] && (
-                                <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                  <button
-                                    onClick={() => handleSaveRow(selectedYear, index)}
-                                    className="px-2 py-0.5 text-[10px] sm:text-xs bg-teal-500 text-white rounded hover:bg-teal-600 transition-all disabled:bg-gray-400"
-                                    disabled={!pendingChanges[selectedYear][index]}
-                                  >
-                                    Save
-                                  </button>
-                                </td>
-                              )}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  <p className="text-xs sm:text-sm">Loading keepers for {selectedYear}...</p>
-                )}
-              </div>
-            )}
-            {currentTab === 'prizes' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
-                <h2 className="text-lg sm:text-xl font-bold mb-2">Prizes</h2>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {['2023', '2024', '2025'].map(year => (
-                    <button
-                      key={year}
-                      className={`px-2 py-1 text-xs sm:text-sm rounded ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'}`}
-                      onClick={() => setSelectedYear(year)}
-                    >
-                      {year}
-                    </button>
-                  ))}
-                </div>
-                <div className="flex flex-col lg:flex-row lg:space-x-2">
-                  <div className="flex-1 mb-2 lg:mb-0">
-                    <h3 className="text-base sm:text-lg font-semibold mb-1">Weekly High Scores</h3>
-                    {prizes[selectedYear].weeklyHighScores.length > 0 ? (
-                      <div className="table-container">
-                        <table className="w-full border-collapse text-[10px] sm:text-xs">
-                          <thead>
-                            <tr className="bg-gray-100">
-                              <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Week</th>
-                              <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Team</th>
-                              <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Total</th>
-                              {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {prizes[selectedYear].weeklyHighScores.map((score, index) => (
-                              <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">{score.week}</td>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">
-                                  {isAdminAuthenticated ? (
-                                    <select
-                                      value={score.team}
-                                      onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
-                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    >
-                                      <option value="">Select Team</option>
-                                      {keepers[selectedYear].map((team, index) => (
-                                        <option key={index} value={team.team}>{team.team}</option>
-                                      ))}
-                                    </select>
-                                  ) : (
-                                    score.team || '-'
-                                  )}
-                                </td>
-                                <td className="border border-gray-300 p-0.5 sm:p-1">
-                                  {isAdminAuthenticated ? (
-                                    <input
-                                      type="number"
-                                      value={score.total}
-                                      onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
-                                      step="0.01"
-                                      min="0"
-                                      className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                    />
-                                  ) : (
-                                    score.total || '-'
-                                  )}
-                                </td>
-                                {isAdminAuthenticated && (
-                                  <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                    <button
-                                      onClick={() => handleWeeklyScoreChange(selectedYear, index, 'team', prizes[selectedYear].weeklyHighScores[index].team)}
-                                      className="px-2 py-0.5 text-[10px] sm:text-xs bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                                    >
-                                      Save
-                                    </button>
-                                  </td>
-                                )}
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    ) : (
-                      <p className="text-xs sm:text-sm">No Weekly High Scores for {selectedYear}.</p>
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-base sm:text-lg font-semibold mb-1">Survivor</h3>
-                    {prizes[selectedYear].survivor.length > 0 ? (
-                      <div className="space-y-3">
-                        <div className="table-container">
-                          <table className="w-full border-collapse text-[10px] sm:text-xs">
-                            <thead>
-                              <tr className="bg-gray-100">
-                                <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Week</th>
-                                <th className="border border-gray-300 p-0.5 sm:p-1 text-left">Team</th>
-                                {isAdminAuthenticated && <th className="border border-gray-300 p-0.5 sm:p-1 text-center">Actions</th>}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {prizes[selectedYear].survivor.map((entry, index) => (
-                                <tr key={index} className={index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}>
-                                  <td className="border border-gray-300 p-0.5 sm:p-1">
-                                    {entry.week <= 11 ? `Week ${entry.week}` : 'Winner'}
-                                  </td>
-                                  <td className="border border-gray-300 p-0.5 sm:p-1">
-                                    {isAdminAuthenticated ? (
-                                      <select
-                                        value={entry.eliminated || entry.winner || ''}
-                                        onChange={(e) => handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
-                                        className="w-full p-1 text-[10px] sm:text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                                      >
-                                        <option value="">Select Team</option>
-                                        {keepers[selectedYear].map((team, index) => (
-                                          <option key={index} value={team.team}>{team.team}</option>
-                                        ))}
-                                      </select>
-                                    ) : (
-                                      entry.eliminated || entry.winner || '-'
-                                    )}
-                                  </td>
-                                  {isAdminAuthenticated && (
-                                    <td className="border border-gray-300 p-0.5 sm:p-1 text-center">
-                                      <button
-                                        onClick={() => handleSurvivorChange(selectedYear, index, 'team', prizes[selectedYear].survivor[index].eliminated || prizes[selectedYear].survivor[index].winner || '')}
-                                        className="px-2 py-0.5 text-[10px] sm:text-xs bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                                      >
-                                        Save
-                                      </button>
-                                    </td>
-                                  )}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                        <div className="mt-3">
-                          <h4 className="text-sm font-semibold mb-2">Remaining Teams</h4>
-                          {getRemainingTeams(selectedYear).length > 0 ? (
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                              {getRemainingTeams(selectedYear).map((team, index) => (
-                                <div
-                                  key={index}
-                                  className="bg-gray-100 text-gray-800 rounded-lg p-2 text-xs sm:text-sm shadow-sm hover:bg-teal-100 transition-all"
-                                >
-                                  {team}
-                                </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-xs sm:text-sm bg-gray-100 text-gray-800 rounded-lg p-2 shadow-sm">
-                              No teams remaining for {selectedYear}.
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-xs sm:text-sm">No Survivor data for {selectedYear}.</p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-            {currentTab === 'admin' && (
-              <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-3">
-                <h2 className="text-lg sm:text-xl font-bold mb-2">Admin Login</h2>
-                <div className="max-w-xs mx-auto">
-                  <form onSubmit={handleAdminLogin} className="space-y-2">
-                    <div>
-                      <label className="text-xs font-medium">Password</label>
-                      <input
-                        type="password"
-                        value={adminPassword}
-                        onChange={(e) => setAdminPassword(e.target.value)}
-                        placeholder="Enter admin password"
-                        className="w-full p-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-teal-500"
-                      />
-                    </div>
-                    <button 
-                      type="submit" 
-                      className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
-                    >
-                      Login
-                    </button>
-                  </form>
-                </div>
-              </div>
-            )}
-            <Modal
-              isOpen={modalState.isOpen}
-              onClose={() => setModalState({ isOpen: false, type: '', data: null })}
-              title={modalState.type === 'deleteRule' ? 'Delete Rule' : 'Delete Section'}
-            >
-              {modalState.type === 'deleteRule' && (
-                <div>
-                  <p className="text-sm mb-2">Are you sure you want to delete this rule?</p>
-                  <button 
-                    onClick={() => {
-                      const updatedRules = { ...rules };
-                      updatedRules.sections[modalState.data.sectionIndex].items.splice(modalState.data.itemIndex, 1);
-                      updateData('rules.json', updatedRules, 'delete', { sectionIndex: modalState.data.sectionIndex, itemIndex: modalState.data.itemIndex }).then(result => {
-                        if (result) {
-                          setRules(updatedRules);
-                          setModalState({ isOpen: false, type: '', data: null });
-                        }
-                      });
-                    }} 
-                    className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-              {modalState.type === 'deleteSection' && (
-                <div>
-                  <p className="text-sm mb-2">Are you sure you want to delete this section?</p>
-                  <button 
-                    onClick={() => {
-                      const updatedRules = { ...rules };
-                      updatedRules.sections.splice(modalState.data.sectionIndex, 1);
-                      updateData('rules.json', updatedRules, 'delete', modalState.data.sectionIndex).then(result => {
-                        if (result) {
-                          setRules(updatedRules);
-                          setModalState({ isOpen: false, type: '', data: null });
-                        }
-                      });
-                    }} 
-                    className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-teal-600 transition-all"
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-            </Modal>
+            {renderTab()}
+            <window.Modal />
           </main>
         </div>
       );
     };
 
-    // Render the app
     const root = ReactDOM.createRoot(document.getElementById('root'));
     root.render(<App />);
   </script>
