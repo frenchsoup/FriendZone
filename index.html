@@ -13,7 +13,9 @@
 <body class="bg-gray-900 text-gray-100">
   <div id="root"></div>
   <script type="text/babel">
-    const AppState = () => {
+    const AppStateContext = React.createContext(null);
+
+    const useAppState = () => {
       const [keepers, setKeepers] = React.useState({});
       const [prizes, setPrizes] = React.useState({});
       const [locks, setLocks] = React.useState({});
@@ -232,22 +234,12 @@
     };
 
     const App = () => {
-      const {
-        selectedYear,
-        setSelectedYear,
-        isAdminAuthenticated,
-        setIsAdminAuthenticated,
-        initializeKeepers,
-      } = window.AppState;
-
-      React.useEffect(() => {
-        initializeKeepers(selectedYear);
-      }, [selectedYear]);
+      const appState = useAppState();
 
       const handleLogin = () => {
         const password = prompt('Enter admin password:');
         if (password === 'friendzone2025') {
-          setIsAdminAuthenticated(true);
+          appState.setIsAdminAuthenticated(true);
           alert('Login successful!');
         } else {
           alert('Incorrect password');
@@ -255,44 +247,45 @@
       };
 
       const handleLogout = () => {
-        setIsAdminAuthenticated(false);
+        appState.setIsAdminAuthenticated(false);
         alert('Logged out');
       };
 
       return (
-        <div className="min-h-screen">
-          <nav className="bg-gray-800 p-4 flex justify-between items-center">
-            <div className="flex space-x-4">
-              <a href="#" onClick={() => window.App.setView('home')} className="text-white hover:text-teal-400">Home</a>
-              <a href="#" onClick={() => window.App.setView('rules')} className="text-white hover:text-teal-400">Rules</a>
-              <a href="#" onClick={() => window.App.setView('payouts')} className="text-white hover:text-teal-400">Payouts</a>
-              <a href="#" onClick={() => window.App.setView('keepers')} className="text-white hover:text-teal-400">Keepers</a>
-              <a href="#" onClick={() => window.App.setView('prizes')} className="text-white hover:text-teal-400">Prizes</a>
-              {isAdminAuthenticated && (
-                <a href="#" onClick={() => window.App.setView('admin')} className="text-white hover:text-teal-400">Admin</a>
-              )}
-            </div>
-            <div>
-              {!isAdminAuthenticated ? (
-                <button onClick={handleLogin} className="text-white hover:text-teal-400">Login</button>
-              ) : (
-                <button onClick={handleLogout} className="text-white hover:text-teal-400">Logout</button>
-              )}
-            </div>
-          </nav>
-          <main className="px-4 sm:px-6 py-4">
-            {window.App.view === 'home' && <window.Home />}
-            {window.App.view === 'rules' && <window.Rules />}
-            {window.App.view === 'payouts' && <window.Payouts />}
-            {window.App.view === 'keepers' && <window.Keepers />}
-            {window.App.view === 'prizes' && <window.Prizes />}
-            {window.App.view === 'admin' && <window.Admin />}
-          </main>
-        </div>
+        <AppStateContext.Provider value={appState}>
+          <div className="min-h-screen">
+            <nav className="bg-gray-800 p-4 flex justify-between items-center">
+              <div className="flex space-x-4">
+                <a href="#" onClick={() => window.App.setView('home')} className="text-white hover:text-teal-400">Home</a>
+                <a href="#" onClick={() => window.App.setView('rules')} className="text-white hover:text-teal-400">Rules</a>
+                <a href="#" onClick={() => window.App.setView('payouts')} className="text-white hover:text-teal-400">Payouts</a>
+                <a href="#" onClick={() => window.App.setView('keepers')} className="text-white hover:text-teal-400">Keepers</a>
+                <a href="#" onClick={() => window.App.setView('prizes')} className="text-white hover:text-teal-400">Prizes</a>
+                {appState.isAdminAuthenticated && (
+                  <a href="#" onClick={() => window.App.setView('admin')} className="text-white hover:text-teal-400">Admin</a>
+                )}
+              </div>
+              <div>
+                {!appState.isAdminAuthenticated ? (
+                  <button onClick={handleLogin} className="text-white hover:text-teal-400">Login</button>
+                ) : (
+                  <button onClick={handleLogout} className="text-white hover:text-teal-400">Logout</button>
+                )}
+              </div>
+            </nav>
+            <main className="px-4 sm:px-6 py-4">
+              {window.App.view === 'home' && <window.Home />}
+              {window.App.view === 'rules' && <window.Rules />}
+              {window.App.view === 'payouts' && <window.Payouts />}
+              {window.App.view === 'keepers' && <window.Keepers />}
+              {window.App.view === 'prizes' && <window.Prizes />}
+              {window.App.view === 'admin' && <window.Admin />}
+            </main>
+          </div>
+        </AppStateContext.Provider>
       );
     };
 
-    window.AppState = AppState();
     window.App = {
       view: 'home',
       setView: (view) => {

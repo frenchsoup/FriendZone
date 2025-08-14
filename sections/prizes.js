@@ -1,5 +1,5 @@
 window.Prizes = () => {
-  const { prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges } = window.AppState;
+  const { prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges, handleWeeklyScoreChange, handleWeeklyScoreSave, handleSurvivorChange, handleSurvivorSave, getRemainingTeams } = React.useContext(window.AppStateContext);
 
   return (
     <div className="space-y-4">
@@ -43,11 +43,11 @@ window.Prizes = () => {
                         {isAdminAuthenticated ? (
                           <select
                             value={displayScore.team || ''}
-                            onChange={(e) => window.AppState.handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
+                            onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
                             className="w-full bg-gray-100 p-1 rounded text-sm"
                           >
                             <option value="">Select Team</option>
-                            {window.AppState.getRemainingTeams(selectedYear).map(team => (
+                            {getRemainingTeams(selectedYear).map(team => (
                               <option key={team} value={team}>{team}</option>
                             ))}
                           </select>
@@ -60,7 +60,7 @@ window.Prizes = () => {
                           <input
                             type="number"
                             value={displayScore.total || ''}
-                            onChange={(e) => window.AppState.handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
+                            onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
                             className="w-full sm:w-16 bg-gray-100 p-1 rounded text-sm text-right no-spinner"
                           />
                         ) : (
@@ -70,7 +70,7 @@ window.Prizes = () => {
                       {isAdminAuthenticated && (
                         <td className="text-right py-2 px-2 sm:px-3">
                           <button
-                            onClick={() => window.AppState.handleWeeklyScoreSave(selectedYear, index)}
+                            onClick={() => handleWeeklyScoreSave(selectedYear, index)}
                             className="px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                           >
                             Save
@@ -115,11 +115,11 @@ window.Prizes = () => {
                         {isAdminAuthenticated ? (
                           <select
                             value={index === 11 ? (displayEntry.winner || '') : (displayEntry.eliminated || '')}
-                            onChange={(e) => window.AppState.handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
+                            onChange={(e) => handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
                             className="w-full bg-gray-100 p-1 rounded text-sm"
                           >
                             <option value="">Select Team</option>
-                            {window.AppState.getRemainingTeams(selectedYear, index).map(team => (
+                            {getRemainingTeams(selectedYear, index).map(team => (
                               <option key={team} value={team}>{team}</option>
                             ))}
                           </select>
@@ -130,7 +130,7 @@ window.Prizes = () => {
                       {isAdminAuthenticated && (
                         <td className="text-right py-2 px-2 sm:px-3">
                           <button
-                            onClick={() => window.AppState.handleSurvivorSave(selectedYear, index)}
+                            onClick={() => handleSurvivorSave(selectedYear, index)}
                             className="px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                           >
                             Save
@@ -145,8 +145,8 @@ window.Prizes = () => {
             <div className="mt-4">
               <h4 className="text-sm font-semibold text-gray-800 mb-2">Remaining Teams</h4>
               <div className="flex flex-wrap gap-2">
-                {window.AppState.getRemainingTeams(selectedYear).length > 0 ? (
-                  window.AppState.getRemainingTeams(selectedYear).map(team => (
+                {getRemainingTeams(selectedYear).length > 0 ? (
+                  getRemainingTeams(selectedYear).map(team => (
                     <span
                       key={team}
                       className="inline-block bg-teal-500 text-white text-xs font-medium px-2 py-1 rounded-full"

@@ -1,5 +1,5 @@
 window.Keepers = () => {
-  const { keepers, locks, selectedYear, setSelectedYear, pendingChanges, isAdminAuthenticated, handleToggleLock, initializeKeepers } = window.AppState;
+  const { keepers, locks, selectedYear, setSelectedYear, pendingChanges, isAdminAuthenticated, handleToggleLock, initializeKeepers, handleKeeperChange, handleSaveRow } = React.useContext(window.AppStateContext);
 
   React.useEffect(() => {
     initializeKeepers(selectedYear);
@@ -53,7 +53,7 @@ window.Keepers = () => {
             </thead>
             <tbody>
               {keepers[selectedYear].map((team, index) => {
-                const pending = pendingChanges[selectedYear][index] || {};
+                const pending = pendingChanges.keepers[selectedYear]?.[index] || {};
                 const displayTeam = { ...team, ...pending };
                 return (
                   <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
@@ -63,7 +63,7 @@ window.Keepers = () => {
                         <input
                           type="text"
                           value={displayTeam.keeper1 || ''}
-                          onChange={(e) => window.AppState.handleKeeperChange(selectedYear, index, 'keeper1', e.target.value)}
+                          onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper1', e.target.value)}
                           className="w-full bg-gray-100 p-1 rounded text-xs sm:text-sm"
                         />
                       ) : (
@@ -75,7 +75,7 @@ window.Keepers = () => {
                         <input
                           type="number"
                           value={displayTeam.draftCost1 || ''}
-                          onChange={(e) => window.AppState.handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
+                          onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
                           onKeyDown={(e) => window.AppState.handleArrowKey(e, selectedYear, index, 'draftCost1')}
                           className="w-14 sm:w-16 bg-gray-100 p-1 rounded text-xs sm:text-sm text-right no-spinner"
                         />
@@ -88,7 +88,7 @@ window.Keepers = () => {
                         <input
                           type="checkbox"
                           checked={displayTeam.tag1 || false}
-                          onChange={(e) => window.AppState.handleKeeperChange(selectedYear, index, 'tag1', e.target.checked)}
+                          onChange={(e) => handleKeeperChange(selectedYear, index, 'tag1', e.target.checked)}
                           className="h-4 w-4 sm:h-5 sm:w-5"
                         />
                       ) : (
@@ -101,7 +101,7 @@ window.Keepers = () => {
                         <input
                           type="text"
                           value={displayTeam.keeper2 || ''}
-                          onChange={(e) => window.AppState.handleKeeperChange(selectedYear, index, 'keeper2', e.target.value)}
+                          onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper2', e.target.value)}
                           className="w-full bg-gray-100 p-1 rounded text-xs sm:text-sm"
                         />
                       ) : (
@@ -113,7 +113,7 @@ window.Keepers = () => {
                         <input
                           type="number"
                           value={displayTeam.draftCost2 || ''}
-                          onChange={(e) => window.AppState.handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
+                          onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
                           onKeyDown={(e) => window.AppState.handleArrowKey(e, selectedYear, index, 'draftCost2')}
                           className="w-14 sm:w-16 bg-gray-100 p-1 rounded text-xs sm:text-sm text-right no-spinner"
                         />
@@ -126,7 +126,7 @@ window.Keepers = () => {
                         <input
                           type="checkbox"
                           checked={displayTeam.tag2 || false}
-                          onChange={(e) => window.AppState.handleKeeperChange(selectedYear, index, 'tag2', e.target.checked)}
+                          onChange={(e) => handleKeeperChange(selectedYear, index, 'tag2', e.target.checked)}
                           className="h-4 w-4 sm:h-5 sm:w-5"
                         />
                       ) : (
@@ -138,7 +138,7 @@ window.Keepers = () => {
                     {!locks[selectedYear] && (
                       <td className="text-right py-1 px-1 sm:px-2">
                         <button
-                          onClick={() => window.AppState.handleSaveRow(selectedYear, index)}
+                          onClick={() => handleSaveRow(selectedYear, index)}
                           className="px-2 py-1 text-xs sm:text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                         >
                           Save
