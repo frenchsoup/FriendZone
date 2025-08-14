@@ -18,6 +18,7 @@
       const [prizes, setPrizes] = React.useState({});
       const [locks, setLocks] = React.useState({});
       const [rules, setRules] = React.useState({ sections: [] });
+      const [payouts, setPayouts] = React.useState([]);
       const [pendingChanges, setPendingChanges] = React.useState({ keepers: {}, prizes: {} });
       const [selectedYear, setSelectedYear] = React.useState('2025');
       const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState(false);
@@ -133,6 +134,21 @@
             } else {
               console.warn('No rules data, using default');
               setRules({ sections: [] });
+            }
+          }
+          if (!payouts.length) {
+            const response = await fetch(`/.netlify/functions/get-data?filename=payouts.json`);
+            if (response.ok) {
+              const data = await response.json();
+              if (Array.isArray(data)) {
+                setPayouts(data);
+              } else {
+                console.warn('No payouts data, using default');
+                setPayouts([]);
+              }
+            } else {
+              console.warn('No payouts data, using default');
+              setPayouts([]);
             }
           }
         } catch (error) {
@@ -306,6 +322,29 @@
         }
       };
 
+      const handlePayoutChange = async (index, field, value) => {
+        if (!isAdminAuthenticated) return;
+        const updatedPayouts = [...payouts];
+        updatedPayouts[index] = { ...updatedPayouts[index], [field]: value };
+        const result = await updateData('payouts.json', updatedPayouts, 'update');
+        if (result) setPayouts(updatedPayouts);
+      };
+
+      const handleAddPayout = async () => {
+        if (!isAdminAuthenticated) return;
+        const newPayout = { category: 'New Category', percentage: 0, prize: 0 };
+        const updatedPayouts = [...payouts, newPayout];
+        const result = await updateData('payouts.json', updatedPayouts, 'update');
+        if (result) setPayouts(updatedPayouts);
+      };
+
+      const handleDeletePayout = async (index) => {
+        if (!isAdminAuthenticated) return;
+        const updatedPayouts = payouts.filter((_, i) => i !== index);
+        const result = await updateData('payouts.json', updatedPayouts, 'delete', index);
+        if (result) setPayouts(updatedPayouts);
+      };
+
       const updateData = async (filename, data, action, index) => {
         try {
           const response = await fetch('/.netlify/functions/update-data', {
@@ -348,8 +387,9 @@
         }
       };
 
-      const handleLogin = () => {
-        const password = prompt('Enter admin password:');
+      const handleAdminLogin = (e) => {
+        e.preventDefault();
+        const password = e.target.querySelector('#password').value;
         if (password === 'friendzone2025') {
           setIsAdminAuthenticated(true);
           alert('Login successful!');
@@ -416,7 +456,7 @@
             </div>
             <div>
               {!isAdminAuthenticated ? (
-                <button onClick={handleLogin} className="text-white hover:text-teal-400">Login</button>
+                <button onClick={() => setView('admin')} className="text-white hover:text-teal-400">Login</button>
               ) : (
                 <button onClick={handleLogout} className="text-white hover:text-teal-400">Logout</button>
               )}
@@ -435,7 +475,15 @@
               handleSectionTitleChange={handleSectionTitleChange}
               setModalState={setModalState}
             />}
-            {view === 'payouts' && window.Payouts && <window.Payouts />}
+            {view === 'payouts' && window.Payouts && <window.Payouts
+              payouts={payouts}
+              setPayouts={setPayouts}
+              isAdminAuthenticated={isAdminAuthenticated}
+              updateData={updateData}
+              handlePayoutChange={handlePayoutChange}
+              handleAddPayout={handleAddPayout}
+              handleDeletePayout={handleDeletePayout}
+            />}
             {view === 'keepers' && window.Keepers && <window.Keepers
               keepers={keepers}
               locks={locks}
@@ -462,7 +510,9 @@
               handleSurvivorSave={handleSurvivorSave}
               getRemainingTeams={getRemainingTeams}
             />}
-            {view === 'admin' && window.Admin && <window.Admin />}
+            {view === 'admin' && window.Admin && <window.Admin
+              handleAdminLogin={handleAdminLogin}
+            />}
           </main>
           <Modal />
         </div>

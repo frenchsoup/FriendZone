@@ -1,11 +1,17 @@
-window.Admin = () => {
-  const { adminPassword, setAdminPassword, handleAdminLogin } = window.AppState;
+window.Admin = ({ handleAdminLogin }) => {
+  const [adminPassword, setAdminPassword] = React.useState('');
+
+  const onSubmit = (e) => {
+    e.preventDefault();
+    handleAdminLogin(e);
+    setAdminPassword('');
+  };
 
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Admin Login</h2>
       <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4 max-w-sm mx-auto">
-        <form onSubmit={handleAdminLogin}>
+        <form onSubmit={onSubmit}>
           <div className="mb-3">
             <label htmlFor="password" className="block text-sm font-medium mb-1">Password</label>
             <input

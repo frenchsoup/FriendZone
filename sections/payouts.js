@@ -1,21 +1,4 @@
-window.Payouts = () => {
-  const { payouts, setPayouts, isAdminAuthenticated, updateData } = window.AppState;
-
-  const handleAddPayout = async () => {
-    if (!isAdminAuthenticated) return;
-    const newPayout = { category: 'New Category', percentage: 0, prize: 0 };
-    const updatedPayouts = [...payouts, newPayout];
-    const result = await updateData('payouts.json', updatedPayouts, 'update');
-    if (result) setPayouts(updatedPayouts);
-  };
-
-  const handleDeletePayout = async (index) => {
-    if (!isAdminAuthenticated) return;
-    const updatedPayouts = payouts.filter((_, i) => i !== index);
-    const result = await updateData('payouts.json', updatedPayouts, 'delete', index);
-    if (result) setPayouts(updatedPayouts);
-  };
-
+window.Payouts = ({ payouts, setPayouts, isAdminAuthenticated, updateData, handlePayoutChange, handleAddPayout, handleDeletePayout }) => {
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Payouts</h2>
@@ -37,7 +20,7 @@ window.Payouts = () => {
                     <input
                       type="text"
                       value={payout.category}
-                      onChange={(e) => window.AppState.handlePayoutChange(index, 'category', e.target.value)}
+                      onChange={(e) => handlePayoutChange(index, 'category', e.target.value)}
                       className="w-full bg-gray-100 p-1 rounded text-sm"
                     />
                   ) : (
@@ -49,7 +32,7 @@ window.Payouts = () => {
                     <input
                       type="number"
                       value={payout.percentage}
-                      onChange={(e) => window.AppState.handlePayoutChange(index, 'percentage', e.target.value)}
+                      onChange={(e) => handlePayoutChange(index, 'percentage', e.target.value)}
                       className="w-20 bg-gray-100 p-1 rounded text-sm text-right"
                     />
                   ) : (
@@ -61,7 +44,7 @@ window.Payouts = () => {
                     <input
                       type="number"
                       value={payout.prize}
-                      onChange={(e) => window.AppState.handlePayoutChange(index, 'prize', e.target.value)}
+                      onChange={(e) => handlePayoutChange(index, 'prize', e.target.value)}
                       className="w-20 bg-gray-100 p-1 rounded text-sm text-right"
                     />
                   ) : (
