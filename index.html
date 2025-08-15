@@ -28,28 +28,37 @@
       const initializeData = async (year) => {
         try {
           const baseUrl = '/.netlify/functions/get-data?filename=';
-          if (!keepers[year] || keepers[year].every(team => team.team.startsWith('Team '))) {
+          if (!keepers[year]) {
             const response = await fetch(`${baseUrl}keepers_${year}.json`);
             let data = {};
             if (response.ok) {
               data = await response.json();
               console.log(`Keepers data for ${year}:`, data);
+              const newKeepers = {
+                ...keepers,
+                [year]: (data.teams && Array.isArray(data.teams) && data.teams.length > 0)
+                  ? data.teams
+                  : Array(12).fill().map((_, i) => ({
+                      team: `Team ${i + 1}`,
+                      keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
+                      keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
+                      remaining: 200,
+                    })),
+              };
+              setKeepers(newKeepers);
+              console.log('Set keepers state:', newKeepers);
             } else {
               console.warn(`Failed to fetch keepers_${year}.json, status: ${response.status}`);
+              setKeepers(prev => ({
+                ...prev,
+                [year]: Array(12).fill().map((_, i) => ({
+                  team: `Team ${i + 1}`,
+                  keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
+                  keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
+                  remaining: 200,
+                })),
+              }));
             }
-            const newKeepers = {
-              ...keepers,
-              [year]: (data.teams && Array.isArray(data.teams) && data.teams.length > 0)
-                ? data.teams
-                : Array(12).fill().map((_, i) => ({
-                    team: `Team ${i + 1}`,
-                    keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
-                    keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
-                    remaining: 200,
-                  })),
-            };
-            setKeepers(newKeepers);
-            console.log('Set keepers state:', newKeepers);
           }
           if (!prizes[year]) {
             const response = await fetch(`${baseUrl}prizes_${year}.json`);
