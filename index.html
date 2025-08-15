@@ -32,15 +32,13 @@
             const response = await fetch(`${baseUrl}keepers_${year}.json`);
             const data = await response.json();
             console.log(`Keepers data for ${year}:`, data);
-            const newKeepers = {
-              ...keepers,
-              [year]: data.teams || Array(12).fill().map((_, i) => ({
-                team: `Team ${i + 1}`,
-                keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
-                keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
-                remaining: 200,
-              })),
-            };
+            const teams = Array.isArray(data) ? data : Array(12).fill().map((_, i) => ({
+              team: `Team ${i + 1}`,
+              keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
+              keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
+              remaining: 200,
+            }));
+            const newKeepers = { ...keepers, [year]: teams };
             setKeepers(newKeepers);
             console.log('Set keepers state:', newKeepers);
           }
