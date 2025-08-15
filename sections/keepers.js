@@ -1,4 +1,3 @@
-<script type="text/babel">
   window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, pendingChanges, isAdminAuthenticated, handleToggleLock, initializeData, handleKeeperChange, handleSaveRow, handleArrowKey }) => {
     const currentKeepers = keepers[selectedYear] || Array(12).fill().map((_, i) => ({
       team: `Team ${i + 1}`,
@@ -167,4 +166,3 @@
       </div>
     );
   };
-</script>
