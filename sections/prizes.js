@@ -39,12 +39,11 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                 {weeklyHighScores.map((score, index) => {
                   const pending = pendingChanges.prizes?.[selectedYear]?.weeklyHighScores?.[index] || {};
                   const displayScore = { ...score, ...pending };
-                  const hasTeam = displayScore.team && displayScore.team !== '';
                   return (
                     <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
                       <td className="py-2 px-2 sm:px-3">{score.week}</td>
                       <td className="py-2 px-2 sm:px-3">
-                        {isAdminAuthenticated && !hasTeam ? (
+                        {isAdminAuthenticated ? (
                           <select
                             value={displayScore.team || ''}
                             onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
@@ -103,7 +102,6 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                 {survivor.map((entry, index) => {
                   const pending = pendingChanges.prizes?.[selectedYear]?.survivor?.[index] || {};
                   const displayEntry = { ...entry, ...pending };
-                  const hasTeam = index === 11 ? (displayEntry.winner && displayEntry.winner !== '') : (displayEntry.eliminated && displayEntry.eliminated !== '');
                   return (
                     <tr
                       key={index}
@@ -117,7 +115,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                     >
                       <td className="py-2 px-2 sm:px-3">{index === 11 ? 'Winner' : entry.week}</td>
                       <td className="py-2 px-2 sm:px-3">
-                        {isAdminAuthenticated && !hasTeam ? (
+                        {isAdminAuthenticated ? (
                           <select
                             value={index === 11 ? (displayEntry.winner || '') : (displayEntry.eliminated || '')}
                             onChange={(e) => handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
