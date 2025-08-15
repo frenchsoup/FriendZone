@@ -1,4 +1,9 @@
 window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges, handleWeeklyScoreChange, handleWeeklyScoreSave, handleSurvivorChange, handleSurvivorSave, getRemainingTeams }) => {
+  // Fallback for missing year data
+  const yearPrizes = prizes[selectedYear] || { weeklyHighScores: [], survivor: [] };
+  const weeklyHighScores = yearPrizes.weeklyHighScores.length > 0 ? yearPrizes.weeklyHighScores : Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' }));
+  const survivor = yearPrizes.survivor.length > 0 ? yearPrizes.survivor : Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' });
+
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Prizes</h2>
@@ -31,14 +36,15 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                 </tr>
               </thead>
               <tbody>
-                {prizes[selectedYear]?.weeklyHighScores?.map((score, index) => {
-                  const pending = pendingChanges.prizes[selectedYear]?.weeklyHighScores?.[index] || {};
+                {weeklyHighScores.map((score, index) => {
+                  const pending = pendingChanges.prizes?.[selectedYear]?.weeklyHighScores?.[index] || {};
                   const displayScore = { ...score, ...pending };
+                  const hasTeam = displayScore.team && displayScore.team !== '';
                   return (
                     <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
                       <td className="py-2 px-2 sm:px-3">{score.week}</td>
                       <td className="py-2 px-2 sm:px-3">
-                        {isAdminAuthenticated ? (
+                        {isAdminAuthenticated && !hasTeam ? (
                           <select
                             value={displayScore.team || ''}
                             onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
@@ -50,19 +56,19 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                             ))}
                           </select>
                         ) : (
-                          <span>{score.team || ''}</span>
+                          <span>{displayScore.team || '-'}</span>
                         )}
                       </td>
                       <td className="text-right py-2 px-2 sm:px-3">
                         {isAdminAuthenticated ? (
                           <input
                             type="number"
-                            value={displayScore.total || ''}
+                            value={displayScore.total ?? ''}
                             onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
                             className="w-full sm:w-16 bg-gray-100 p-1 rounded text-sm text-right no-spinner"
                           />
                         ) : (
-                          <span>{score.total || ''}</span>
+                          <span>{displayScore.total || '-'}</span>
                         )}
                       </td>
                       {isAdminAuthenticated && (
@@ -77,7 +83,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                       )}
                     </tr>
                   );
-                }) || <tr><td colSpan="4">Loading...</td></tr>}
+                })}
               </tbody>
             </table>
           </div>
@@ -94,9 +100,10 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                 </tr>
               </thead>
               <tbody>
-                {prizes[selectedYear]?.survivor?.map((entry, index) => {
-                  const pending = pendingChanges.prizes[selectedYear]?.survivor?.[index] || {};
+                {survivor.map((entry, index) => {
+                  const pending = pendingChanges.prizes?.[selectedYear]?.survivor?.[index] || {};
                   const displayEntry = { ...entry, ...pending };
+                  const hasTeam = index === 11 ? (displayEntry.winner && displayEntry.winner !== '') : (displayEntry.eliminated && displayEntry.eliminated !== '');
                   return (
                     <tr
                       key={index}
@@ -110,7 +117,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                     >
                       <td className="py-2 px-2 sm:px-3">{index === 11 ? 'Winner' : entry.week}</td>
                       <td className="py-2 px-2 sm:px-3">
-                        {isAdminAuthenticated ? (
+                        {isAdminAuthenticated && !hasTeam ? (
                           <select
                             value={index === 11 ? (displayEntry.winner || '') : (displayEntry.eliminated || '')}
                             onChange={(e) => handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
@@ -122,7 +129,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                             ))}
                           </select>
                         ) : (
-                          <span>{index === 11 ? (entry.winner || '') : (entry.eliminated || '')}</span>
+                          <span>{index === 11 ? (displayEntry.winner || '-') : (displayEntry.eliminated || '-')}</span>
                         )}
                       </td>
                       {isAdminAuthenticated && (
@@ -137,7 +144,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                       )}
                     </tr>
                   );
-                }) || <tr><td colSpan="3">Loading...</td></tr>}
+                })}
               </tbody>
             </table>
             <div className="mt-4">
