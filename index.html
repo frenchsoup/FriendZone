@@ -30,98 +30,65 @@
           const baseUrl = '/.netlify/functions/get-data?filename=';
           if (!keepers[year]) {
             const response = await fetch(`${baseUrl}keepers_${year}.json`);
-            let data = {};
-            if (response.ok) {
-              data = await response.json();
-              console.log(`Keepers data for ${year}:`, data);
-              const newKeepers = {
-                ...keepers,
-                [year]: (data.teams && Array.isArray(data.teams) && data.teams.length > 0)
-                  ? data.teams
-                  : Array(12).fill().map((_, i) => ({
-                      team: `Team ${i + 1}`,
-                      keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
-                      keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
-                      remaining: 200,
-                    })),
-              };
-              setKeepers(newKeepers);
-              console.log('Set keepers state:', newKeepers);
-            } else {
-              console.warn(`Failed to fetch keepers_${year}.json, status: ${response.status}`);
-              setKeepers(prev => ({
-                ...prev,
-                [year]: Array(12).fill().map((_, i) => ({
-                  team: `Team ${i + 1}`,
-                  keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
-                  keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
-                  remaining: 200,
-                })),
-              }));
-            }
+            const data = await response.json();
+            console.log(`Keepers data for ${year}:`, data);
+            const newKeepers = {
+              ...keepers,
+              [year]: data.teams || Array(12).fill().map((_, i) => ({
+                team: `Team ${i + 1}`,
+                keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
+                keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
+                remaining: 200,
+              })),
+            };
+            setKeepers(newKeepers);
+            console.log('Set keepers state:', newKeepers);
           }
           if (!prizes[year]) {
             const response = await fetch(`${baseUrl}prizes_${year}.json`);
-            let data = {};
-            if (response.ok) {
-              data = await response.json();
-              console.log(`Prizes data for ${year}:`, data);
-            } else {
-              console.warn(`Failed to fetch prizes_${year}.json, status: ${response.status}`);
-            }
+            const data = await response.json();
             setPrizes(prev => ({
               ...prev,
-              [year]: (data.weeklyHighScores && data.survivor)
-                ? data
-                : {
-                    weeklyHighScores: Array(17).fill().map((_, i) => ({
-                      week: i + 1,
-                      team: '',
-                      total: '',
-                    })),
-                    survivor: Array(12).fill().map((_, i) => ({
-                      week: i + 1,
-                      eliminated: '',
-                      winner: i === 11 ? '' : undefined,
-                    })),
-                  },
+              [year]: (data.weeklyHighScores && data.survivor) ? data : {
+                weeklyHighScores: Array(17).fill().map((_, i) => ({
+                  week: i + 1,
+                  team: '',
+                  total: '',
+                })),
+                survivor: Array(12).fill().map((_, i) => ({
+                  week: i + 1,
+                  eliminated: '',
+                  winner: i === 11 ? '' : undefined,
+                })),
+              },
             }));
           }
           if (!locks[year]) {
             const response = await fetch(`${baseUrl}locks.json`);
-            let data = {};
-            if (response.ok) {
-              data = await response.json();
-              console.log('Locks data:', data);
-            } else {
-              console.warn(`Failed to fetch locks.json, status: ${response.status}`);
-            }
+            const data = await response.json();
             setLocks(data || { [year]: false });
           }
           if (!rules.sections.length) {
             const response = await fetch(`${baseUrl}rules.json`);
-            let data = {};
-            if (response.ok) {
-              data = await response.json();
-              console.log('Rules data:', data);
-            } else {
-              console.warn(`Failed to fetch rules.json, status: ${response.status}`);
-            }
+            const data = await response.json();
             setRules(data.sections ? data : { sections: [] });
           }
           if (!payouts.length) {
             const response = await fetch(`${baseUrl}payouts.json`);
-            let data = [];
-            if (response.ok) {
-              data = await response.json();
-              console.log('Payouts data:', data);
-            } else {
-              console.warn(`Failed to fetch payouts.json, status: ${response.status}`);
-            }
+            const data = await response.json();
             setPayouts(Array.isArray(data) ? data : []);
           }
         } catch (error) {
           console.error('Error initializing data:', error);
+          setKeepers(prev => ({
+            ...prev,
+            [year]: Array(12).fill().map((_, i) => ({
+              team: `Team ${i + 1}`,
+              keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
+              keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
+              remaining: 200,
+            })),
+          }));
         }
       };
 
@@ -186,8 +153,6 @@
           const updatedPending = { ...pendingChanges };
           updatedPending.prizes[year].weeklyHighScores[index] = {};
           setPendingChanges(updatedPending);
-        } else {
-          console.error('Failed to save weekly score');
         }
       };
 
@@ -218,8 +183,6 @@
           const updatedPending = { ...pendingChanges };
           updatedPending.prizes[year].survivor[index] = {};
           setPendingChanges(updatedPending);
-        } else {
-          console.error('Failed to save survivor change');
         }
       };
 
