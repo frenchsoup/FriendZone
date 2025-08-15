@@ -63,7 +63,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                           <input
                             type="number"
                             value={displayScore.total ?? ''}
-                            onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
+                            onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'total', parseFloat(e.target.value) || '')}
                             className="w-full sm:w-16 bg-gray-100 p-1 rounded text-sm text-right no-spinner"
                           />
                         ) : (
