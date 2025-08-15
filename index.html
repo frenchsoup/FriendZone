@@ -24,6 +24,7 @@
       const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState(false);
       const [view, setView] = React.useState('home');
       const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: {} });
+      const [isNavOpen, setIsNavOpen] = React.useState(false);
 
       const initializeData = async (year) => {
         try {
@@ -31,16 +32,13 @@
           if (!keepers[year]) {
             const response = await fetch(`${baseUrl}keepers_${year}.json`);
             const data = await response.json();
-            console.log(`Keepers data for ${year}:`, data);
             const teams = Array.isArray(data) ? data : Array(12).fill().map((_, i) => ({
               team: `Team ${i + 1}`,
               keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
               keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
               remaining: 200,
             }));
-            const newKeepers = { ...keepers, [year]: teams };
-            setKeepers(newKeepers);
-            console.log('Set keepers state:', newKeepers);
+            setKeepers(prev => ({ ...prev, [year]: teams }));
           }
           if (!prizes[year]) {
             const response = await fetch(`${baseUrl}prizes_${year}.json`);
@@ -77,7 +75,6 @@
             setPayouts(Array.isArray(data) ? data : []);
           }
         } catch (error) {
-          console.error('Error initializing data:', error);
           setKeepers(prev => ({
             ...prev,
             [year]: Array(12).fill().map((_, i) => ({
@@ -118,7 +115,6 @@
         const result = await updateData(`keepers_${year}.json`, updatedKeepers[year], 'update');
         if (result) {
           setKeepers(updatedKeepers);
-          console.log('Saved keepers state:', updatedKeepers);
           const updatedPending = { ...pendingChanges };
           updatedPending.keepers[year][index] = {};
           setPendingChanges(updatedPending);
@@ -284,7 +280,6 @@
           });
           return response.ok;
         } catch (error) {
-          console.error('Error updating data:', error);
           return false;
         }
       };
@@ -335,63 +330,39 @@
       };
 
       React.useEffect(() => {
-        console.log('Running useEffect with selectedYear:', selectedYear);
         initializeData(selectedYear);
       }, [selectedYear]);
 
-      const Modal = () => {
-        if (!modalState.isOpen) return null;
-        const { type, data } = modalState;
-        return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-bold mb-4">
-                {type === 'deleteSection' ? 'Delete Section' : 'Delete Rule'}
-              </h3>
-              <p className="text-sm mb-4">
-                Are you sure you want to delete this {type === 'deleteSection' ? 'section' : 'rule'}?
-              </p>
-              <div className="flex justify-end space-x-2">
-                <button
-                  onClick={() => setModalState({ isOpen: false, type: '', data: {} })}
-                  className="px-4 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    if (type === 'deleteSection') handleDeleteSection(data.sectionIndex);
-                    if (type === 'deleteRule') handleDeleteRule(data.sectionIndex, data.itemIndex);
-                  }}
-                  className="px-4 py-2 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        );
-      };
-
       return (
         <div className="min-h-screen">
-          <nav className="bg-gray-800 p-4 flex justify-between items-center">
-            <div className="flex space-x-4">
-              <a href="#" onClick={() => setView('home')} className="text-white hover:text-teal-400">Home</a>
-              <a href="#" onClick={() => setView('rules')} className="text-white hover:text-teal-400">Rules</a>
-              <a href="#" onClick={() => setView('payouts')} className="text-white hover:text-teal-400">Payouts</a>
-              <a href="#" onClick={() => setView('keepers')} className="text-white hover:text-teal-400">Keepers</a>
-              <a href="#" onClick={() => setView('prizes')} className="text-white hover:text-teal-400">Prizes</a>
-              {isAdminAuthenticated && (
-                <a href="#" onClick={() => setView('admin')} className="text-white hover:text-teal-400">Admin</a>
-              )}
+          <nav className="bg-gray-800 p-4">
+            <div className="flex justify-between items-center">
+              <div className="text-white font-bold">FriendZone FF</div>
+              <button
+                className="md:hidden text-white focus:outline-none"
+                onClick={() => setIsNavOpen(!isNavOpen)}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={isNavOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'} />
+                </svg>
+              </button>
             </div>
-            <div>
-              {!isAdminAuthenticated ? (
-                <button onClick={() => setView('admin')} className="text-white hover:text-teal-400">Login</button>
-              ) : (
-                <button onClick={handleLogout} className="text-white hover:text-teal-400">Logout</button>
+            <div className={`${isNavOpen ? 'block' : 'hidden'} md:flex md:space-x-4 mt-2 md:mt-0`}>
+              <a href="#" onClick={() => { setView('home'); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Home</a>
+              <a href="#" onClick={() => { setView('rules'); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Rules</a>
+              <a href="#" onClick={() => { setView('payouts'); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Payouts</a>
+              <a href="#" onClick={() => { setView('keepers'); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Keepers</a>
+              <a href="#" onClick={() => { setView('prizes'); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Prizes</a>
+              {isAdminAuthenticated && (
+                <a href="#" onClick={() => { setView('admin'); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Admin</a>
               )}
+              <div className="md:ml-4">
+                {!isAdminAuthenticated ? (
+                  <button onClick={() => { setView('admin'); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Login</button>
+                ) : (
+                  <button onClick={() => { handleLogout(); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Logout</button>
+                )}
+              </div>
             </div>
           </nav>
           <main className="px-4 sm:px-6 py-4">
@@ -446,7 +417,33 @@
               handleAdminLogin={handleAdminLogin}
             />}
           </main>
-          <Modal />
+          <div className={`${modalState.isOpen ? 'block' : 'hidden'} fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50`}>
+            <div className="bg-white rounded-lg p-6 w-full max-w-md">
+              <h3 className="text-lg font-bold mb-4">
+                {modalState.type === 'deleteSection' ? 'Delete Section' : 'Delete Rule'}
+              </h3>
+              <p className="text-sm mb-4">
+                Are you sure you want to delete this {modalState.type === 'deleteSection' ? 'section' : 'rule'}?
+              </p>
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setModalState({ isOpen: false, type: '', data: {} })}
+                  className="px-4 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (modalState.type === 'deleteSection') handleDeleteSection(modalState.data.sectionIndex);
+                    if (modalState.type === 'deleteRule') handleDeleteRule(modalState.data.sectionIndex, modalState.data.itemIndex);
+                  }}
+                  className="px-4 py-2 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       );
     };
