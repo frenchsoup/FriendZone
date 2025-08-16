@@ -9,12 +9,17 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
   console.log('Survivor:', survivor);
 
   const cachedRemainingTeams = React.useMemo(() => {
+    if (!keepers[selectedYear] || !prizes[selectedYear]) return Array(survivor.length + 1).fill([]);
     const teamsByIndex = [];
     for (let i = -1; i < survivor.length; i++) {
       teamsByIndex[i + 1] = getRemainingTeams(selectedYear, i);
     }
     return teamsByIndex;
-  }, [selectedYear, prizes, keepers]);
+  }, [selectedYear, keepers[selectedYear], prizes[selectedYear]]);
+
+  if (!cachedRemainingTeams) {
+    return <div className="text-center text-white">Loading teams...</div>;
+  }
 
   return (
     <div className="space-y-4">
@@ -62,7 +67,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                             className="w-full bg-gray-100 p-1 rounded text-sm"
                           >
                             <option value="">Select Team</option>
-                            {cachedRemainingTeams[-1].map(team => (
+                            {(cachedRemainingTeams[-1] || []).map(team => (
                               <option key={team} value={team}>{team}</option>
                             ))}
                           </select>
@@ -134,7 +139,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                             className="w-full bg-gray-100 p-1 rounded text-sm"
                           >
                             <option value="">Select Team</option>
-                            {cachedRemainingTeams[index].map(team => (
+                            {(cachedRemainingTeams[index] || []).map(team => (
                               <option key={team} value={team}>{team}</option>
                             ))}
                           </select>
@@ -160,7 +165,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
             <div className="mt-4">
               <h4 className="text-sm font-semibold text-gray-800 mb-2">Remaining Teams</h4>
               <div className="flex flex-wrap gap-2">
-                {cachedRemainingTeams[-1].length > 0 ? (
+                {(cachedRemainingTeams[-1] || []).length > 0 ? (
                   cachedRemainingTeams[-1].map(team => (
                     <span
                       key={team}

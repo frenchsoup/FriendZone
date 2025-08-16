@@ -26,8 +26,10 @@
       const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: {} });
       const [isNavOpen, setIsNavOpen] = React.useState(false);
       const [isLoading, setIsLoading] = React.useState(false);
+      const dataCache = React.useRef({}); // Cache for loaded data
 
       const initializeData = async (year) => {
+        if (dataCache.current[year]) return; // Skip if already loaded
         setIsLoading(true);
         try {
           const baseUrl = '/.netlify/functions/get-data?filename=';
@@ -46,6 +48,7 @@
                     remaining: 200,
                   }));
                   setKeepers(prev => ({ ...prev, [year]: teams }));
+                  dataCache.current[year] = { ...dataCache.current[year], keepers: true };
                 })
                 .catch(error => {
                   console.error(`Error loading keepers_${year}.json:`, error);
@@ -80,6 +83,7 @@
                     ...prev,
                     [year]: data && (data.weeklyHighScores || data.survivor) ? { ...defaultPrizes, ...data } : defaultPrizes
                   }));
+                  dataCache.current[year] = { ...dataCache.current[year], prizes: true };
                 })
                 .catch(error => {
                   console.error(`Error loading prizes_${year}.json:`, error);
@@ -105,6 +109,7 @@
                 .then(data => {
                   console.log('Loaded locks.json:', data);
                   setLocks(data || { [year]: false });
+                  dataCache.current[year] = { ...dataCache.current[year], locks: true };
                 })
                 .catch(error => console.error('Error loading locks.json:', error))
             );
@@ -117,6 +122,7 @@
                 .then(data => {
                   console.log('Loaded rules.json:', data);
                   setRules(data.sections ? data : { sections: [] });
+                  dataCache.current.rules = true;
                 })
                 .catch(error => console.error('Error loading rules.json:', error))
             );
@@ -129,6 +135,7 @@
                 .then(data => {
                   console.log('Loaded payouts.json:', data);
                   setPayouts(Array.isArray(data) ? data : []);
+                  dataCache.current.payouts = true;
                 })
                 .catch(error => console.error('Error loading payouts.json:', error))
             );
