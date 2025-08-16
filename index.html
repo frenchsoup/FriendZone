@@ -14,7 +14,12 @@
   <div id="root"></div>
   <script type="text/babel">
     const App = () => {
-      const [keepers, setKeepers] = React.useState({});
+      const [keepers, setKeepers] = React.useState({
+        2022: [],
+        2023: [],
+        2024: [],
+        2025: []
+      });
       const [prizes, setPrizes] = React.useState({});
       const [locks, setLocks] = React.useState({});
       const [rules, setRules] = React.useState({ sections: [] });
@@ -222,7 +227,7 @@
             {view === 'home' && window.Home && <window.Home />}
             {view === 'rules' && window.Rules && <window.Rules rules={rules} />}
             {view === 'payouts' && window.Payouts && <window.Payouts payouts={payouts} />}
-            {view === 'keepers' && window.Keepers && <window.Keepers
+            {view === 'keepers' && window.Keepers && !isLoading && keepers[selectedYear]?.length && <window.Keepers
               keepers={keepers}
               locks={locks}
               selectedYear={selectedYear}
