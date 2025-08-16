@@ -26,10 +26,10 @@
       const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: {} });
       const [isNavOpen, setIsNavOpen] = React.useState(false);
       const [isLoading, setIsLoading] = React.useState(false);
-      const dataCache = React.useRef({}); // Cache for loaded data
+      const dataCache = React.useRef({});
 
       const initializeData = async (year) => {
-        if (dataCache.current[year]) return; // Skip if already loaded
+        if (dataCache.current[year]) return;
         setIsLoading(true);
         try {
           const baseUrl = '/.netlify/functions/get-data?filename=';
@@ -40,7 +40,6 @@
               fetch(`${baseUrl}keepers_${year}.json`)
                 .then(response => response.json())
                 .then(data => {
-                  console.log(`Loaded keepers_${year}.json:`, data);
                   const teams = Array.isArray(data) ? data : Array(12).fill().map((_, i) => ({
                     team: `Team ${i + 1}`,
                     keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
@@ -70,7 +69,6 @@
               fetch(`${baseUrl}prizes_${year}.json`)
                 .then(response => response.json())
                 .then(data => {
-                  console.log(`Loaded prizes_${year}.json:`, data);
                   const defaultPrizes = {
                     weeklyHighScores: Array(14).fill().map((_, i) => ({
                       week: i + 1,
@@ -107,7 +105,6 @@
               fetch(`${baseUrl}locks.json`)
                 .then(response => response.json())
                 .then(data => {
-                  console.log('Loaded locks.json:', data);
                   setLocks(data || { [year]: false });
                   dataCache.current[year] = { ...dataCache.current[year], locks: true };
                 })
@@ -120,7 +117,6 @@
               fetch(`${baseUrl}rules.json`)
                 .then(response => response.json())
                 .then(data => {
-                  console.log('Loaded rules.json:', data);
                   setRules(data.sections ? data : { sections: [] });
                   dataCache.current.rules = true;
                 })
@@ -133,7 +129,6 @@
               fetch(`${baseUrl}payouts.json`)
                 .then(response => response.json())
                 .then(data => {
-                  console.log('Loaded payouts.json:', data);
                   setPayouts(Array.isArray(data) ? data : []);
                   dataCache.current.payouts = true;
                 })
@@ -190,7 +185,6 @@
           ...updatedPending.prizes[year].weeklyHighScores[index],
           [field]: field === 'total' ? (value === '' ? '' : parseFloat(value)) : value
         };
-        console.log(`WeeklyScoreChange [${year}][${index}]:`, updatedPending.prizes[year].weeklyHighScores[index]);
         setPendingChanges(updatedPending);
       };
 
@@ -206,7 +200,6 @@
             ...updatedPrizes[year].weeklyHighScores.slice(index + 1)
           ]
         };
-        console.log(`Saving WeeklyScore [${year}][${index}]:`, updatedPrizes[year].weeklyHighScores[index]);
         const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
         if (result) {
           setPrizes(updatedPrizes);
@@ -226,7 +219,6 @@
           [index === 11 ? 'winner' : 'eliminated']: value,
           [index === 11 ? 'eliminated' : 'winner']: ''
         };
-        console.log(`SurvivorChange [${year}][${index}]:`, updatedPending.prizes[year].survivor[index]);
         setPendingChanges(updatedPending);
       };
 
@@ -242,7 +234,6 @@
             ...updatedPrizes[year].survivor.slice(index + 1)
           ]
         };
-        console.log(`Saving Survivor [${year}][${index}]:`, updatedPrizes[year].survivor[index]);
         const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
         if (result) {
           setPrizes(updatedPrizes);
@@ -350,7 +341,6 @@
             method: 'POST',
             body: JSON.stringify({ file: filename, data, action, index }),
           });
-          console.log(`updateData ${filename} result:`, response.ok);
           return response.ok;
         } catch (error) {
           console.error(`Error updating ${filename}:`, error);
@@ -367,7 +357,6 @@
           ?.map(team => team.team)
           .filter(team => team && !survivorTeams.includes(team))
           .sort() || [];
-        console.log(`getRemainingTeams [${year}]:`, teams);
         return teams;
       };
 

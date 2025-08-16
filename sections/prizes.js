@@ -3,10 +3,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
 
   const yearPrizes = prizes[selectedYear] || { weeklyHighScores: [], survivor: [] };
   const weeklyHighScores = yearPrizes.weeklyHighScores.length > 0 ? yearPrizes.weeklyHighScores : Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' }));
-  const survivor = yearPrizes.survivor.length > 0 ? yearPrizes.survivor : Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' }));
-
-  console.log('Weekly High Scores:', weeklyHighScores);
-  console.log('Survivor:', survivor);
+  const survivor = yearPrizes.survivor.length > 0 ? yearPrizes.survivor : Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' });
 
   const cachedRemainingTeams = React.useMemo(() => {
     if (!keepers[selectedYear] || !prizes[selectedYear]) return Array(survivor.length + 1).fill([]);
@@ -14,6 +11,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
     for (let i = -1; i < survivor.length; i++) {
       teamsByIndex[i + 1] = getRemainingTeams(selectedYear, i);
     }
+    console.log('getRemainingTeams [' + selectedYear + ']:', teamsByIndex[-1]); // Log only for Weekly High Scores
     return teamsByIndex;
   }, [selectedYear, keepers[selectedYear], prizes[selectedYear]]);
 
