@@ -17,8 +17,8 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
           </button>
         ))}
       </div>
-      <div className="table-container">
-        <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+      <div className="table-container overflow-x-auto">
+        <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4 max-w-full">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-base sm:text-lg font-bold">Keepers {selectedYear}</h3>
             {isAdminAuthenticated && (
@@ -30,20 +30,20 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
               </button>
             )}
           </div>
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full text-xs sm:text-sm border-collapse">
             <thead>
-              <tr className="border-b bg-gray-100">
-                <th className="text-left py-2 px-2 sm:px-3 w-[15%] min-w-[100px]">Team</th>
-                <th className="text-left py-2 px-2 sm:px-3 w-[15%] min-w-[80px]">Keeper 1</th>
-                <th className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">Draft Cost 1</th>
-                <th className="text-center py-2 px-2 sm:px-3 w-[5%] min-w-[40px]">Tag 1</th>
-                <th className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">Cost 1</th>
-                <th className="text-left py-2 px-2 sm:px-3 w-[15%] min-w-[80px]">Keeper 2</th>
-                <th className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">Draft Cost 2</th>
-                <th className="text-center py-2 px-2 sm:px-3 w-[5%] min-w-[40px]">Tag 2</th>
-                <th className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">Cost 2</th>
-                <th className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[80px]">Remaining</th>
-                <th className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">Actions</th>
+              <tr className="border-b bg-gray-200">
+                <th className="text-left py-2 px-1 sm:px-3 w-[15%] min-w-[80px]">Team</th>
+                <th className="text-left py-2 px-1 sm:px-3 w-[15%] min-w-[70px]">Keeper 1</th>
+                <th className="text-right py-2 px-1 sm:px-3 w-[10%] min-w-[50px]">Draft Cost 1</th>
+                <th className="text-center py-2 px-1 sm:px-3 w-[5%] min-w-[30px]">Tag 1</th>
+                <th className="text-right py-2 px-1 sm:px-3 w-[10%] min-w-[50px]">Cost 1</th>
+                <th className="text-left py-2 px-1 sm:px-3 w-[15%] min-w-[70px]">Keeper 2</th>
+                <th className="text-right py-2 px-1 sm:px-3 w-[10%] min-w-[50px]">Draft Cost 2</th>
+                <th className="text-center py-2 px-1 sm:px-3 w-[5%] min-w-[30px]">Tag 2</th>
+                <th className="text-right py-2 px-1 sm:px-3 w-[10%] min-w-[50px]">Cost 2</th>
+                <th className="text-right py-2 px-1 sm:px-3 w-[10%] min-w-[60px]">Remaining</th>
+                <th className="text-right py-2 px-1 sm:px-3 w-[10%] min-w-[50px]">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -51,8 +51,8 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                 const pending = pendingChanges.keepers[selectedYear]?.[index] || {};
                 const displayTeam = { ...team, ...pending };
                 return (
-                  <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
-                    <td className="py-2 px-2 sm:px-3 w-[15%] min-w-[100px]">
+                  <tr key={index} className={`border-b ${index % 2 === 0 ? 'bg-gray-50' : 'bg-gray-100'}`}>
+                    <td className="py-1 px-1 sm:px-3 w-[15%] min-w-[80px]">
                       {locks[selectedYear] ? (
                         <span>{displayTeam.team || '-'}</span>
                       ) : (
@@ -60,11 +60,11 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                           type="text"
                           value={displayTeam.team || ''}
                           onChange={(e) => handleKeeperChange(selectedYear, index, 'team', e.target.value)}
-                          className="w-full bg-gray-100 p-1 rounded text-sm"
+                          className="w-full bg-gray-200 p-1 rounded text-xs sm:text-sm"
                         />
                       )}
                     </td>
-                    <td className="py-2 px-2 sm:px-3 w-[15%] min-w-[80px]">
+                    <td className="py-1 px-1 sm:px-3 w-[15%] min-w-[70px]">
                       {locks[selectedYear] ? (
                         <span>{displayTeam.keeper1 || '-'}</span>
                       ) : (
@@ -72,11 +72,11 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                           type="text"
                           value={displayTeam.keeper1 || ''}
                           onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper1', e.target.value)}
-                          className="w-full bg-gray-100 p-1 rounded text-sm"
+                          className="w-full bg-gray-200 p-1 rounded text-xs sm:text-sm"
                         />
                       )}
                     </td>
-                    <td className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">
+                    <td className="text-right py-1 px-1 sm:px-3 w-[10%] min-w-[50px]">
                       {locks[selectedYear] ? (
                         <span>{displayTeam.draftCost1 || '-'}</span>
                       ) : (
@@ -84,11 +84,11 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                           type="number"
                           value={displayTeam.draftCost1 || ''}
                           onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
-                          className="w-full sm:w-16 bg-gray-100 p-1 rounded text-sm text-right no-spinner"
+                          className="w-full sm:w-12 bg-gray-200 p-1 rounded text-xs sm:text-sm text-right no-spinner"
                         />
                       )}
                     </td>
-                    <td className="text-center py-2 px-2 sm:px-3 w-[5%] min-w-[40px]">
+                    <td className="text-center py-1 px-1 sm:px-3 w-[5%] min-w-[30px]">
                       {locks[selectedYear] ? (
                         <span>{displayTeam.tag1 ? 'Yes' : 'No'}</span>
                       ) : (
@@ -100,8 +100,8 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                         />
                       )}
                     </td>
-                    <td className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">{displayTeam.cost1 || '-'}</td>
-                    <td className="py-2 px-2 sm:px-3 w-[15%] min-w-[80px]">
+                    <td className="text-right py-1 px-1 sm:px-3 w-[10%] min-w-[50px]">{displayTeam.cost1 || '-'}</td>
+                    <td className="py-1 px-1 sm:px-3 w-[15%] min-w-[70px]">
                       {locks[selectedYear] ? (
                         <span>{displayTeam.keeper2 || '-'}</span>
                       ) : (
@@ -109,11 +109,11 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                           type="text"
                           value={displayTeam.keeper2 || ''}
                           onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper2', e.target.value)}
-                          className="w-full bg-gray-100 p-1 rounded text-sm"
+                          className="w-full bg-gray-200 p-1 rounded text-xs sm:text-sm"
                         />
                       )}
                     </td>
-                    <td className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">
+                    <td className="text-right py-1 px-1 sm:px-3 w-[10%] min-w-[50px]">
                       {locks[selectedYear] ? (
                         <span>{displayTeam.draftCost2 || '-'}</span>
                       ) : (
@@ -121,11 +121,11 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                           type="number"
                           value={displayTeam.draftCost2 || ''}
                           onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
-                          className="w-full sm:w-16 bg-gray-100 p-1 rounded text-sm text-right no-spinner"
+                          className="w-full sm:w-12 bg-gray-200 p-1 rounded text-xs sm:text-sm text-right no-spinner"
                         />
                       )}
                     </td>
-                    <td className="text-center py-2 px-2 sm:px-3 w-[5%] min-w-[40px]">
+                    <td className="text-center py-1 px-1 sm:px-3 w-[5%] min-w-[30px]">
                       {locks[selectedYear] ? (
                         <span>{displayTeam.tag2 ? 'Yes' : 'No'}</span>
                       ) : (
@@ -137,13 +137,13 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                         />
                       )}
                     </td>
-                    <td className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">{displayTeam.cost2 || '-'}</td>
-                    <td className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[80px]">{displayTeam.remaining || '-'}</td>
-                    <td className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">
+                    <td className="text-right py-1 px-1 sm:px-3 w-[10%] min-w-[50px]">{displayTeam.cost2 || '-'}</td>
+                    <td className="text-right py-1 px-1 sm:px-3 w-[10%] min-w-[60px]">{displayTeam.remaining || '-'}</td>
+                    <td className="text-right py-1 px-1 sm:px-3 w-[10%] min-w-[50px]">
                       {!locks[selectedYear] && (
                         <button
                           onClick={() => handleSaveRow(selectedYear, index)}
-                          className="px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                          className="px-2 py-1 text-xs sm:text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                         >
                           Save
                         </button>
