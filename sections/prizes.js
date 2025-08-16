@@ -17,7 +17,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
     return teamsByIndex;
   }, [selectedYear, keepers[selectedYear], prizes[selectedYear]]);
 
-  if (!prizes[selectedYear] || !cachedRemainingTeams) {
+  if (!prizes[selectedYear]?.weeklyHighScores || !prizes[selectedYear]?.survivor || !cachedRemainingTeams) {
     return <div className="text-center text-white">Loading prizes...</div>;
   }
 
@@ -59,6 +59,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                     <td className="py-2 px-2 sm:px-3">
                       {isAdminAuthenticated ? (
                         <select
+                          key={`weekly-${index}-${score.team}`}
                           value={score.team || ''}
                           onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
                           className="w-full bg-gray-100 p-1 rounded text-sm"
@@ -127,6 +128,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                     <td className="py-2 px-2 sm:px-3">
                       {isAdminAuthenticated ? (
                         <select
+                          key={`survivor-${index}-${index === 11 ? entry.winner : entry.eliminated}`}
                           value={index === 11 ? (entry.winner || '') : (entry.eliminated || '')}
                           onChange={(e) => handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
                           className="w-full bg-gray-100 p-1 rounded text-sm"

@@ -25,89 +25,92 @@
       const [view, setView] = React.useState('home');
       const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: {} });
       const [isNavOpen, setIsNavOpen] = React.useState(false);
-      const [isLoading, setIsLoading] = React.useState(false);
+      const [isLoading, setIsLoading] = React.useState(true);
       const dataCache = React.useRef({});
 
-      const initializeData = async (year) => {
-        if (dataCache.current[year]) return;
+      const initializeData = async () => {
+        if (dataCache.current.initialized) return;
         setIsLoading(true);
         try {
           const baseUrl = '/.netlify/functions/get-data?filename=';
+          const years = ['2023', '2024', '2025'];
           const promises = [];
 
-          if (!keepers[year]) {
-            promises.push(
-              fetch(`${baseUrl}keepers_${year}.json`)
-                .then(response => response.json())
-                .then(data => {
-                  const teams = Array.isArray(data) ? data : Array(12).fill().map((_, i) => ({
-                    team: `Team ${i + 1}`,
-                    keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
-                    keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
-                    remaining: 200,
-                  }));
-                  setKeepers(prev => ({ ...prev, [year]: teams }));
-                  dataCache.current[year] = { ...dataCache.current[year], keepers: true };
-                })
-                .catch(error => {
-                  setKeepers(prev => ({
-                    ...prev,
-                    [year]: Array(12).fill().map((_, i) => ({
+          years.forEach(year => {
+            if (!keepers[year]) {
+              promises.push(
+                fetch(`${baseUrl}keepers_${year}.json`)
+                  .then(response => response.json())
+                  .then(data => {
+                    const teams = Array.isArray(data) && data.length > 0 ? data : Array(12).fill().map((_, i) => ({
                       team: `Team ${i + 1}`,
                       keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
                       keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
                       remaining: 200,
-                    })),
-                  }));
-                })
-            );
-          }
+                    }));
+                    setKeepers(prev => ({ ...prev, [year]: teams }));
+                    dataCache.current[year] = { ...dataCache.current[year], keepers: true };
+                  })
+                  .catch(() => {
+                    setKeepers(prev => ({
+                      ...prev,
+                      [year]: Array(12).fill().map((_, i) => ({
+                        team: `Team ${i + 1}`,
+                        keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
+                        keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
+                        remaining: 200,
+                      })),
+                    }));
+                  })
+              );
+            }
 
-          if (!prizes[year]) {
-            promises.push(
-              fetch(`${baseUrl}prizes_${year}.json`)
-                .then(response => response.json())
-                .then(data => {
-                  const defaultPrizes = {
-                    weeklyHighScores: Array(14).fill().map((_, i) => ({
-                      week: i + 1,
-                      team: '',
-                      total: ''
-                    })),
-                    survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
-                  };
-                  setPrizes(prev => ({
-                    ...prev,
-                    [year]: data && (data.weeklyHighScores || data.survivor) ? { ...defaultPrizes, ...data } : defaultPrizes
-                  }));
-                  dataCache.current[year] = { ...dataCache.current[year], prizes: true };
-                })
-                .catch(error => {
-                  setPrizes(prev => ({
-                    ...prev,
-                    [year]: {
+            if (!prizes[year]) {
+              promises.push(
+                fetch(`${baseUrl}prizes_${year}.json`)
+                  .then(response => response.json())
+                  .then(data => {
+                    const defaultPrizes = {
                       weeklyHighScores: Array(14).fill().map((_, i) => ({
                         week: i + 1,
                         team: '',
                         total: ''
                       })),
                       survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
-                    }
-                  }));
-                })
-            );
-          }
+                    };
+                    setPrizes(prev => ({
+                      ...prev,
+                      [year]: data && (data.weeklyHighScores || data.survivor) ? { ...defaultPrizes, ...data } : defaultPrizes
+                    }));
+                    dataCache.current[year] = { ...dataCache.current[year], prizes: true };
+                  })
+                  .catch(() => {
+                    setPrizes(prev => ({
+                      ...prev,
+                      [year]: {
+                        weeklyHighScores: Array(14).fill().map((_, i) => ({
+                          week: i + 1,
+                          team: '',
+                          total: ''
+                        })),
+                        survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
+                      }
+                    }));
+                  })
+              );
+            }
 
-          if (!locks[year]) {
-            promises.push(
-              fetch(`${baseUrl}locks.json`)
-                .then(response => response.json())
-                .then(data => {
-                  setLocks(data || { [year]: false });
-                  dataCache.current[year] = { ...dataCache.current[year], locks: true };
-                })
-            );
-          }
+            if (!locks[year]) {
+              promises.push(
+                fetch(`${baseUrl}locks.json`)
+                  .then(response => response.json())
+                  .then(data => {
+                    setLocks(data || { [year]: false });
+                    dataCache.current[year] = { ...dataCache.current[year], locks: true };
+                  })
+              );
+            }
+          });
 
           if (!rules.sections.length) {
             promises.push(
@@ -132,6 +135,7 @@
           }
 
           await Promise.all(promises);
+          dataCache.current.initialized = true;
         } finally {
           setIsLoading(false);
         }
@@ -345,8 +349,10 @@
           ?.filter((entry, index) => currentIndex === -1 || index <= currentIndex)
           .map(entry => entry.eliminated || entry.winner)
           .filter(team => team) || [];
-        const teams = keepers[year]
-          ?.map(team => team.team)
+        const defaultTeams = ['Team 1', 'Team 2', 'Team 3', 'Team 4', 'Team 5', 'Team 6', 'Team 7', 'Team 8', 'Team 9', 'Team 10', 'Team 11', 'Team 12'];
+        const teams = (keepers[year]?.length > 0
+          ? keepers[year].map(team => team.team)
+          : defaultTeams)
           .filter(team => team && !survivorTeams.includes(team))
           .sort() || [];
         return teams;
@@ -387,8 +393,8 @@
       };
 
       React.useEffect(() => {
-        initializeData(selectedYear);
-      }, [selectedYear]);
+        initializeData();
+      }, []);
 
       return (
         <div className="min-h-screen">
@@ -458,7 +464,7 @@
               handleSaveRow={handleSaveRow}
               handleArrowKey={handleArrowKey}
             />}
-            {view === 'prizes' && window.Prizes && !isLoading && prizes[selectedYear] && <window.Prizes
+            {view === 'prizes' && window.Prizes && !isLoading && prizes[selectedYear]?.weeklyHighScores && prizes[selectedYear]?.survivor && <window.Prizes
               prizes={prizes}
               keepers={keepers}
               selectedYear={selectedYear}
