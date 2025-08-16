@@ -11,11 +11,11 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
     for (let i = -1; i < survivor.length; i++) {
       teamsByIndex[i + 1] = getRemainingTeams(selectedYear, i);
     }
-    console.log('getRemainingTeams [' + selectedYear + ']:', teamsByIndex[-1]); // Log only for Weekly High Scores
     return teamsByIndex;
   }, [selectedYear, keepers[selectedYear], prizes[selectedYear]]);
 
   if (!cachedRemainingTeams) {
+    console.log('getRemainingTeams [' + selectedYear + ']: Failed to load teams');
     return <div className="text-center text-white">Loading teams...</div>;
   }
 
@@ -53,7 +53,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
               <tbody>
                 {weeklyHighScores.map((score, index) => {
                   const pending = pendingChanges.prizes?.[selectedYear]?.weeklyHighScores[index] || {};
-                  const displayScore = { ...score, ...pending, team: pending.team || score.team || '' };
+                  const displayScore = { ...score, team: pending.team ?? score.team ?? '', total: pending.total ?? score.total ?? '' };
                   return (
                     <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
                       <td className="py-2 px-2 sm:px-3">{score.week}</td>
@@ -77,7 +77,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                         {isAdminAuthenticated ? (
                           <input
                             type="number"
-                            value={displayScore.total ?? ''}
+                            value={displayScore.total}
                             onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
                             className="w-full sm:w-16 bg-gray-100 p-1 rounded text-sm text-right no-spinner"
                           />
@@ -118,9 +118,8 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                   const pending = pendingChanges.prizes?.[selectedYear]?.survivor[index] || {};
                   const displayEntry = {
                     ...entry,
-                    ...pending,
-                    eliminated: index !== 11 ? (pending.eliminated || entry.eliminated || '') : '',
-                    winner: index === 11 ? (pending.winner || entry.winner || '') : ''
+                    eliminated: index !== 11 ? (pending.eliminated ?? entry.eliminated ?? '') : '',
+                    winner: index === 11 ? (pending.winner ?? entry.winner ?? '') : ''
                   };
                   return (
                     <tr
