@@ -1,54 +1,4 @@
 {
-  "survivor": [
-    {
-      "week": 1,
-      "eliminated": "LeFevre"
-    },
-    {
-      "week": 2,
-      "eliminated": "Mante"
-    },
-    {
-      "week": 3,
-      "eliminated": "Dgatz"
-    },
-    {
-      "week": 4,
-      "eliminated": "Lewis"
-    },
-    {
-      "week": 5,
-      "eliminated": "Yacob"
-    },
-    {
-      "week": 6,
-      "eliminated": "Jordan"
-    },
-    {
-      "week": 7,
-      "eliminated": "Trudy"
-    },
-    {
-      "week": 8,
-      "eliminated": "Byz"
-    },
-    {
-      "week": 9,
-      "eliminated": "Ayer"
-    },
-    {
-      "week": 10,
-      "eliminated": "Tobin"
-    },
-    {
-      "week": 11,
-      "eliminated": "Lusa"
-    },
-    {
-      "week": 12,
-      "winner": "Buck"
-    }
-  ],
   "weeklyHighScores": [
     {
       "week": 1,
@@ -119,6 +69,56 @@
       "week": 14,
       "team": "Tobin",
       "total": 170.9
+    }
+  ],
+  "survivor": [
+    {
+      "week": 1,
+      "eliminated": "LeFevre"
+    },
+    {
+      "week": 2,
+      "eliminated": "Mante"
+    },
+    {
+      "week": 3,
+      "eliminated": "Dgatz"
+    },
+    {
+      "week": 4,
+      "eliminated": "Lewis"
+    },
+    {
+      "week": 5,
+      "eliminated": "Yacob"
+    },
+    {
+      "week": 6,
+      "eliminated": "Jordan"
+    },
+    {
+      "week": 7,
+      "eliminated": "Trudy"
+    },
+    {
+      "week": 8,
+      "eliminated": "Byz"
+    },
+    {
+      "week": 9,
+      "eliminated": "Ayer"
+    },
+    {
+      "week": 10,
+      "eliminated": "Tobin"
+    },
+    {
+      "week": 11,
+      "eliminated": "Lusa"
+    },
+    {
+      "week": 12,
+      "winner": "Buck"
     }
   ]
 }
