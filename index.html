@@ -32,6 +32,7 @@
           if (!keepers[year]) {
             const response = await fetch(`${baseUrl}keepers_${year}.json`);
             const data = await response.json();
+            console.log(`Loaded keepers_${year}.json:`, data);
             const teams = Array.isArray(data) ? data : Array(12).fill().map((_, i) => ({
               team: `Team ${i + 1}`,
               keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
@@ -43,38 +44,40 @@
           if (!prizes[year]) {
             const response = await fetch(`${baseUrl}prizes_${year}.json`);
             const data = await response.json();
+            console.log(`Loaded prizes_${year}.json:`, data);
+            const defaultPrizes = {
+              weeklyHighScores: Array(14).fill().map((_, i) => ({
+                week: i + 1,
+                team: '',
+                total: ''
+              })),
+              survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
+            };
             setPrizes(prev => ({
               ...prev,
-              [year]: (data.weeklyHighScores && data.survivor) ? data : {
-                weeklyHighScores: Array(17).fill().map((_, i) => ({
-                  week: i + 1,
-                  team: '',
-                  total: '',
-                })),
-                survivor: Array(12).fill().map((_, i) => ({
-                  week: i + 1,
-                  eliminated: '',
-                  winner: i === 11 ? '' : undefined,
-                })),
-              },
+              [year]: data && (data.weeklyHighScores || data.survivor) ? { ...defaultPrizes, ...data } : defaultPrizes
             }));
           }
           if (!locks[year]) {
             const response = await fetch(`${baseUrl}locks.json`);
             const data = await response.json();
+            console.log('Loaded locks.json:', data);
             setLocks(data || { [year]: false });
           }
           if (!rules.sections.length) {
             const response = await fetch(`${baseUrl}rules.json`);
             const data = await response.json();
+            console.log('Loaded rules.json:', data);
             setRules(data.sections ? data : { sections: [] });
           }
           if (!payouts.length) {
             const response = await fetch(`${baseUrl}payouts.json`);
             const data = await response.json();
+            console.log('Loaded payouts.json:', data);
             setPayouts(Array.isArray(data) ? data : []);
           }
         } catch (error) {
+          console.error('Error in initializeData:', error);
           setKeepers(prev => ({
             ...prev,
             [year]: Array(12).fill().map((_, i) => ({
@@ -83,6 +86,17 @@
               keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
               remaining: 200,
             })),
+          }));
+          setPrizes(prev => ({
+            ...prev,
+            [year]: {
+              weeklyHighScores: Array(14).fill().map((_, i) => ({
+                week: i + 1,
+                team: '',
+                total: ''
+              })),
+              survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
+            }
           }));
         }
       };
@@ -124,23 +138,29 @@
       const handleWeeklyScoreChange = (year, index, field, value) => {
         if (!isAdminAuthenticated) return;
         const updatedPending = { ...pendingChanges };
-        updatedPending.prizes[year] = updatedPending.prizes[year] || {};
-        updatedPending.prizes[year].weeklyHighScores = updatedPending.prizes[year].weeklyHighScores || [];
+        updatedPending.prizes[year] = updatedPending.prizes[year] || { weeklyHighScores: {}, survivor: {} };
         updatedPending.prizes[year].weeklyHighScores[index] = {
+          ...prizes[year]?.weeklyHighScores[index],
           ...updatedPending.prizes[year].weeklyHighScores[index],
-          ...prizes[year].weeklyHighScores[index],
-          [field]: value,
+          [field]: field === 'total' ? (value === '' ? '' : parseFloat(value)) : value
         };
+        console.log(`WeeklyScoreChange [${year}][${index}]:`, updatedPending.prizes[year].weeklyHighScores[index]);
         setPendingChanges(updatedPending);
       };
 
       const handleWeeklyScoreSave = async (year, index) => {
         if (!isAdminAuthenticated) return;
         const updatedPrizes = { ...prizes };
-        updatedPrizes[year].weeklyHighScores[index] = {
-          ...updatedPrizes[year].weeklyHighScores[index],
-          ...pendingChanges.prizes[year]?.weeklyHighScores[index],
+        const pending = pendingChanges.prizes[year]?.weeklyHighScores[index] || {};
+        updatedPrizes[year] = {
+          ...updatedPrizes[year],
+          weeklyHighScores: [
+            ...updatedPrizes[year].weeklyHighScores.slice(0, index),
+            { ...updatedPrizes[year].weeklyHighScores[index], ...pending },
+            ...updatedPrizes[year].weeklyHighScores.slice(index + 1)
+          ]
         };
+        console.log(`Saving WeeklyScore [${year}][${index}]:`, updatedPrizes[year].weeklyHighScores[index]);
         const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
         if (result) {
           setPrizes(updatedPrizes);
@@ -153,24 +173,30 @@
       const handleSurvivorChange = (year, index, field, value) => {
         if (!isAdminAuthenticated) return;
         const updatedPending = { ...pendingChanges };
-        updatedPending.prizes[year] = updatedPending.prizes[year] || {};
-        updatedPending.prizes[year].survivor = updatedPending.prizes[year].survivor || [];
+        updatedPending.prizes[year] = updatedPending.prizes[year] || { weeklyHighScores: {}, survivor: {} };
         updatedPending.prizes[year].survivor[index] = {
+          ...prizes[year]?.survivor[index],
           ...updatedPending.prizes[year].survivor[index],
-          ...prizes[year].survivor[index],
           [index === 11 ? 'winner' : 'eliminated']: value,
-          [index === 11 ? 'eliminated' : 'winner']: '',
+          [index === 11 ? 'eliminated' : 'winner']: ''
         };
+        console.log(`SurvivorChange [${year}][${index}]:`, updatedPending.prizes[year].survivor[index]);
         setPendingChanges(updatedPending);
       };
 
       const handleSurvivorSave = async (year, index) => {
         if (!isAdminAuthenticated) return;
         const updatedPrizes = { ...prizes };
-        updatedPrizes[year].survivor[index] = {
-          ...updatedPrizes[year].survivor[index],
-          ...pendingChanges.prizes[year]?.survivor[index],
+        const pending = pendingChanges.prizes[year]?.survivor[index] || {};
+        updatedPrizes[year] = {
+          ...updatedPrizes[year],
+          survivor: [
+            ...updatedPrizes[year].survivor.slice(0, index),
+            { ...updatedPrizes[year].survivor[index], ...pending },
+            ...updatedPrizes[year].survivor.slice(index + 1)
+          ]
         };
+        console.log(`Saving Survivor [${year}][${index}]:`, updatedPrizes[year].survivor[index]);
         const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
         if (result) {
           setPrizes(updatedPrizes);
@@ -278,8 +304,10 @@
             method: 'POST',
             body: JSON.stringify({ file: filename, data, action, index }),
           });
+          console.log(`updateData ${filename} result:`, response.ok);
           return response.ok;
         } catch (error) {
+          console.error(`Error updating ${filename}:`, error);
           return false;
         }
       };
@@ -289,10 +317,12 @@
           ?.filter((entry, index) => currentIndex === -1 || index <= currentIndex)
           .map(entry => entry.eliminated || entry.winner)
           .filter(team => team) || [];
-        return keepers[year]
+        const teams = keepers[year]
           ?.map(team => team.team)
           .filter(team => team && !survivorTeams.includes(team))
           .sort() || [];
+        console.log(`getRemainingTeams [${year}]:`, teams);
+        return teams;
       };
 
       const handleToggleLock = async (year) => {

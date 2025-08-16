@@ -1,4 +1,7 @@
 window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges, handleWeeklyScoreChange, handleWeeklyScoreSave, handleSurvivorChange, handleSurvivorSave, getRemainingTeams }) => {
+  // Log data for debugging
+  console.log('Prizes props:', { selectedYear, prizes: prizes[selectedYear], pendingChanges: pendingChanges.prizes?.[selectedYear] });
+
   // Fallback for missing year data
   const yearPrizes = prizes[selectedYear] || { weeklyHighScores: [], survivor: [] };
   const weeklyHighScores = yearPrizes.weeklyHighScores.length > 0 ? yearPrizes.weeklyHighScores : Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' }));
@@ -39,6 +42,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                 {weeklyHighScores.map((score, index) => {
                   const pending = pendingChanges.prizes?.[selectedYear]?.weeklyHighScores?.[index] || {};
                   const displayScore = { ...score, ...pending };
+                  console.log(`Weekly High Score [${index}]:`, { score, pending, displayScore });
                   return (
                     <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
                       <td className="py-2 px-2 sm:px-3">{score.week}</td>
@@ -102,6 +106,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                 {survivor.map((entry, index) => {
                   const pending = pendingChanges.prizes?.[selectedYear]?.survivor?.[index] || {};
                   const displayEntry = { ...entry, ...pending };
+                  console.log(`Survivor [${index}]:`, { entry, pending, displayEntry });
                   return (
                     <tr
                       key={index}
