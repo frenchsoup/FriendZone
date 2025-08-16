@@ -50,7 +50,6 @@
                   dataCache.current[year] = { ...dataCache.current[year], keepers: true };
                 })
                 .catch(error => {
-                  console.error(`Error loading keepers_${year}.json:`, error);
                   setKeepers(prev => ({
                     ...prev,
                     [year]: Array(12).fill().map((_, i) => ({
@@ -84,7 +83,6 @@
                   dataCache.current[year] = { ...dataCache.current[year], prizes: true };
                 })
                 .catch(error => {
-                  console.error(`Error loading prizes_${year}.json:`, error);
                   setPrizes(prev => ({
                     ...prev,
                     [year]: {
@@ -108,7 +106,6 @@
                   setLocks(data || { [year]: false });
                   dataCache.current[year] = { ...dataCache.current[year], locks: true };
                 })
-                .catch(error => console.error('Error loading locks.json:', error))
             );
           }
 
@@ -120,7 +117,6 @@
                   setRules(data.sections ? data : { sections: [] });
                   dataCache.current.rules = true;
                 })
-                .catch(error => console.error('Error loading rules.json:', error))
             );
           }
 
@@ -132,7 +128,6 @@
                   setPayouts(Array.isArray(data) ? data : []);
                   dataCache.current.payouts = true;
                 })
-                .catch(error => console.error('Error loading payouts.json:', error))
             );
           }
 
@@ -181,7 +176,6 @@
         const updatedPending = { ...pendingChanges };
         updatedPending.prizes[year] = updatedPending.prizes[year] || { weeklyHighScores: Array(14).fill({}), survivor: Array(12).fill({}) };
         updatedPending.prizes[year].weeklyHighScores[index] = {
-          ...prizes[year]?.weeklyHighScores[index],
           ...updatedPending.prizes[year].weeklyHighScores[index],
           [field]: field === 'total' ? (value === '' ? '' : parseFloat(value)) : value
         };
@@ -214,7 +208,6 @@
         const updatedPending = { ...pendingChanges };
         updatedPending.prizes[year] = updatedPending.prizes[year] || { weeklyHighScores: Array(14).fill({}), survivor: Array(12).fill({}) };
         updatedPending.prizes[year].survivor[index] = {
-          ...prizes[year]?.survivor[index],
           ...updatedPending.prizes[year].survivor[index],
           [index === 11 ? 'winner' : 'eliminated']: value,
           [index === 11 ? 'eliminated' : 'winner']: ''
@@ -343,7 +336,6 @@
           });
           return response.ok;
         } catch (error) {
-          console.error(`Error updating ${filename}:`, error);
           return false;
         }
       };
@@ -466,7 +458,7 @@
               handleSaveRow={handleSaveRow}
               handleArrowKey={handleArrowKey}
             />}
-            {view === 'prizes' && window.Prizes && !isLoading && <window.Prizes
+            {view === 'prizes' && window.Prizes && !isLoading && prizes[selectedYear] && <window.Prizes
               prizes={prizes}
               keepers={keepers}
               selectedYear={selectedYear}
