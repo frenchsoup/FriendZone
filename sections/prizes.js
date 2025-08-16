@@ -5,6 +5,17 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
   const weeklyHighScores = yearPrizes.weeklyHighScores.length > 0 ? yearPrizes.weeklyHighScores : Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' }));
   const survivor = yearPrizes.survivor.length > 0 ? yearPrizes.survivor : Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' });
 
+  console.log('Weekly High Scores:', weeklyHighScores);
+  console.log('Survivor:', survivor);
+
+  const cachedRemainingTeams = React.useMemo(() => {
+    const teamsByIndex = [];
+    for (let i = -1; i < survivor.length; i++) {
+      teamsByIndex[i + 1] = getRemainingTeams(selectedYear, i);
+    }
+    return teamsByIndex;
+  }, [selectedYear, prizes, keepers]);
+
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Prizes</h2>
@@ -40,7 +51,6 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                 {weeklyHighScores.map((score, index) => {
                   const pending = pendingChanges.prizes?.[selectedYear]?.weeklyHighScores[index] || {};
                   const displayScore = { ...score, ...pending };
-                  console.log(`Weekly High Score [${index}]:`, { score, pending, displayScore });
                   return (
                     <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
                       <td className="py-2 px-2 sm:px-3">{score.week}</td>
@@ -52,7 +62,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                             className="w-full bg-gray-100 p-1 rounded text-sm"
                           >
                             <option value="">Select Team</option>
-                            {getRemainingTeams(selectedYear).map(team => (
+                            {cachedRemainingTeams[-1].map(team => (
                               <option key={team} value={team}>{team}</option>
                             ))}
                           </select>
@@ -104,7 +114,6 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                 {survivor.map((entry, index) => {
                   const pending = pendingChanges.prizes?.[selectedYear]?.survivor[index] || {};
                   const displayEntry = { ...entry, ...pending };
-                  console.log(`Survivor [${index}]:`, { entry, pending, displayEntry });
                   return (
                     <tr
                       key={index}
@@ -125,7 +134,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                             className="w-full bg-gray-100 p-1 rounded text-sm"
                           >
                             <option value="">Select Team</option>
-                            {getRemainingTeams(selectedYear, index).map(team => (
+                            {cachedRemainingTeams[index].map(team => (
                               <option key={team} value={team}>{team}</option>
                             ))}
                           </select>
@@ -151,8 +160,8 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
             <div className="mt-4">
               <h4 className="text-sm font-semibold text-gray-800 mb-2">Remaining Teams</h4>
               <div className="flex flex-wrap gap-2">
-                {getRemainingTeams(selectedYear).length > 0 ? (
-                  getRemainingTeams(selectedYear).map(team => (
+                {cachedRemainingTeams[-1].length > 0 ? (
+                  cachedRemainingTeams[-1].map(team => (
                     <span
                       key={team}
                       className="inline-block bg-teal-500 text-white text-xs font-medium px-2 py-1 rounded-full"

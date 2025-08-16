@@ -177,7 +177,7 @@
       const handleWeeklyScoreChange = (year, index, field, value) => {
         if (!isAdminAuthenticated) return;
         const updatedPending = { ...pendingChanges };
-        updatedPending.prizes[year] = updatedPending.prizes[year] || { weeklyHighScores: {}, survivor: {} };
+        updatedPending.prizes[year] = updatedPending.prizes[year] || { weeklyHighScores: Array(14).fill({}), survivor: Array(12).fill({}) };
         updatedPending.prizes[year].weeklyHighScores[index] = {
           ...prizes[year]?.weeklyHighScores[index],
           ...updatedPending.prizes[year].weeklyHighScores[index],
@@ -212,7 +212,7 @@
       const handleSurvivorChange = (year, index, field, value) => {
         if (!isAdminAuthenticated) return;
         const updatedPending = { ...pendingChanges };
-        updatedPending.prizes[year] = updatedPending.prizes[year] || { weeklyHighScores: {}, survivor: {} };
+        updatedPending.prizes[year] = updatedPending.prizes[year] || { weeklyHighScores: Array(14).fill({}), survivor: Array(12).fill({}) };
         updatedPending.prizes[year].survivor[index] = {
           ...prizes[year]?.survivor[index],
           ...updatedPending.prizes[year].survivor[index],
