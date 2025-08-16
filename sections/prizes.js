@@ -1,8 +1,6 @@
 window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges, handleWeeklyScoreChange, handleWeeklyScoreSave, handleSurvivorChange, handleSurvivorSave, getRemainingTeams }) => {
-  // Log data for debugging
   console.log('Prizes props:', { selectedYear, prizes: prizes[selectedYear], pendingChanges: pendingChanges.prizes?.[selectedYear] });
 
-  // Fallback for missing year data
   const yearPrizes = prizes[selectedYear] || { weeklyHighScores: [], survivor: [] };
   const weeklyHighScores = yearPrizes.weeklyHighScores.length > 0 ? yearPrizes.weeklyHighScores : Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' }));
   const survivor = yearPrizes.survivor.length > 0 ? yearPrizes.survivor : Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' });
@@ -40,7 +38,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
               </thead>
               <tbody>
                 {weeklyHighScores.map((score, index) => {
-                  const pending = pendingChanges.prizes?.[selectedYear]?.weeklyHighScores?.[index] || {};
+                  const pending = pendingChanges.prizes?.[selectedYear]?.weeklyHighScores[index] || {};
                   const displayScore = { ...score, ...pending };
                   console.log(`Weekly High Score [${index}]:`, { score, pending, displayScore });
                   return (
@@ -67,7 +65,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                           <input
                             type="number"
                             value={displayScore.total ?? ''}
-                            onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'total', parseFloat(e.target.value) || '')}
+                            onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
                             className="w-full sm:w-16 bg-gray-100 p-1 rounded text-sm text-right no-spinner"
                           />
                         ) : (
@@ -104,7 +102,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
               </thead>
               <tbody>
                 {survivor.map((entry, index) => {
-                  const pending = pendingChanges.prizes?.[selectedYear]?.survivor?.[index] || {};
+                  const pending = pendingChanges.prizes?.[selectedYear]?.survivor[index] || {};
                   const displayEntry = { ...entry, ...pending };
                   console.log(`Survivor [${index}]:`, { entry, pending, displayEntry });
                   return (

@@ -25,79 +25,118 @@
       const [view, setView] = React.useState('home');
       const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: {} });
       const [isNavOpen, setIsNavOpen] = React.useState(false);
+      const [isLoading, setIsLoading] = React.useState(false);
 
       const initializeData = async (year) => {
+        setIsLoading(true);
         try {
           const baseUrl = '/.netlify/functions/get-data?filename=';
+          const promises = [];
+
           if (!keepers[year]) {
-            const response = await fetch(`${baseUrl}keepers_${year}.json`);
-            const data = await response.json();
-            console.log(`Loaded keepers_${year}.json:`, data);
-            const teams = Array.isArray(data) ? data : Array(12).fill().map((_, i) => ({
-              team: `Team ${i + 1}`,
-              keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
-              keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
-              remaining: 200,
-            }));
-            setKeepers(prev => ({ ...prev, [year]: teams }));
+            promises.push(
+              fetch(`${baseUrl}keepers_${year}.json`)
+                .then(response => response.json())
+                .then(data => {
+                  console.log(`Loaded keepers_${year}.json:`, data);
+                  const teams = Array.isArray(data) ? data : Array(12).fill().map((_, i) => ({
+                    team: `Team ${i + 1}`,
+                    keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
+                    keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
+                    remaining: 200,
+                  }));
+                  setKeepers(prev => ({ ...prev, [year]: teams }));
+                })
+                .catch(error => {
+                  console.error(`Error loading keepers_${year}.json:`, error);
+                  setKeepers(prev => ({
+                    ...prev,
+                    [year]: Array(12).fill().map((_, i) => ({
+                      team: `Team ${i + 1}`,
+                      keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
+                      keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
+                      remaining: 200,
+                    })),
+                  }));
+                })
+            );
           }
+
           if (!prizes[year]) {
-            const response = await fetch(`${baseUrl}prizes_${year}.json`);
-            const data = await response.json();
-            console.log(`Loaded prizes_${year}.json:`, data);
-            const defaultPrizes = {
-              weeklyHighScores: Array(14).fill().map((_, i) => ({
-                week: i + 1,
-                team: '',
-                total: ''
-              })),
-              survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
-            };
-            setPrizes(prev => ({
-              ...prev,
-              [year]: data && (data.weeklyHighScores || data.survivor) ? { ...defaultPrizes, ...data } : defaultPrizes
-            }));
+            promises.push(
+              fetch(`${baseUrl}prizes_${year}.json`)
+                .then(response => response.json())
+                .then(data => {
+                  console.log(`Loaded prizes_${year}.json:`, data);
+                  const defaultPrizes = {
+                    weeklyHighScores: Array(14).fill().map((_, i) => ({
+                      week: i + 1,
+                      team: '',
+                      total: ''
+                    })),
+                    survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
+                  };
+                  setPrizes(prev => ({
+                    ...prev,
+                    [year]: data && (data.weeklyHighScores || data.survivor) ? { ...defaultPrizes, ...data } : defaultPrizes
+                  }));
+                })
+                .catch(error => {
+                  console.error(`Error loading prizes_${year}.json:`, error);
+                  setPrizes(prev => ({
+                    ...prev,
+                    [year]: {
+                      weeklyHighScores: Array(14).fill().map((_, i) => ({
+                        week: i + 1,
+                        team: '',
+                        total: ''
+                      })),
+                      survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
+                    }
+                  }));
+                })
+            );
           }
+
           if (!locks[year]) {
-            const response = await fetch(`${baseUrl}locks.json`);
-            const data = await response.json();
-            console.log('Loaded locks.json:', data);
-            setLocks(data || { [year]: false });
+            promises.push(
+              fetch(`${baseUrl}locks.json`)
+                .then(response => response.json())
+                .then(data => {
+                  console.log('Loaded locks.json:', data);
+                  setLocks(data || { [year]: false });
+                })
+                .catch(error => console.error('Error loading locks.json:', error))
+            );
           }
+
           if (!rules.sections.length) {
-            const response = await fetch(`${baseUrl}rules.json`);
-            const data = await response.json();
-            console.log('Loaded rules.json:', data);
-            setRules(data.sections ? data : { sections: [] });
+            promises.push(
+              fetch(`${baseUrl}rules.json`)
+                .then(response => response.json())
+                .then(data => {
+                  console.log('Loaded rules.json:', data);
+                  setRules(data.sections ? data : { sections: [] });
+                })
+                .catch(error => console.error('Error loading rules.json:', error))
+            );
           }
+
           if (!payouts.length) {
-            const response = await fetch(`${baseUrl}payouts.json`);
-            const data = await response.json();
-            console.log('Loaded payouts.json:', data);
-            setPayouts(Array.isArray(data) ? data : []);
+            promises.push(
+              fetch(`${baseUrl}payouts.json`)
+                .then(response => response.json())
+                .then(data => {
+                  console.log('Loaded payouts.json:', data);
+                  setPayouts(Array.isArray(data) ? data : []);
+                })
+                .catch(error => console.error('Error loading payouts.json:', error))
+            );
           }
-        } catch (error) {
-          console.error('Error in initializeData:', error);
-          setKeepers(prev => ({
-            ...prev,
-            [year]: Array(12).fill().map((_, i) => ({
-              team: `Team ${i + 1}`,
-              keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
-              keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
-              remaining: 200,
-            })),
-          }));
-          setPrizes(prev => ({
-            ...prev,
-            [year]: {
-              weeklyHighScores: Array(14).fill().map((_, i) => ({
-                week: i + 1,
-                team: '',
-                total: ''
-              })),
-              survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
-            }
-          }));
+
+          await Promise.all(promises);
+        } finally {
+          setIsLoading(false);
         }
       };
 
@@ -365,6 +404,7 @@
 
       return (
         <div className="min-h-screen">
+          {isLoading && <div className="text-center text-white">Loading...</div>}
           <nav className="bg-gray-800 p-4">
             <div className="flex justify-between items-center">
               <div className="text-white font-bold">FriendZone FF</div>
@@ -430,7 +470,7 @@
               handleSaveRow={handleSaveRow}
               handleArrowKey={handleArrowKey}
             />}
-            {view === 'prizes' && window.Prizes && <window.Prizes
+            {view === 'prizes' && window.Prizes && !isLoading && <window.Prizes
               prizes={prizes}
               keepers={keepers}
               selectedYear={selectedYear}
