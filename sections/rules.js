@@ -1,19 +1,19 @@
 window.Rules = ({ rules, setRules, isAdminAuthenticated, updateData, handleRuleChange, handleAddSection, handleAddRule, handleSectionTitleChange, setModalState }) => {
   return (
     <div className="space-y-4">
-      <h2 className="text-lg sm:text-xl font-bold text-white text-center">Rules</h2>
+      <h2 className="text-lg sm:text-xl font-bold text-teal-400 text-center">Rules</h2>
       {rules.sections.map((section, sectionIndex) => (
-        <div key={sectionIndex} className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+        <div key={sectionIndex} className="card bg-gray-800 text-gray-100 rounded-lg shadow-lg p-4 animate-fade-in">
           <div className="flex items-center justify-between mb-3">
             {isAdminAuthenticated ? (
               <input
                 type="text"
                 value={section.title}
                 onChange={(e) => handleSectionTitleChange(sectionIndex, e.target.value)}
-                className="text-lg sm:text-xl font-bold w-full bg-gray-100 p-1 rounded"
+                className="text-lg sm:text-xl font-bold w-full bg-gray-700 p-1 rounded text-gray-100 focus:ring-2 focus:ring-teal-500"
               />
             ) : (
-              <h3 className="text-lg sm:text-xl font-bold">{section.title}</h3>
+              <h3 className="text-lg sm:text-xl font-bold text-teal-400">{section.title}</h3>
             )}
             {isAdminAuthenticated && (
               <button
@@ -29,13 +29,13 @@ window.Rules = ({ rules, setRules, isAdminAuthenticated, updateData, handleRuleC
               <li key={itemIndex} className="flex items-start justify-between">
                 {isAdminAuthenticated ? (
                   <div className="flex items-center w-full">
-                    <span className="text-sm mr-2">{itemIndex + 1}.</span>
+                    <span className="text-sm mr-2 text-gray-300">{itemIndex + 1}.</span>
                     {typeof item === 'string' ? (
                       <input
                         type="text"
                         value={item}
                         onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'text', e.target.value)}
-                        className="w-full bg-gray-100 p-1 rounded text-sm"
+                        className="w-full bg-gray-700 p-1 rounded text-xs sm:text-sm text-gray-100 focus:ring-2 focus:ring-teal-500"
                       />
                     ) : (
                       <div className="w-full">
@@ -43,12 +43,12 @@ window.Rules = ({ rules, setRules, isAdminAuthenticated, updateData, handleRuleC
                           type="text"
                           value={item.text}
                           onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'text', e.target.value)}
-                          className="w-full bg-gray-100 p-1 rounded text-sm mb-2"
+                          className="w-full bg-gray-700 p-1 rounded text-xs sm:text-sm text-gray-100 focus:ring-2 focus:ring-teal-500 mb-2"
                         />
                         <textarea
                           value={item.subItems.join('\n')}
                           onChange={(e) => handleRuleChange(sectionIndex, itemIndex, 'subItems', e.target.value)}
-                          className="w-full bg-gray-100 p-1 rounded text-sm"
+                          className="w-full bg-gray-700 p-1 rounded text-xs sm:text-sm text-gray-100 focus:ring-2 focus:ring-teal-500"
                           rows="3"
                         />
                       </div>
@@ -62,15 +62,15 @@ window.Rules = ({ rules, setRules, isAdminAuthenticated, updateData, handleRuleC
                   </div>
                 ) : (
                   <div className="flex items-start w-full">
-                    <span className="text-sm mr-2">{itemIndex + 1}.</span>
+                    <span className="text-sm mr-2 text-gray-300">{itemIndex + 1}.</span>
                     {typeof item === 'string' ? (
-                      <span className="text-sm">{item}</span>
+                      <span className="text-sm text-gray-400">{item}</span>
                     ) : (
                       <div>
-                        <span className="text-sm">{item.text}</span>
+                        <span className="text-sm text-gray-400">{item.text}</span>
                         <ul className="list-disc pl-6 mt-1">
                           {item.subItems.map((subItem, subIndex) => (
-                            <li key={subIndex} className="text-sm">{subItem}</li>
+                            <li key={subIndex} className="text-sm text-gray-400">{subItem}</li>
                           ))}
                         </ul>
                       </div>
@@ -83,7 +83,7 @@ window.Rules = ({ rules, setRules, isAdminAuthenticated, updateData, handleRuleC
           {isAdminAuthenticated && (
             <button
               onClick={() => handleAddRule(sectionIndex)}
-              className="mt-3 w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+              className="mt-3 w-full px-2 py-1 text-xs sm:text-sm bg-teal-500 text-white rounded-full hover:bg-teal-600 transition-all"
             >
               Add Rule
             </button>
@@ -93,7 +93,7 @@ window.Rules = ({ rules, setRules, isAdminAuthenticated, updateData, handleRuleC
       {isAdminAuthenticated && (
         <button
           onClick={handleAddSection}
-          className="w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+          className="w-full px-2 py-1 text-xs sm:text-sm bg-teal-500 text-white rounded-full hover:bg-teal-600 transition-all"
         >
           Add Section
         </button>

@@ -10,10 +10,17 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body className="bg-gray-900 text-gray-100">
+<body className="bg-gray-900 text-gray-100 font-sans">
   <div id="root"></div>
   <script type="text/babel">
-    // Keeper cost calculation
+    window.AppState = {
+      rules: { sections: [] },
+      setRules: () => {},
+      modalState: { isOpen: false, type: '', data: null },
+      setModalState: () => {},
+      updateData: async () => true,
+    };
+
     const calculateKeeperCost = (draftCost, tag, keeperName) => {
       if (keeperName === '' && draftCost === 0) return 0;
       if (draftCost === 0 && !tag) return 5;
@@ -36,6 +43,13 @@
       const [isNavOpen, setIsNavOpen] = React.useState(false);
       const [isLoading, setIsLoading] = React.useState(true);
       const [pendingChanges, setPendingChanges] = React.useState({ keepers: {} });
+      const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: null });
+
+      React.useEffect(() => {
+        window.AppState.setRules = setRules;
+        window.AppState.setModalState = setModalState;
+        window.AppState.updateData = updateData;
+      }, []);
 
       const initializeData = async () => {
         setIsLoading(true);
@@ -129,11 +143,11 @@
         }
       };
 
-      const updateData = async (filename, data) => {
+      const updateData = async (filename, data, action, indexData) => {
         try {
           const response = await fetch('/.netlify/functions/update-data', {
             method: 'POST',
-            body: JSON.stringify({ file: filename, data, action: 'update' }),
+            body: JSON.stringify({ file: filename, data, action, indexData }),
           });
           return response.ok;
         } catch (error) {
@@ -254,18 +268,78 @@
         alert('Logged out');
       };
 
+      const handleRuleChange = (sectionIndex, itemIndex, field, value) => {
+        if (!isAdminAuthenticated) return;
+        const updatedRules = { ...rules };
+        const item = updatedRules.sections[sectionIndex].items[itemIndex];
+        if (typeof item === 'string') {
+          updatedRules.sections[sectionIndex].items[itemIndex] = value;
+        } else {
+          if (field === 'text') {
+            updatedRules.sections[sectionIndex].items[itemIndex].text = value;
+          } else {
+            updatedRules.sections[sectionIndex].items[itemIndex].subItems = value.split('\n').filter(line => line.trim());
+          }
+        }
+        setRules(updatedRules);
+      };
+
+      const handleAddSection = () => {
+        if (!isAdminAuthenticated) return;
+        const updatedRules = { ...rules };
+        updatedRules.sections.push({ title: 'New Section', items: ['New Rule'] });
+        setRules(updatedRules);
+        updateData('rules.json', updatedRules);
+      };
+
+      const handleAddRule = (sectionIndex) => {
+        if (!isAdminAuthenticated) return;
+        const updatedRules = { ...rules };
+        updatedRules.sections[sectionIndex].items.push('New Rule');
+        setRules(updatedRules);
+        updateData('rules.json', updatedRules);
+      };
+
+      const handleSectionTitleChange = (sectionIndex, title) => {
+        if (!isAdminAuthenticated) return;
+        const updatedRules = { ...rules };
+        updatedRules.sections[sectionIndex].title = title;
+        setRules(updatedRules);
+      };
+
+      const handlePayoutChange = (index, field, value) => {
+        if (!isAdminAuthenticated) return;
+        const updatedPayouts = [...payouts];
+        updatedPayouts[index] = { ...updatedPayouts[index], [field]: field === 'category' ? value : parseFloat(value) || 0 };
+        setPayouts(updatedPayouts);
+      };
+
+      const handleAddPayout = () => {
+        if (!isAdminAuthenticated) return;
+        const updatedPayouts = [...payouts, { category: 'New Payout', percentage: 0, prize: 0 }];
+        setPayouts(updatedPayouts);
+        updateData('payouts.json', updatedPayouts);
+      };
+
+      const handleDeletePayout = (index) => {
+        if (!isAdminAuthenticated) return;
+        const updatedPayouts = payouts.filter((_, i) => i !== index);
+        setPayouts(updatedPayouts);
+        updateData('payouts.json', updatedPayouts);
+      };
+
       React.useEffect(() => {
         initializeData();
       }, []);
 
       return (
         <div className="min-h-screen">
-          {isLoading && <div className="text-center text-white">Loading...</div>}
-          <nav className="bg-gray-800 p-4">
+          {isLoading && <div className="text-center text-gray-300">Loading...</div>}
+          <nav className="bg-gray-800 p-4 shadow-lg">
             <div className="flex justify-between items-center">
-              <div className="text-white font-bold">FriendZone FF</div>
+              <div className="text-teal-400 font-bold text-lg">FriendZone FF</div>
               <button
-                className="md:hidden text-white focus:outline-none"
+                className="md:hidden text-gray-300 focus:outline-none"
                 onClick={() => setIsNavOpen(!isNavOpen)}
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -274,27 +348,45 @@
               </button>
             </div>
             <div className={`${isNavOpen ? 'block' : 'hidden'} md:flex md:space-x-4 mt-2 md:mt-0`}>
-              <a href="#" onClick={() => { setView('home'); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Home</a>
-              <a href="#" onClick={() => { setView('rules'); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Rules</a>
-              <a href="#" onClick={() => { setView('payouts'); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Payouts</a>
-              <a href="#" onClick={() => { setView('keepers'); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Keepers</a>
-              <a href="#" onClick={() => { setView('prizes'); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Prizes</a>
+              <a href="#" onClick={() => { setView('home'); setIsNavOpen(false); }} className="block text-gray-300 hover:text-teal-400 py-1 md:py-0 transition-colors">Home</a>
+              <a href="#" onClick={() => { setView('rules'); setIsNavOpen(false); }} className="block text-gray-300 hover:text-teal-400 py-1 md:py-0 transition-colors">Rules</a>
+              <a href="#" onClick={() => { setView('payouts'); setIsNavOpen(false); }} className="block text-gray-300 hover:text-teal-400 py-1 md:py-0 transition-colors">Payouts</a>
+              <a href="#" onClick={() => { setView('keepers'); setIsNavOpen(false); }} className="block text-gray-300 hover:text-teal-400 py-1 md:py-0 transition-colors">Keepers</a>
+              <a href="#" onClick={() => { setView('prizes'); setIsNavOpen(false); }} className="block text-gray-300 hover:text-teal-400 py-1 md:py-0 transition-colors">Prizes</a>
               {isAdminAuthenticated && (
-                <a href="#" onClick={() => { setView('admin'); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Admin</a>
+                <a href="#" onClick={() => { setView('admin'); setIsNavOpen(false); }} className="block text-gray-300 hover:text-teal-400 py-1 md:py-0 transition-colors">Admin</a>
               )}
               <div className="md:ml-4">
                 {!isAdminAuthenticated ? (
-                  <button onClick={() => { setView('admin'); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Login</button>
+                  <button onClick={() => { setView('admin'); setIsNavOpen(false); }} className="block text-gray-300 hover:text-teal-400 py-1 md:py-0 transition-colors">Login</button>
                 ) : (
-                  <button onClick={() => { handleLogout(); setIsNavOpen(false); }} className="block text-white hover:text-teal-400 py-1 md:py-0">Logout</button>
+                  <button onClick={() => { handleLogout(); setIsNavOpen(false); }} className="block text-gray-300 hover:text-teal-400 py-1 md:py-0 transition-colors">Logout</button>
                 )}
               </div>
             </div>
           </nav>
           <main className="px-4 sm:px-6 py-4">
-            {view === 'home' && window.Home && <window.Home />}
-            {view === 'rules' && window.Rules && <window.Rules rules={rules} />}
-            {view === 'payouts' && window.Payouts && <window.Payouts payouts={payouts} />}
+            {view === 'home' && window.Home && <window.Home keepers={keepers} prizes={prizes} />}
+            {view === 'rules' && window.Rules && <window.Rules
+              rules={rules}
+              setRules={setRules}
+              isAdminAuthenticated={isAdminAuthenticated}
+              updateData={updateData}
+              handleRuleChange={handleRuleChange}
+              handleAddSection={handleAddSection}
+              handleAddRule={handleAddRule}
+              handleSectionTitleChange={handleSectionTitleChange}
+              setModalState={setModalState}
+            />}
+            {view === 'payouts' && window.Payouts && <window.Payouts
+              payouts={payouts}
+              setPayouts={setPayouts}
+              isAdminAuthenticated={isAdminAuthenticated}
+              updateData={updateData}
+              handlePayoutChange={handlePayoutChange}
+              handleAddPayout={handleAddPayout}
+              handleDeletePayout={handleDeletePayout}
+            />}
             {view === 'keepers' && window.Keepers && !isLoading && keepers[selectedYear]?.length && <window.Keepers
               keepers={keepers}
               locks={locks}
@@ -319,13 +411,14 @@
               getRemainingTeams={getRemainingTeams}
             />}
             {view === 'admin' && window.Admin && <window.Admin handleAdminLogin={handleAdminLogin} />}
+            <window.Modal />
           </main>
         </div>
       );
     };
 
     const checkComponentsLoaded = setInterval(() => {
-      if (window.Home && window.Rules && window.Payouts && window.Keepers && window.Prizes && window.Admin) {
+      if (window.Home && window.Rules && window.Payouts && window.Keepers && window.Prizes && window.Admin && window.Modal) {
         clearInterval(checkComponentsLoaded);
         ReactDOM.render(<App />, document.getElementById('root'));
       }
@@ -337,5 +430,6 @@
   <script src="/sections/keepers.js" type="text/babel"></script>
   <script src="/sections/prizes.js" type="text/babel"></script>
   <script src="/sections/admin.js" type="text/babel"></script>
+  <script src="/sections/modal.js" type="text/babel"></script>
 </body>
 </html>

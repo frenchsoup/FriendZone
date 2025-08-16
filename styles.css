@@ -4,6 +4,11 @@ body {
   @apply bg-gray-900 text-gray-100;
 }
 
+/* Custom gray shade for alternating rows */
+.bg-gray-850 {
+  background-color: #1f2937; /* Slightly lighter than gray-800 */
+}
+
 /* Responsive table container */
 .table-container {
   @apply overflow-x-auto;
@@ -21,7 +26,7 @@ nav a:hover, nav button:hover {
 
 /* Cards */
 .card {
-  @apply transition-all duration-200 ease-in-out bg-white text-gray-800 rounded-lg shadow-md;
+  @apply transition-all duration-200 ease-in-out bg-gray-800 text-gray-100 rounded-lg shadow-lg;
 }
 
 .card:hover {
@@ -35,11 +40,11 @@ nav a:hover, nav button:hover {
 
 /* Table row striping */
 .table-row-even {
-  @apply bg-white;
+  @apply bg-gray-800;
 }
 
 .table-row-odd {
-  @apply bg-gray-50;
+  @apply bg-gray-850;
 }
 
 /* Modal */
@@ -53,15 +58,15 @@ nav a:hover, nav button:hover {
 
 /* Inputs, selects, and textareas */
 input, select, textarea {
-  @apply transition-all duration-200 ease-in-out rounded border border-gray-300 bg-gray-100 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400;
+  @apply transition-all duration-200 ease-in-out rounded border-none bg-gray-700 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500;
 }
 
 input:focus, select:focus, textarea:focus {
-  @apply ring-2 ring-teal-400 ring-opacity-50;
+  @apply ring-2 ring-teal-500 ring-opacity-50;
 }
 
 input:disabled, select:disabled, textarea:disabled {
-  @apply bg-gray-200 cursor-not-allowed opacity-75;
+  @apply bg-gray-600 cursor-not-allowed opacity-75;
 }
 
 /* Buttons */
@@ -75,7 +80,7 @@ button:not(.lock-button):hover {
 
 /* Lock button specific styling */
 .lock-button {
-  @apply transition-all duration-200 ease-in-out rounded px-2 py-1 text-sm;
+  @apply transition-all duration-200 ease-in-out rounded-full px-3 py-1 text-sm;
 }
 
 .lock-button:hover {
@@ -116,15 +121,15 @@ table {
 }
 
 th, td {
-  @apply px-2 py-2 sm:px-3 sm:py-3;
+  @apply px-1 py-1 sm:px-3 sm:py-2;
 }
 
 th {
-  @apply text-left font-semibold text-gray-700;
+  @apply text-left font-semibold text-gray-300;
 }
 
 td {
-  @apply text-gray-800;
+  @apply text-gray-400;
 }
 
 /* Responsive padding for main content */

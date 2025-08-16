@@ -2,15 +2,15 @@ window.Modal = () => {
   const { modalState, setModalState } = window.AppState;
   if (!modalState.isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal">
-      <div className="bg-white text-gray-800 rounded-lg p-2 sm:p-3 max-w-sm w-full">
-        <div className="flex justify-between items-center mb-2">
-          <h3 className="text-sm sm:text-base font-semibold">{modalState.type === 'deleteRule' ? 'Delete Rule' : 'Delete Section'}</h3>
-          <button onClick={() => setModalState({ isOpen: false, type: '', data: null })} className="text-gray-500 hover:text-gray-700 text-lg">\u00D7</button>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal animate-fade-in">
+      <div className="bg-gray-800 text-gray-100 rounded-lg p-3 sm:p-4 max-w-sm w-full">
+        <div className="flex justify-between items-center mb-3">
+          <h3 className="text-sm sm:text-base font-semibold text-teal-400">{modalState.type === 'deleteRule' ? 'Delete Rule' : 'Delete Section'}</h3>
+          <button onClick={() => setModalState({ isOpen: false, type: '', data: null })} className="text-gray-400 hover:text-gray-200 text-lg">×</button>
         </div>
         {modalState.type === 'deleteRule' && (
           <div>
-            <p className="text-sm mb-2">Are you sure you want to delete this rule?</p>
+            <p className="text-sm text-gray-300 mb-3">Are you sure you want to delete this rule?</p>
             <button 
               onClick={() => {
                 const updatedRules = { ...window.AppState.rules };
@@ -22,7 +22,7 @@ window.Modal = () => {
                   }
                 });
               }} 
-              className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+              className="w-full px-3 py-2 text-sm bg-red-600 text-white rounded-full hover:bg-red-700 transition-all"
             >
               Delete
             </button>
@@ -30,7 +30,7 @@ window.Modal = () => {
         )}
         {modalState.type === 'deleteSection' && (
           <div>
-            <p className="text-sm mb-2">Are you sure you want to delete this section?</p>
+            <p className="text-sm text-gray-300 mb-3">Are you sure you want to delete this section?</p>
             <button 
               onClick={() => {
                 const updatedRules = { ...window.AppState.rules };
@@ -42,7 +42,7 @@ window.Modal = () => {
                   }
                 });
               }} 
-              className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
+              className="w-full px-3 py-2 text-sm bg-red-600 text-white rounded-full hover:bg-red-700 transition-all"
             >
               Delete
             </button>
