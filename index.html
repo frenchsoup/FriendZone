@@ -10,7 +10,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body class="bg-gray-900 text-gray-100">
+<body className="bg-gray-900 text-gray-100">
   <div id="root"></div>
   <script type="text/babel">
     // Keeper cost calculation
@@ -143,14 +143,27 @@
 
       const handleKeeperChange = (year, index, field, value) => {
         if (locks[year]) return;
-        const updatedPending = { ...pendingChanges };
-        updatedPending.keepers[year] = updatedPending.keepers[year] || {};
-        updatedPending.keepers[year][index] = {
-          ...updatedPending.keepers[year][index],
-          ...keepers[year][index],
-          [field]: field.includes('tag') ? value : field.includes('draftCost') ? (value === '' ? 0 : parseFloat(value)) : value,
-        };
-        setPendingChanges(updatedPending);
+        setPendingChanges(prev => {
+          const updatedPending = { ...prev, keepers: { ...prev.keepers, [year]: { ...prev.keepers[year] } } };
+          updatedPending.keepers[year][index] = {
+            ...updatedPending.keepers[year][index],
+            ...keepers[year][index],
+            [field]: field.includes('tag') ? value : field.includes('draftCost') ? (value === '' ? 0 : parseFloat(value)) : value,
+          };
+          const team = updatedPending.keepers[year][index];
+          if ((team.draftCost1 === 0 && team.tag1) || (team.draftCost2 === 0 && team.tag2)) {
+            alert('No player can be kept for $0 if tagged.');
+            team[field.includes('tag') ? field : field.includes('draftCost') ? (field === 'draftCost1' ? 'tag1' : 'tag2') : field] = false;
+          }
+          team.cost1 = calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1);
+          team.cost2 = calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2);
+          team.remaining = 200 - (team.cost1 + team.cost2);
+          if (team.remaining < 0) {
+            alert('Total keeper cost exceeds $200 budget.');
+            return prev;
+          }
+          return updatedPending;
+        });
       };
 
       const handleSaveRow = async (year, index) => {
@@ -158,24 +171,15 @@
         const updatedKeepers = { ...keepers };
         const pending = pendingChanges.keepers[year]?.[index] || {};
         const team = { ...updatedKeepers[year][index], ...pending };
-        if ((team.draftCost1 === 0 && team.tag1) || (team.draftCost2 === 0 && team.tag2)) {
-          alert('No player can be kept for $0 if tagged.');
-          return;
-        }
-        team.cost1 = calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1);
-        team.cost2 = calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2);
-        team.remaining = 200 - (team.cost1 + team.cost2);
-        if (team.remaining < 0) {
-          alert('Total keeper cost exceeds $200 budget.');
-          return;
-        }
         updatedKeepers[year][index] = team;
         const result = await updateData(`keepers_${year}.json`, updatedKeepers[year]);
         if (result) {
           setKeepers(updatedKeepers);
-          const updatedPending = { ...pendingChanges };
-          updatedPending.keepers[year][index] = {};
-          setPendingChanges(updatedPending);
+          setPendingChanges(prev => {
+            const updatedPending = { ...prev, keepers: { ...prev.keepers, [year]: { ...prev.keepers[year] } } };
+            updatedPending.keepers[year][index] = {};
+            return updatedPending;
+          });
         } else {
           alert('Failed to save keeper changes');
         }

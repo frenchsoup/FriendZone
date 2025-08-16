@@ -33,17 +33,17 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b bg-gray-100">
-                <th className="text-left py-2 px-2 sm:px-3 min-w-[100px]">Team</th>
-                <th className="text-left py-2 px-2 sm:px-3 min-w-[80px]">Keeper 1</th>
-                <th className="text-right py-2 px-2 sm:px-3 min-w-[60px]">Draft Cost 1</th>
-                <th className="text-center py-2 px-2 sm:px-3 min-w-[40px]">Tag 1</th>
-                <th className="text-right py-2 px-2 sm:px-3 min-w-[60px]">Cost 1</th>
-                <th className="text-left py-2 px-2 sm:px-3 min-w-[80px]">Keeper 2</th>
-                <th className="text-right py-2 px-2 sm:px-3 min-w-[60px]">Draft Cost 2</th>
-                <th className="text-center py-2 px-2 sm:px-3 min-w-[40px]">Tag 2</th>
-                <th className="text-right py-2 px-2 sm:px-3 min-w-[60px]">Cost 2</th>
-                <th className="text-right py-2 px-2 sm:px-3 min-w-[80px]">Remaining</th>
-                <th className="text-right py-2 px-2 sm:px-3 min-w-[60px]">Actions</th>
+                <th className="text-left py-2 px-2 sm:px-3 w-[15%] min-w-[100px]">Team</th>
+                <th className="text-left py-2 px-2 sm:px-3 w-[15%] min-w-[80px]">Keeper 1</th>
+                <th className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">Draft Cost 1</th>
+                <th className="text-center py-2 px-2 sm:px-3 w-[5%] min-w-[40px]">Tag 1</th>
+                <th className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">Cost 1</th>
+                <th className="text-left py-2 px-2 sm:px-3 w-[15%] min-w-[80px]">Keeper 2</th>
+                <th className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">Draft Cost 2</th>
+                <th className="text-center py-2 px-2 sm:px-3 w-[5%] min-w-[40px]">Tag 2</th>
+                <th className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">Cost 2</th>
+                <th className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[80px]">Remaining</th>
+                <th className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -52,7 +52,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                 const displayTeam = { ...team, ...pending };
                 return (
                   <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
-                    <td className="py-2 px-2 sm:px-3 min-w-[100px]">
+                    <td className="py-2 px-2 sm:px-3 w-[15%] min-w-[100px]">
                       {locks[selectedYear] ? (
                         <span>{displayTeam.team || '-'}</span>
                       ) : (
@@ -64,7 +64,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                         />
                       )}
                     </td>
-                    <td className="py-2 px-2 sm:px-3 min-w-[80px]">
+                    <td className="py-2 px-2 sm:px-3 w-[15%] min-w-[80px]">
                       {locks[selectedYear] ? (
                         <span>{displayTeam.keeper1 || '-'}</span>
                       ) : (
@@ -76,7 +76,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                         />
                       )}
                     </td>
-                    <td className="text-right py-2 px-2 sm:px-3 min-w-[60px]">
+                    <td className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">
                       {locks[selectedYear] ? (
                         <span>{displayTeam.draftCost1 || '-'}</span>
                       ) : (
@@ -88,7 +88,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                         />
                       )}
                     </td>
-                    <td className="text-center py-2 px-2 sm:px-3 min-w-[40px]">
+                    <td className="text-center py-2 px-2 sm:px-3 w-[5%] min-w-[40px]">
                       {locks[selectedYear] ? (
                         <span>{displayTeam.tag1 ? 'Yes' : 'No'}</span>
                       ) : (
@@ -100,8 +100,8 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                         />
                       )}
                     </td>
-                    <td className="text-right py-2 px-2 sm:px-3 min-w-[60px]">{displayTeam.cost1 || '-'}</td>
-                    <td className="py-2 px-2 sm:px-3 min-w-[80px]">
+                    <td className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">{displayTeam.cost1 || '-'}</td>
+                    <td className="py-2 px-2 sm:px-3 w-[15%] min-w-[80px]">
                       {locks[selectedYear] ? (
                         <span>{displayTeam.keeper2 || '-'}</span>
                       ) : (
@@ -113,7 +113,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                         />
                       )}
                     </td>
-                    <td className="text-right py-2 px-2 sm:px-3 min-w-[60px]">
+                    <td className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">
                       {locks[selectedYear] ? (
                         <span>{displayTeam.draftCost2 || '-'}</span>
                       ) : (
@@ -125,7 +125,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                         />
                       )}
                     </td>
-                    <td className="text-center py-2 px-2 sm:px-3 min-w-[40px]">
+                    <td className="text-center py-2 px-2 sm:px-3 w-[5%] min-w-[40px]">
                       {locks[selectedYear] ? (
                         <span>{displayTeam.tag2 ? 'Yes' : 'No'}</span>
                       ) : (
@@ -137,9 +137,9 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                         />
                       )}
                     </td>
-                    <td className="text-right py-2 px-2 sm:px-3 min-w-[60px]">{displayTeam.cost2 || '-'}</td>
-                    <td className="text-right py-2 px-2 sm:px-3 min-w-[80px]">{displayTeam.remaining || '-'}</td>
-                    <td className="text-right py-2 px-2 sm:px-3 min-w-[60px]">
+                    <td className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">{displayTeam.cost2 || '-'}</td>
+                    <td className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[80px]">{displayTeam.remaining || '-'}</td>
+                    <td className="text-right py-2 px-2 sm:px-3 w-[10%] min-w-[60px]">
                       {!locks[selectedYear] && (
                         <button
                           onClick={() => handleSaveRow(selectedYear, index)}
