@@ -10,7 +10,7 @@
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <link rel="stylesheet" href="/styles.css">
 </head>
-<body className="bg-gray-800 text-gray-100 font-sans">
+<body class="bg-gray-800 text-gray-100 font-sans">
   <div id="root"></div>
   <script type="text/babel">
     window.AppState = {
@@ -366,7 +366,7 @@
             </div>
           </nav>
           <main className="px-4 sm:px-6 py-4">
-            {view === 'home' && window.Home && <window.Home keepers={keepers} prizes={prizes} />}
+            {view === 'home' && window.Home && <window.Home />}
             {view === 'rules' && window.Rules && <window.Rules
               rules={rules}
               setRules={setRules}

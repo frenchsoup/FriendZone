@@ -1,6 +1,7 @@
 /* Base styles */
 body {
   font-family: 'Inter', sans-serif;
+  background-color: #1f2937; /* Explicitly set to gray-800 */
   @apply bg-gray-800 text-gray-100;
 }
 
