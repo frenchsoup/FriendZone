@@ -13,6 +13,15 @@
 <body class="bg-gray-900 text-gray-100">
   <div id="root"></div>
   <script type="text/babel">
+    // Keeper cost calculation
+    const calculateKeeperCost = (draftCost, tag, keeperName) => {
+      if (keeperName === '' && draftCost === 0) return 0;
+      if (draftCost === 0 && !tag) return 5;
+      if (draftCost === 0 && tag) return 0;
+      if (tag) return Math.round(draftCost);
+      return Math.round(draftCost * 1.1 + 5);
+    };
+
     const App = () => {
       const [keepers, setKeepers] = React.useState({
         2022: [], 2023: [], 2024: [], 2025: []
@@ -42,7 +51,14 @@
                 .then(data => {
                   setKeepers(prev => ({
                     ...prev,
-                    [year]: Array.isArray(data) && data.length > 0 ? data : Array(12).fill().map((_, i) => ({
+                    [year]: Array.isArray(data) && data.length > 0 ? data.map(team => ({
+                      ...team,
+                      draftCost1: Math.round(team.draftCost1 || 0),
+                      draftCost2: Math.round(team.draftCost2 || 0),
+                      cost1: Math.round(calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
+                      cost2: Math.round(calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
+                      remaining: 200 - (Math.round(calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
+                    })) : Array(12).fill().map((_, i) => ({
                       team: `Team ${i + 1}`,
                       keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
                       keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
@@ -91,7 +107,7 @@
             promises.push(
               fetch(`${baseUrl}locks.json`)
                 .then(response => response.json())
-                .then(data => setLocks(data || { [year]: false }))
+                .then(data => setLocks(data || { [year]: year !== '2025' }))
             );
           });
 
@@ -126,12 +142,13 @@
       };
 
       const handleKeeperChange = (year, index, field, value) => {
+        if (locks[year]) return;
         const updatedPending = { ...pendingChanges };
         updatedPending.keepers[year] = updatedPending.keepers[year] || {};
         updatedPending.keepers[year][index] = {
           ...updatedPending.keepers[year][index],
           ...keepers[year][index],
-          [field]: field.includes('tag') ? value === 'true' : field.includes('draftCost') ? (value === '' ? 0 : parseFloat(value)) : value,
+          [field]: field.includes('tag') ? value : field.includes('draftCost') ? (value === '' ? 0 : parseFloat(value)) : value,
         };
         setPendingChanges(updatedPending);
       };
@@ -141,11 +158,17 @@
         const updatedKeepers = { ...keepers };
         const pending = pendingChanges.keepers[year]?.[index] || {};
         const team = { ...updatedKeepers[year][index], ...pending };
-        const cost1 = team.tag1 ? (parseFloat(team.draftCost1) || 0) + 5 : parseFloat(team.draftCost1) || 0;
-        const cost2 = team.tag2 ? (parseFloat(team.draftCost2) || 0) + 5 : parseFloat(team.draftCost2) || 0;
-        team.cost1 = team.keeper1 ? cost1 : 0;
-        team.cost2 = team.keeper2 ? cost2 : 0;
-        team.remaining = 200 - cost1 - cost2;
+        if ((team.draftCost1 === 0 && team.tag1) || (team.draftCost2 === 0 && team.tag2)) {
+          alert('No player can be kept for $0 if tagged.');
+          return;
+        }
+        team.cost1 = calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1);
+        team.cost2 = calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2);
+        team.remaining = 200 - (team.cost1 + team.cost2);
+        if (team.remaining < 0) {
+          alert('Total keeper cost exceeds $200 budget.');
+          return;
+        }
         updatedKeepers[year][index] = team;
         const result = await updateData(`keepers_${year}.json`, updatedKeepers[year]);
         if (result) {
