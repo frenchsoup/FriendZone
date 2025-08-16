@@ -15,10 +15,7 @@
   <script type="text/babel">
     const App = () => {
       const [keepers, setKeepers] = React.useState({
-        2022: [],
-        2023: [],
-        2024: [],
-        2025: []
+        2022: [], 2023: [], 2024: [], 2025: []
       });
       const [prizes, setPrizes] = React.useState({});
       const [locks, setLocks] = React.useState({});
@@ -29,6 +26,7 @@
       const [view, setView] = React.useState('home');
       const [isNavOpen, setIsNavOpen] = React.useState(false);
       const [isLoading, setIsLoading] = React.useState(true);
+      const [pendingChanges, setPendingChanges] = React.useState({ keepers: {} });
 
       const initializeData = async () => {
         setIsLoading(true);
@@ -65,28 +63,30 @@
                 })
             );
 
-            promises.push(
-              fetch(`${baseUrl}prizes_${year}.json`)
-                .then(response => response.json())
-                .then(data => {
-                  setPrizes(prev => ({
-                    ...prev,
-                    [year]: data && (data.weeklyHighScores || data.survivor) ? data : {
-                      weeklyHighScores: Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' })),
-                      survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
-                    }
-                  }));
-                })
-                .catch(() => {
-                  setPrizes(prev => ({
-                    ...prev,
-                    [year]: {
-                      weeklyHighScores: Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' })),
-                      survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
-                    }
-                  }));
-                })
-            );
+            if (year !== '2022') {
+              promises.push(
+                fetch(`${baseUrl}prizes_${year}.json`)
+                  .then(response => response.json())
+                  .then(data => {
+                    setPrizes(prev => ({
+                      ...prev,
+                      [year]: data && (data.weeklyHighScores || data.survivor) ? data : {
+                        weeklyHighScores: Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' })),
+                        survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
+                      }
+                    }));
+                  })
+                  .catch(() => {
+                    setPrizes(prev => ({
+                      ...prev,
+                      [year]: {
+                        weeklyHighScores: Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' })),
+                        survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
+                      }
+                    }));
+                  })
+              );
+            }
 
             promises.push(
               fetch(`${baseUrl}locks.json`)
@@ -125,6 +125,39 @@
         }
       };
 
+      const handleKeeperChange = (year, index, field, value) => {
+        const updatedPending = { ...pendingChanges };
+        updatedPending.keepers[year] = updatedPending.keepers[year] || {};
+        updatedPending.keepers[year][index] = {
+          ...updatedPending.keepers[year][index],
+          ...keepers[year][index],
+          [field]: field.includes('tag') ? value === 'true' : field.includes('draftCost') ? (value === '' ? 0 : parseFloat(value)) : value,
+        };
+        setPendingChanges(updatedPending);
+      };
+
+      const handleSaveRow = async (year, index) => {
+        if (locks[year]) return;
+        const updatedKeepers = { ...keepers };
+        const pending = pendingChanges.keepers[year]?.[index] || {};
+        const team = { ...updatedKeepers[year][index], ...pending };
+        const cost1 = team.tag1 ? (parseFloat(team.draftCost1) || 0) + 5 : parseFloat(team.draftCost1) || 0;
+        const cost2 = team.tag2 ? (parseFloat(team.draftCost2) || 0) + 5 : parseFloat(team.draftCost2) || 0;
+        team.cost1 = team.keeper1 ? cost1 : 0;
+        team.cost2 = team.keeper2 ? cost2 : 0;
+        team.remaining = 200 - cost1 - cost2;
+        updatedKeepers[year][index] = team;
+        const result = await updateData(`keepers_${year}.json`, updatedKeepers[year]);
+        if (result) {
+          setKeepers(updatedKeepers);
+          const updatedPending = { ...pendingChanges };
+          updatedPending.keepers[year][index] = {};
+          setPendingChanges(updatedPending);
+        } else {
+          alert('Failed to save keeper changes');
+        }
+      };
+
       const handleWeeklyScoreChange = (year, index, field, value) => {
         if (!isAdminAuthenticated) return;
         const updatedPrizes = { ...prizes };
@@ -155,6 +188,14 @@
         if (!isAdminAuthenticated) return;
         const result = await updateData(`prizes_${year}.json`, prizes[year]);
         if (!result) alert('Failed to save Survivor');
+      };
+
+      const handleToggleLock = async (year) => {
+        if (!isAdminAuthenticated) return;
+        const updatedLocks = { ...locks, [year]: !locks[year] };
+        const result = await updateData('locks.json', updatedLocks);
+        if (result) setLocks(updatedLocks);
+        else alert('Failed to toggle lock');
       };
 
       const getRemainingTeams = (year, currentIndex = -1) => {
@@ -233,6 +274,10 @@
               selectedYear={selectedYear}
               setSelectedYear={setSelectedYear}
               isAdminAuthenticated={isAdminAuthenticated}
+              pendingChanges={pendingChanges}
+              handleKeeperChange={handleKeeperChange}
+              handleSaveRow={handleSaveRow}
+              handleToggleLock={handleToggleLock}
             />}
             {view === 'prizes' && window.Prizes && !isLoading && prizes[selectedYear]?.weeklyHighScores && prizes[selectedYear]?.survivor && <window.Prizes
               prizes={prizes}
