@@ -3,7 +3,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
 
   const yearPrizes = prizes[selectedYear] || { weeklyHighScores: [], survivor: [] };
   const weeklyHighScores = yearPrizes.weeklyHighScores.length > 0 ? yearPrizes.weeklyHighScores : Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' }));
-  const survivor = yearPrizes.survivor.length > 0 ? yearPrizes.survivor : Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' });
+  const survivor = yearPrizes.survivor.length > 0 ? yearPrizes.survivor : Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' }));
 
   console.log('Weekly High Scores:', weeklyHighScores);
   console.log('Survivor:', survivor);
@@ -55,14 +55,14 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
               <tbody>
                 {weeklyHighScores.map((score, index) => {
                   const pending = pendingChanges.prizes?.[selectedYear]?.weeklyHighScores[index] || {};
-                  const displayScore = { ...score, ...pending };
+                  const displayScore = { ...score, ...pending, team: pending.team || score.team || '' };
                   return (
                     <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
                       <td className="py-2 px-2 sm:px-3">{score.week}</td>
                       <td className="py-2 px-2 sm:px-3">
                         {isAdminAuthenticated ? (
                           <select
-                            value={displayScore.team || ''}
+                            value={displayScore.team}
                             onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
                             className="w-full bg-gray-100 p-1 rounded text-sm"
                           >
@@ -118,7 +118,12 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
               <tbody>
                 {survivor.map((entry, index) => {
                   const pending = pendingChanges.prizes?.[selectedYear]?.survivor[index] || {};
-                  const displayEntry = { ...entry, ...pending };
+                  const displayEntry = {
+                    ...entry,
+                    ...pending,
+                    eliminated: index !== 11 ? (pending.eliminated || entry.eliminated || '') : '',
+                    winner: index === 11 ? (pending.winner || entry.winner || '') : ''
+                  };
                   return (
                     <tr
                       key={index}
@@ -134,7 +139,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                       <td className="py-2 px-2 sm:px-3">
                         {isAdminAuthenticated ? (
                           <select
-                            value={index === 11 ? (displayEntry.winner || '') : (displayEntry.eliminated || '')}
+                            value={index === 11 ? displayEntry.winner : displayEntry.eliminated}
                             onChange={(e) => handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
                             className="w-full bg-gray-100 p-1 rounded text-sm"
                           >
