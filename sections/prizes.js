@@ -1,23 +1,11 @@
-window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges, handleWeeklyScoreChange, handleWeeklyScoreSave, handleSurvivorChange, handleSurvivorSave, getRemainingTeams }) => {
-  console.log('Prizes props:', { selectedYear, prizes: prizes[selectedYear], pendingChanges: pendingChanges.prizes?.[selectedYear] });
+window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, handleWeeklyScoreChange, handleWeeklyScoreSave, handleSurvivorChange, handleSurvivorSave, getRemainingTeams }) => {
+  console.log('Prizes props:', { selectedYear, prizes: prizes[selectedYear] });
 
   const yearPrizes = prizes[selectedYear] || { weeklyHighScores: [], survivor: [] };
   const weeklyHighScores = yearPrizes.weeklyHighScores.length > 0 ? yearPrizes.weeklyHighScores : Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' }));
   const survivor = yearPrizes.survivor.length > 0 ? yearPrizes.survivor : Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' });
 
-  const cachedRemainingTeams = React.useMemo(() => {
-    if (!keepers[selectedYear] || !prizes[selectedYear]) {
-      console.log('getRemainingTeams [' + selectedYear + ']: Failed to load teams');
-      return Array(survivor.length + 1).fill([]);
-    }
-    const teamsByIndex = [];
-    for (let i = -1; i < survivor.length; i++) {
-      teamsByIndex[i + 1] = getRemainingTeams(selectedYear, i);
-    }
-    return teamsByIndex;
-  }, [selectedYear, keepers[selectedYear], prizes[selectedYear]]);
-
-  if (!prizes[selectedYear]?.weeklyHighScores || !prizes[selectedYear]?.survivor || !cachedRemainingTeams) {
+  if (!prizes[selectedYear]?.weeklyHighScores || !prizes[selectedYear]?.survivor) {
     return <div className="text-center text-white">Loading prizes...</div>;
   }
 
@@ -25,15 +13,11 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Prizes</h2>
       <div className="flex justify-center mb-4 space-x-2">
-        {['2023', '2024', '2025'].map(year => (
+        {['2022', '2023', '2024', '2025'].map(year => (
           <button
             key={year}
             onClick={() => setSelectedYear(year)}
-            className={`px-3 py-1 text-sm rounded transition-all ${
-              selectedYear === year
-                ? 'bg-teal-500 text-white'
-                : 'bg-gray-700 text-gray-200 hover:bg-teal-600 hover:text-white'
-            }`}
+            className={`px-3 py-1 text-sm rounded transition-all ${selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-700 text-gray-200 hover:bg-teal-600 hover:text-white'}`}
           >
             {year}
           </button>
@@ -59,13 +43,12 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                     <td className="py-2 px-2 sm:px-3">
                       {isAdminAuthenticated ? (
                         <select
-                          key={`weekly-${index}-${score.team}`}
                           value={score.team || ''}
                           onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
                           className="w-full bg-gray-100 p-1 rounded text-sm"
                         >
                           <option value="">Select Team</option>
-                          {(cachedRemainingTeams[-1] || []).map(team => (
+                          {(getRemainingTeams(selectedYear, -1) || []).map(team => (
                             <option key={team} value={team}>{team}</option>
                           ))}
                         </select>
@@ -114,27 +97,17 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
               </thead>
               <tbody>
                 {survivor.map((entry, index) => (
-                  <tr
-                    key={index}
-                    className={`border-b ${
-                      index === 11
-                        ? 'bg-teal-100 font-semibold text-gray-900'
-                        : index % 2 === 0
-                        ? 'table-row-even'
-                        : 'table-row-odd'
-                    }`}
-                  >
+                  <tr key={index} className={`border-b ${index === 11 ? 'bg-teal-100 font-semibold text-gray-900' : index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
                     <td className="py-2 px-2 sm:px-3">{index === 11 ? 'Winner' : entry.week}</td>
                     <td className="py-2 px-2 sm:px-3">
                       {isAdminAuthenticated ? (
                         <select
-                          key={`survivor-${index}-${index === 11 ? entry.winner : entry.eliminated}`}
                           value={index === 11 ? (entry.winner || '') : (entry.eliminated || '')}
-                          onChange={(e) => handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
+                          onChange={(e) => handleSurvivorChange(selectedYear, index, e.target.value)}
                           className="w-full bg-gray-100 p-1 rounded text-sm"
                         >
                           <option value="">Select Team</option>
-                          {(cachedRemainingTeams[index] || []).map(team => (
+                          {(getRemainingTeams(selectedYear, index) || []).map(team => (
                             <option key={team} value={team}>{team}</option>
                           ))}
                         </select>
@@ -156,23 +129,6 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                 ))}
               </tbody>
             </table>
-            <div className="mt-4">
-              <h4 className="text-sm font-semibold text-gray-800 mb-2">Remaining Teams</h4>
-              <div className="flex flex-wrap gap-2">
-                {(cachedRemainingTeams[-1] || []).length > 0 ? (
-                  cachedRemainingTeams[-1].map(team => (
-                    <span
-                      key={team}
-                      className="inline-block bg-teal-500 text-white text-xs font-medium px-2 py-1 rounded-full"
-                    >
-                      {team}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-sm text-gray-600">No teams remaining</span>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       </div>

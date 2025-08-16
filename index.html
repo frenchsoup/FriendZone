@@ -19,329 +19,137 @@
       const [locks, setLocks] = React.useState({});
       const [rules, setRules] = React.useState({ sections: [] });
       const [payouts, setPayouts] = React.useState([]);
-      const [pendingChanges, setPendingChanges] = React.useState({ keepers: {}, prizes: {} });
       const [selectedYear, setSelectedYear] = React.useState('2025');
       const [isAdminAuthenticated, setIsAdminAuthenticated] = React.useState(false);
       const [view, setView] = React.useState('home');
-      const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: {} });
       const [isNavOpen, setIsNavOpen] = React.useState(false);
       const [isLoading, setIsLoading] = React.useState(true);
-      const dataCache = React.useRef({});
 
       const initializeData = async () => {
-        if (dataCache.current.initialized) return;
         setIsLoading(true);
         try {
           const baseUrl = '/.netlify/functions/get-data?filename=';
-          const years = ['2023', '2024', '2025'];
+          const years = ['2022', '2023', '2024', '2025'];
           const promises = [];
 
           years.forEach(year => {
-            if (!keepers[year]) {
-              promises.push(
-                fetch(`${baseUrl}keepers_${year}.json`)
-                  .then(response => response.json())
-                  .then(data => {
-                    const teams = Array.isArray(data) && data.length > 0 ? data : Array(12).fill().map((_, i) => ({
+            promises.push(
+              fetch(`${baseUrl}keepers_${year}.json`)
+                .then(response => response.json())
+                .then(data => {
+                  setKeepers(prev => ({
+                    ...prev,
+                    [year]: Array.isArray(data) && data.length > 0 ? data : Array(12).fill().map((_, i) => ({
                       team: `Team ${i + 1}`,
                       keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
                       keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
                       remaining: 200,
-                    }));
-                    setKeepers(prev => ({ ...prev, [year]: teams }));
-                    dataCache.current[year] = { ...dataCache.current[year], keepers: true };
-                  })
-                  .catch(() => {
-                    setKeepers(prev => ({
-                      ...prev,
-                      [year]: Array(12).fill().map((_, i) => ({
-                        team: `Team ${i + 1}`,
-                        keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
-                        keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
-                        remaining: 200,
-                      })),
-                    }));
-                  })
-              );
-            }
+                    }))
+                  }));
+                })
+                .catch(() => {
+                  setKeepers(prev => ({
+                    ...prev,
+                    [year]: Array(12).fill().map((_, i) => ({
+                      team: `Team ${i + 1}`,
+                      keeper1: '', draftCost1: 0, tag1: false, cost1: 0,
+                      keeper2: '', draftCost2: 0, tag2: false, cost2: 0,
+                      remaining: 200,
+                    }))
+                  }));
+                })
+            );
 
-            if (!prizes[year]) {
-              promises.push(
-                fetch(`${baseUrl}prizes_${year}.json`)
-                  .then(response => response.json())
-                  .then(data => {
-                    const defaultPrizes = {
-                      weeklyHighScores: Array(14).fill().map((_, i) => ({
-                        week: i + 1,
-                        team: '',
-                        total: ''
-                      })),
+            promises.push(
+              fetch(`${baseUrl}prizes_${year}.json`)
+                .then(response => response.json())
+                .then(data => {
+                  setPrizes(prev => ({
+                    ...prev,
+                    [year]: data && (data.weeklyHighScores || data.survivor) ? data : {
+                      weeklyHighScores: Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' })),
                       survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
-                    };
-                    setPrizes(prev => ({
-                      ...prev,
-                      [year]: data && (data.weeklyHighScores || data.survivor) ? { ...defaultPrizes, ...data } : defaultPrizes
-                    }));
-                    dataCache.current[year] = { ...dataCache.current[year], prizes: true };
-                  })
-                  .catch(() => {
-                    setPrizes(prev => ({
-                      ...prev,
-                      [year]: {
-                        weeklyHighScores: Array(14).fill().map((_, i) => ({
-                          week: i + 1,
-                          team: '',
-                          total: ''
-                        })),
-                        survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
-                      }
-                    }));
-                  })
-              );
-            }
+                    }
+                  }));
+                })
+                .catch(() => {
+                  setPrizes(prev => ({
+                    ...prev,
+                    [year]: {
+                      weeklyHighScores: Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' })),
+                      survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
+                    }
+                  }));
+                })
+            );
 
-            if (!locks[year]) {
-              promises.push(
-                fetch(`${baseUrl}locks.json`)
-                  .then(response => response.json())
-                  .then(data => {
-                    setLocks(data || { [year]: false });
-                    dataCache.current[year] = { ...dataCache.current[year], locks: true };
-                  })
-              );
-            }
+            promises.push(
+              fetch(`${baseUrl}locks.json`)
+                .then(response => response.json())
+                .then(data => setLocks(data || { [year]: false }))
+            );
           });
 
-          if (!rules.sections.length) {
-            promises.push(
-              fetch(`${baseUrl}rules.json`)
-                .then(response => response.json())
-                .then(data => {
-                  setRules(data.sections ? data : { sections: [] });
-                  dataCache.current.rules = true;
-                })
-            );
-          }
+          promises.push(
+            fetch(`${baseUrl}rules.json`)
+              .then(response => response.json())
+              .then(data => setRules(data.sections ? data : { sections: [] }))
+          );
 
-          if (!payouts.length) {
-            promises.push(
-              fetch(`${baseUrl}payouts.json`)
-                .then(response => response.json())
-                .then(data => {
-                  setPayouts(Array.isArray(data) ? data : []);
-                  dataCache.current.payouts = true;
-                })
-            );
-          }
+          promises.push(
+            fetch(`${baseUrl}payouts.json`)
+              .then(response => response.json())
+              .then(data => setPayouts(Array.isArray(data) ? data : []))
+          );
 
           await Promise.all(promises);
-          dataCache.current.initialized = true;
         } finally {
           setIsLoading(false);
         }
       };
 
-      const handleKeeperChange = (year, index, field, value) => {
-        const updatedPending = { ...pendingChanges };
-        updatedPending.keepers[year] = updatedPending.keepers[year] || {};
-        updatedPending.keepers[year][index] = {
-          ...updatedPending.keepers[year][index],
-          ...keepers[year][index],
-          [field]: value,
-        };
-        setPendingChanges(updatedPending);
-      };
-
-      const handleSaveRow = async (year, index) => {
-        const updatedKeepers = { ...keepers };
-        const pending = pendingChanges.keepers[year]?.[index] || {};
-        const team = { ...updatedKeepers[year][index], ...pending };
-        const cost1 = team.tag1 ? (parseInt(team.draftCost1) || 0) + 5 : parseInt(team.draftCost1) || 0;
-        const cost2 = team.tag2 ? (parseInt(team.draftCost2) || 0) + 5 : parseInt(team.draftCost2) || 0;
-        if ((team.tag1 && !team.draftCost1) || (team.tag2 && !team.draftCost2)) {
-          alert('Tagged keepers must have a draft cost greater than 0');
-          return;
-        }
-        team.cost1 = cost1;
-        team.cost2 = cost2;
-        team.remaining = 200 - cost1 - cost2;
-        updatedKeepers[year][index] = team;
-        const result = await updateData(`keepers_${year}.json`, updatedKeepers[year], 'update');
-        if (result) {
-          setKeepers(updatedKeepers);
-          const updatedPending = { ...pendingChanges };
-          updatedPending.keepers[year][index] = {};
-          setPendingChanges(updatedPending);
-        }
-      };
-
-      const handleWeeklyScoreChange = (year, index, field, value) => {
-        if (!isAdminAuthenticated) return;
-        const updatedPending = { ...pendingChanges };
-        updatedPending.prizes[year] = updatedPending.prizes[year] || { weeklyHighScores: Array(14).fill({}), survivor: Array(12).fill({}) };
-        updatedPending.prizes[year].weeklyHighScores[index] = {
-          ...updatedPending.prizes[year].weeklyHighScores[index],
-          [field]: field === 'total' ? (value === '' ? '' : parseFloat(value)) : value
-        };
-        setPendingChanges(updatedPending);
-      };
-
-      const handleWeeklyScoreSave = async (year, index) => {
-        if (!isAdminAuthenticated) return;
-        const updatedPrizes = { ...prizes };
-        const pending = pendingChanges.prizes[year]?.weeklyHighScores[index] || {};
-        updatedPrizes[year] = {
-          ...updatedPrizes[year],
-          weeklyHighScores: [
-            ...updatedPrizes[year].weeklyHighScores.slice(0, index),
-            { ...updatedPrizes[year].weeklyHighScores[index], ...pending },
-            ...updatedPrizes[year].weeklyHighScores.slice(index + 1)
-          ]
-        };
-        const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
-        if (result) {
-          setPrizes(updatedPrizes);
-          const updatedPending = { ...pendingChanges };
-          updatedPending.prizes[year].weeklyHighScores[index] = {};
-          setPendingChanges(updatedPending);
-        }
-      };
-
-      const handleSurvivorChange = (year, index, field, value) => {
-        if (!isAdminAuthenticated) return;
-        const updatedPending = { ...pendingChanges };
-        updatedPending.prizes[year] = updatedPending.prizes[year] || { weeklyHighScores: Array(14).fill({}), survivor: Array(12).fill({}) };
-        updatedPending.prizes[year].survivor[index] = {
-          ...updatedPending.prizes[year].survivor[index],
-          [index === 11 ? 'winner' : 'eliminated']: value,
-          [index === 11 ? 'eliminated' : 'winner']: ''
-        };
-        setPendingChanges(updatedPending);
-      };
-
-      const handleSurvivorSave = async (year, index) => {
-        if (!isAdminAuthenticated) return;
-        const updatedPrizes = { ...prizes };
-        const pending = pendingChanges.prizes[year]?.survivor[index] || {};
-        updatedPrizes[year] = {
-          ...updatedPrizes[year],
-          survivor: [
-            ...updatedPrizes[year].survivor.slice(0, index),
-            { ...updatedPrizes[year].survivor[index], ...pending },
-            ...updatedPrizes[year].survivor.slice(index + 1)
-          ]
-        };
-        const result = await updateData(`prizes_${year}.json`, updatedPrizes[year], 'update');
-        if (result) {
-          setPrizes(updatedPrizes);
-          const updatedPending = { ...pendingChanges };
-          updatedPending.prizes[year].survivor[index] = {};
-          setPendingChanges(updatedPending);
-        }
-      };
-
-      const handleRuleChange = async (sectionIndex, itemIndex, field, value) => {
-        if (!isAdminAuthenticated) return;
-        const updatedRules = { ...rules };
-        const item = updatedRules.sections[sectionIndex].items[itemIndex];
-        if (field === 'subItems') {
-          updatedRules.sections[sectionIndex].items[itemIndex] = {
-            ...item,
-            subItems: value.split('\n').filter(line => line.trim()),
-          };
-        } else {
-          if (typeof item === 'string') {
-            updatedRules.sections[sectionIndex].items[itemIndex] = value;
-          } else {
-            updatedRules.sections[sectionIndex].items[itemIndex] = { ...item, [field]: value };
-          }
-        }
-        const result = await updateData('rules.json', updatedRules, 'update');
-        if (result) setRules(updatedRules);
-      };
-
-      const handleAddSection = async () => {
-        if (!isAdminAuthenticated) return;
-        const newSection = { title: 'New Section', items: ['New Rule'] };
-        const updatedRules = { sections: [...rules.sections, newSection] };
-        const result = await updateData('rules.json', updatedRules, 'update');
-        if (result) setRules(updatedRules);
-      };
-
-      const handleAddRule = async (sectionIndex) => {
-        if (!isAdminAuthenticated) return;
-        const updatedRules = { ...rules };
-        updatedRules.sections[sectionIndex].items.push('New Rule');
-        const result = await updateData('rules.json', updatedRules, 'update');
-        if (result) setRules(updatedRules);
-      };
-
-      const handleSectionTitleChange = async (sectionIndex, value) => {
-        if (!isAdminAuthenticated) return;
-        const updatedRules = { ...rules };
-        updatedRules.sections[sectionIndex].title = value;
-        const result = await updateData('rules.json', updatedRules, 'update');
-        if (result) setRules(updatedRules);
-      };
-
-      const handleDeleteSection = async (sectionIndex) => {
-        if (!isAdminAuthenticated) return;
-        const updatedRules = {
-          sections: rules.sections.filter((_, index) => index !== sectionIndex),
-        };
-        const result = await updateData('rules.json', updatedRules, 'update');
-        if (result) {
-          setRules(updatedRules);
-          setModalState({ isOpen: false, type: '', data: {} });
-        }
-      };
-
-      const handleDeleteRule = async (sectionIndex, itemIndex) => {
-        if (!isAdminAuthenticated) return;
-        const updatedRules = { ...rules };
-        updatedRules.sections[sectionIndex].items = updatedRules.sections[sectionIndex].items.filter(
-          (_, index) => index !== itemIndex
-        );
-        const result = await updateData('rules.json', updatedRules, 'update');
-        if (result) {
-          setRules(updatedRules);
-          setModalState({ isOpen: false, type: '', data: {} });
-        }
-      };
-
-      const handlePayoutChange = async (index, field, value) => {
-        if (!isAdminAuthenticated) return;
-        const updatedPayouts = [...payouts];
-        updatedPayouts[index] = { ...updatedPayouts[index], [field]: value };
-        const result = await updateData('payouts.json', updatedPayouts, 'update');
-        if (result) setPayouts(updatedPayouts);
-      };
-
-      const handleAddPayout = async () => {
-        if (!isAdminAuthenticated) return;
-        const newPayout = { category: 'New Category', percentage: 0, prize: 0 };
-        const updatedPayouts = [...payouts, newPayout];
-        const result = await updateData('payouts.json', updatedPayouts, 'update');
-        if (result) setPayouts(updatedPayouts);
-      };
-
-      const handleDeletePayout = async (index) => {
-        if (!isAdminAuthenticated) return;
-        const updatedPayouts = payouts.filter((_, i) => i !== index);
-        const result = await updateData('payouts.json', updatedPayouts, 'delete', index);
-        if (result) setPayouts(updatedPayouts);
-      };
-
-      const updateData = async (filename, data, action, index) => {
+      const updateData = async (filename, data) => {
         try {
           const response = await fetch('/.netlify/functions/update-data', {
             method: 'POST',
-            body: JSON.stringify({ file: filename, data, action, index }),
+            body: JSON.stringify({ file: filename, data, action: 'update' }),
           });
           return response.ok;
         } catch (error) {
           return false;
         }
+      };
+
+      const handleWeeklyScoreChange = (year, index, field, value) => {
+        if (!isAdminAuthenticated) return;
+        const updatedPrizes = { ...prizes };
+        updatedPrizes[year].weeklyHighScores[index] = {
+          ...updatedPrizes[year].weeklyHighScores[index],
+          [field]: field === 'total' ? (value === '' ? '' : parseFloat(value)) : value
+        };
+        setPrizes(updatedPrizes);
+      };
+
+      const handleWeeklyScoreSave = async (year, index) => {
+        if (!isAdminAuthenticated) return;
+        const result = await updateData(`prizes_${year}.json`, prizes[year]);
+        if (!result) alert('Failed to save Weekly High Score');
+      };
+
+      const handleSurvivorChange = (year, index, value) => {
+        if (!isAdminAuthenticated) return;
+        const updatedPrizes = { ...prizes };
+        updatedPrizes[year].survivor[index] = {
+          ...updatedPrizes[year].survivor[index],
+          [index === 11 ? 'winner' : 'eliminated']: value
+        };
+        setPrizes(updatedPrizes);
+      };
+
+      const handleSurvivorSave = async (year, index) => {
+        if (!isAdminAuthenticated) return;
+        const result = await updateData(`prizes_${year}.json`, prizes[year]);
+        if (!result) alert('Failed to save Survivor');
       };
 
       const getRemainingTeams = (year, currentIndex = -1) => {
@@ -350,30 +158,11 @@
           .map(entry => entry.eliminated || entry.winner)
           .filter(team => team) || [];
         const defaultTeams = ['Team 1', 'Team 2', 'Team 3', 'Team 4', 'Team 5', 'Team 6', 'Team 7', 'Team 8', 'Team 9', 'Team 10', 'Team 11', 'Team 12'];
-        const teams = (keepers[year]?.length > 0
+        return (keepers[year]?.length > 0
           ? keepers[year].map(team => team.team)
           : defaultTeams)
           .filter(team => team && !survivorTeams.includes(team))
-          .sort() || [];
-        return teams;
-      };
-
-      const handleToggleLock = async (year) => {
-        if (!isAdminAuthenticated) return;
-        const updatedLocks = { ...locks, [year]: !locks[year] };
-        const result = await updateData('locks.json', updatedLocks, 'update');
-        if (result) setLocks(updatedLocks);
-      };
-
-      const handleArrowKey = (e, year, index, field) => {
-        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-          e.preventDefault();
-          const newIndex = e.key === 'ArrowUp' ? index - 1 : index + 1;
-          if (newIndex >= 0 && newIndex < keepers[year].length) {
-            const input = document.querySelector(`input[name="${field}-${newIndex}"]`);
-            if (input) input.focus();
-          }
-        }
+          .sort();
       };
 
       const handleAdminLogin = (e) => {
@@ -431,38 +220,14 @@
           </nav>
           <main className="px-4 sm:px-6 py-4">
             {view === 'home' && window.Home && <window.Home />}
-            {view === 'rules' && window.Rules && <window.Rules
-              rules={rules}
-              setRules={setRules}
-              isAdminAuthenticated={isAdminAuthenticated}
-              updateData={updateData}
-              handleRuleChange={handleRuleChange}
-              handleAddSection={handleAddSection}
-              handleAddRule={handleAddRule}
-              handleSectionTitleChange={handleSectionTitleChange}
-              setModalState={setModalState}
-            />}
-            {view === 'payouts' && window.Payouts && <window.Payouts
-              payouts={payouts}
-              setPayouts={setPayouts}
-              isAdminAuthenticated={isAdminAuthenticated}
-              updateData={updateData}
-              handlePayoutChange={handlePayoutChange}
-              handleAddPayout={handleAddPayout}
-              handleDeletePayout={handleDeletePayout}
-            />}
+            {view === 'rules' && window.Rules && <window.Rules rules={rules} />}
+            {view === 'payouts' && window.Payouts && <window.Payouts payouts={payouts} />}
             {view === 'keepers' && window.Keepers && <window.Keepers
               keepers={keepers}
               locks={locks}
               selectedYear={selectedYear}
               setSelectedYear={setSelectedYear}
-              pendingChanges={pendingChanges}
               isAdminAuthenticated={isAdminAuthenticated}
-              handleToggleLock={handleToggleLock}
-              initializeData={initializeData}
-              handleKeeperChange={handleKeeperChange}
-              handleSaveRow={handleSaveRow}
-              handleArrowKey={handleArrowKey}
             />}
             {view === 'prizes' && window.Prizes && !isLoading && prizes[selectedYear]?.weeklyHighScores && prizes[selectedYear]?.survivor && <window.Prizes
               prizes={prizes}
@@ -470,44 +235,14 @@
               selectedYear={selectedYear}
               setSelectedYear={setSelectedYear}
               isAdminAuthenticated={isAdminAuthenticated}
-              pendingChanges={pendingChanges}
               handleWeeklyScoreChange={handleWeeklyScoreChange}
               handleWeeklyScoreSave={handleWeeklyScoreSave}
               handleSurvivorChange={handleSurvivorChange}
               handleSurvivorSave={handleSurvivorSave}
               getRemainingTeams={getRemainingTeams}
             />}
-            {view === 'admin' && window.Admin && <window.Admin
-              handleAdminLogin={handleAdminLogin}
-            />}
+            {view === 'admin' && window.Admin && <window.Admin handleAdminLogin={handleAdminLogin} />}
           </main>
-          <div className={`${modalState.isOpen ? 'block' : 'hidden'} fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50`}>
-            <div className="bg-white rounded-lg p-6 w-full max-w-md">
-              <h3 className="text-lg font-bold mb-4">
-                {modalState.type === 'deleteSection' ? 'Delete Section' : 'Delete Rule'}
-              </h3>
-              <p className="text-sm mb-4">
-                Are you sure you want to delete this {modalState.type === 'deleteSection' ? 'section' : 'rule'}?
-              </p>
-              <div className="flex justify-end space-x-2">
-                <button
-                  onClick={() => setModalState({ isOpen: false, type: '', data: {} })}
-                  className="px-4 py-2 text-sm bg-gray-500 text-white rounded hover:bg-gray-600"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    if (modalState.type === 'deleteSection') handleDeleteSection(modalState.data.sectionIndex);
-                    if (modalState.type === 'deleteRule') handleDeleteRule(modalState.data.sectionIndex, modalState.data.itemIndex);
-                  }}
-                  className="px-4 py-2 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
       );
     };
