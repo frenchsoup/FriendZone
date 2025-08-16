@@ -10,7 +10,7 @@ window.Admin = ({ handleAdminLogin }) => {
   return (
     <div className="space-y-4 max-w-md mx-auto">
       <h2 className="text-lg sm:text-xl font-bold text-teal-400 text-center">Admin Login</h2>
-      <div className="card bg-gray-800 text-gray-100 rounded-lg shadow-lg p-4 animate-fade-in">
+      <div className="card bg-gray-900 text-gray-100 rounded-lg shadow-lg p-4 animate-fade-in">
         <form onSubmit={onSubmit}>
           <div className="mb-3">
             <label htmlFor="password" className="block text-sm text-gray-300">Password</label>

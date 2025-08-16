@@ -7,7 +7,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-teal-400 text-center">Keepers</h2>
       <div className="flex justify-center mb-4 space-x-2">
-        {['2025', '2024', '2023', '2022'].map(year => (
+        {['2022', '2023', '2024', '2025'].map(year => (
           <button
             key={year}
             onClick={() => setSelectedYear(year)}
@@ -20,7 +20,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
         ))}
       </div>
       <div className="table-container overflow-x-auto">
-        <div className="card bg-gray-800 text-gray-100 rounded-lg shadow-lg p-4 animate-fade-in">
+        <div className="card bg-gray-900 text-gray-100 rounded-lg shadow-lg p-4 animate-fade-in">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-base sm:text-lg font-bold text-teal-400">Keepers {selectedYear}</h3>
             {isAdminAuthenticated && (
@@ -36,7 +36,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
           </div>
           <table className="w-full text-xs sm:text-sm border-collapse">
             <thead>
-              <tr className="border-b border-gray-700 bg-gray-900">
+              <tr className="border-b border-gray-700 bg-gray-800">
                 <th className="text-left py-2 px-1 sm:px-3 w-[15%] min-w-[80px] text-gray-300">Team</th>
                 <th className="text-left py-2 px-1 sm:px-3 w-[15%] min-w-[70px] text-gray-300">Keeper 1</th>
                 <th className="text-right py-2 px-1 sm:px-3 w-[10%] min-w-[50px] text-gray-300">Draft Cost 1</th>
@@ -55,7 +55,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                 const pending = pendingChanges.keepers[selectedYear]?.[index] || {};
                 const displayTeam = { ...team, ...pending };
                 return (
-                  <tr key={index} className={`border-b border-gray-700 ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-850'}`}>
+                  <tr key={index} className={`border-b border-gray-700 ${index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-850'}`}>
                     <td className="py-1 px-1 sm:px-3 w-[15%] min-w-[80px]">
                       {locks[selectedYear] ? (
                         <span className="text-gray-400">{displayTeam.team || '-'}</span>

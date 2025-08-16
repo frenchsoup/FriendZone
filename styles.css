@@ -1,12 +1,12 @@
 /* Base styles */
 body {
   font-family: 'Inter', sans-serif;
-  @apply bg-gray-900 text-gray-100;
+  @apply bg-gray-800 text-gray-100;
 }
 
 /* Custom gray shade for alternating rows */
 .bg-gray-850 {
-  background-color: #1f2937; /* Slightly lighter than gray-800 */
+  background-color: #1f2937; /* Slightly lighter than gray-900 */
 }
 
 /* Responsive table container */
@@ -26,7 +26,7 @@ nav a:hover, nav button:hover {
 
 /* Cards */
 .card {
-  @apply transition-all duration-200 ease-in-out bg-gray-800 text-gray-100 rounded-lg shadow-lg;
+  @apply transition-all duration-200 ease-in-out bg-gray-900 text-gray-100 rounded-lg shadow-lg;
 }
 
 .card:hover {
@@ -40,7 +40,7 @@ nav a:hover, nav button:hover {
 
 /* Table row striping */
 .table-row-even {
-  @apply bg-gray-800;
+  @apply bg-gray-900;
 }
 
 .table-row-odd {

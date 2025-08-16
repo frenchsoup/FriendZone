@@ -3,7 +3,7 @@ window.Modal = () => {
   if (!modalState.isOpen) return null;
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center modal animate-fade-in">
-      <div className="bg-gray-800 text-gray-100 rounded-lg p-3 sm:p-4 max-w-sm w-full">
+      <div className="bg-gray-900 text-gray-100 rounded-lg p-3 sm:p-4 max-w-sm w-full">
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-sm sm:text-base font-semibold text-teal-400">{modalState.type === 'deleteRule' ? 'Delete Rule' : 'Delete Section'}</h3>
           <button onClick={() => setModalState({ isOpen: false, type: '', data: null })} className="text-gray-400 hover:text-gray-200 text-lg">×</button>

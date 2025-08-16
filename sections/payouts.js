@@ -2,10 +2,10 @@ window.Payouts = ({ payouts, setPayouts, isAdminAuthenticated, updateData, handl
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-teal-400 text-center">Payouts</h2>
-      <div className="card bg-gray-800 text-gray-100 rounded-lg shadow-lg p-4 animate-fade-in">
+      <div className="card bg-gray-900 text-gray-100 rounded-lg shadow-lg p-4 animate-fade-in">
         <table className="w-full text-xs sm:text-sm border-collapse">
           <thead>
-            <tr className="border-b border-gray-700 bg-gray-900">
+            <tr className="border-b border-gray-700 bg-gray-800">
               <th className="text-left py-2 px-1 sm:px-3 w-[40%] min-w-[100px] text-gray-300">Category</th>
               <th className="text-right py-2 px-1 sm:px-3 w-[20%] min-w-[60px] text-gray-300">Percentage</th>
               <th className="text-right py-2 px-1 sm:px-3 w-[20%] min-w-[60px] text-gray-300">Prize</th>
@@ -14,7 +14,7 @@ window.Payouts = ({ payouts, setPayouts, isAdminAuthenticated, updateData, handl
           </thead>
           <tbody>
             {payouts.map((payout, index) => (
-              <tr key={index} className={`border-b border-gray-700 ${index % 2 === 0 ? 'bg-gray-800' : 'bg-gray-850'}`}>
+              <tr key={index} className={`border-b border-gray-700 ${index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-850'}`}>
                 <td className="py-1 px-1 sm:px-3 w-[40%] min-w-[100px]">
                   {isAdminAuthenticated ? (
                     <input

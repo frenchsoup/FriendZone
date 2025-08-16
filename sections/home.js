@@ -3,7 +3,7 @@ window.Home = () => (
     <h2 className="text-lg sm:text-xl font-bold text-teal-400 text-center">FriendZone Fantasy Football Champions</h2>
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       {['2024', '2023'].map(year => (
-        <div key={year} className="card bg-gray-800 text-gray-100 rounded-lg shadow-lg hover:scale-105 transition-transform duration-200 animate-fade-in">
+        <div key={year} className="card bg-gray-900 text-gray-100 rounded-lg shadow-lg hover:scale-105 transition-transform duration-200 animate-fade-in">
           <div className="bg-gradient-to-r from-teal-500 to-teal-700 text-white rounded-t-lg p-4 flex items-center">
             <span className="text-lg mr-2">🏈</span>
             <h3 className="text-lg sm:text-xl font-bold">{year} Season</h3>
