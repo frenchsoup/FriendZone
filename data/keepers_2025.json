@@ -109,10 +109,10 @@
   },
   {
     "team": "Tobin",
-    "keeper1": "Test",
-    "draftCost1": 1,
+    "keeper1": "",
+    "draftCost1": 0,
     "tag1": false,
-    "cost1": 6,
+    "cost1": 0,
     "keeper2": "",
     "draftCost2": 0,
     "tag2": false,
