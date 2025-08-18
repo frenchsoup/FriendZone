@@ -5,18 +5,7 @@ async function loadOctokit() {
 
 exports.handler = async function (event, context) {
   try {
-    // Validate event.body exists and is valid JSON
-    if (!event.body) {
-      throw new Error('Request body is empty');
-    }
-    const body = JSON.parse(event.body);
-    const { file, data, action, index } = body;
-
-    // Validate required fields
-    if (!file || !action || (action === 'update' && !data) || (action === 'delete' && index === undefined)) {
-      throw new Error('Missing required fields: file, action, data, or index');
-    }
-
+    const { file, data, action, index } = JSON.parse(event.body);
     const Octokit = await loadOctokit();
     const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
@@ -46,17 +35,7 @@ exports.handler = async function (event, context) {
 
     let updatedContent;
     if (action === 'update') {
-      // For keepers or prizes, replace or update specific index
-      if (Array.isArray(currentContent)) {
-        updatedContent = [...currentContent];
-        if (index !== undefined) {
-          updatedContent[index] = data;
-        } else {
-          updatedContent = data; // Full array replacement
-        }
-      } else {
-        updatedContent = data; // For objects like prizes.json
-      }
+      updatedContent = data;
     } else if (action === 'delete') {
       if (Array.isArray(currentContent)) {
         updatedContent = currentContent.filter((_, i) => i !== index);
@@ -73,9 +52,6 @@ exports.handler = async function (event, context) {
       throw new Error('Invalid action');
     }
 
-    // Validate updatedContent before writing
-    JSON.stringify(updatedContent); // Ensure it can be serialized
-
     const { data: commitData } = await octokit.repos.createOrUpdateFileContents({
       owner: repoOwner,
       repo: repoName,
@@ -88,14 +64,12 @@ exports.handler = async function (event, context) {
 
     return {
       statusCode: 200,
-      headers: { 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ message: 'File updated successfully', commit: commitData.commit.sha }),
     };
   } catch (error) {
-    console.error('Error in update-data:', error.message, error.stack);
+    console.error('Error in update-data:', error);
     return {
       statusCode: error.status || 500,
-      headers: { 'Access-Control-Allow-Origin': '*' },
       body: JSON.stringify({ error: error.message || 'Internal Server Error' }),
     };
   }

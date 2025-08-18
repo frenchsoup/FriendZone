@@ -1,185 +1,150 @@
-window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges, handleKeeperChange, handleSaveRow, handleToggleLock }) => {
-  if (!keepers[selectedYear]?.length) {
-    return <div className="text-center text-gray-300">Loading keepers...</div>;
-  }
+window.Keepers = () => {
+  const { keepers, locks, selectedYear, setSelectedYear, pendingChanges, isAdminAuthenticated, handleToggleLock, initializeKeepers } = window.AppState;
 
-  const enhancedHandleSaveRow = async (year, index) => {
-    try {
-      const teamData = pendingChanges.keepers[year]?.[index] || keepers[year][index];
-      const payload = {
-        file: `keepers_${year}.json`,
-        data: teamData,
-        action: 'update',
-        indexData: index,
-      };
-      console.log('Saving keeper payload:', JSON.stringify(payload, null, 2));
-      await handleSaveRow(year, index, payload);
-    } catch (err) {
-      console.error('Save error:', err);
-      alert(`Failed to save: ${err.message}`);
-    }
-  };
-
-  const enhancedHandleToggleLock = async (year) => {
-    try {
-      const updatedLocks = { ...locks, [year]: !locks[year] };
-      const payload = {
-        file: 'locks.json',
-        data: updatedLocks,
-        action: 'update',
-      };
-      console.log('Saving locks payload:', JSON.stringify(payload, null, 2));
-      await handleToggleLock(year, payload);
-    } catch (err) {
-      console.error('Lock toggle error:', err);
-      alert(`Failed to toggle lock: ${err.message}`);
-    }
-  };
+  React.useEffect(() => {
+    initializeKeepers(selectedYear);
+  }, [selectedYear]);
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg sm:text-xl font-bold text-teal-400 text-center">Keepers</h2>
+      <h2 className="text-lg sm:text-xl font-bold text-white text-center">Keepers</h2>
       <div className="flex justify-center mb-4 space-x-2">
         {['2022', '2023', '2024', '2025'].map(year => (
           <button
             key={year}
             onClick={() => setSelectedYear(year)}
-            className={`px-3 py-1 text-sm rounded-full transition-all ${
-              selectedYear === year ? 'bg-teal-500 text-white' : 'bg-gray-700 text-gray-300 hover:bg-teal-600 hover:text-white'
+            className={`px-3 py-1 text-sm rounded transition-all ${
+              selectedYear === year
+                ? 'bg-teal-500 text-white'
+                : 'bg-gray-700 text-gray-200 hover:bg-teal-600 hover:text-white'
             }`}
           >
             {year}
           </button>
         ))}
+        {isAdminAuthenticated && (
+          <button
+            onClick={() => handleToggleLock(selectedYear)}
+            className={`ml-2 px-2 py-1 text-sm rounded ${
+              locks[selectedYear] ? 'bg-red-500 hover:bg-red-600' : 'bg-teal-500 hover:bg-teal-600'
+            } text-white transition-all lock-button`}
+          >
+            {locks[selectedYear] ? 'Unlock' : 'Lock'}
+          </button>
+        )}
       </div>
-      <div className="table-container overflow-x-auto max-w-[100%] w-full">
-        <div className="card bg-gray-900 text-gray-100 rounded-lg shadow-lg p-2 sm:p-3 w-full min-w-[540px]">
-          <div className="flex justify-between items-center mb-2 sm:mb-3">
-            <h3 className="text-base sm:text-lg font-bold text-teal-400">Keepers {selectedYear}</h3>
-            {isAdminAuthenticated && (
-              <button
-                onClick={() => enhancedHandleToggleLock(selectedYear)}
-                className={`px-2 py-1 text-xs rounded-full lock-button ${
-                  locks[selectedYear] ? 'bg-red-600 hover:bg-red-700' : 'bg-teal-500 hover:bg-teal-600'
-                } text-white transition-all`}
-              >
-                {locks[selectedYear] ? 'Unlock' : 'Lock'}
-              </button>
-            )}
-          </div>
-          <table className="w-full text-xs border-collapse min-w-[540px]">
+      <div className="table-container">
+        <div className="card bg-white text-gray-800 rounded-lg shadow-md overflow-hidden">
+          <table className="w-full text-xs sm:text-sm">
             <thead>
-              <tr className="border-b border-gray-700 bg-gray-800 sticky top-0 z-10">
-                <th className="text-left py-1 px-0.5 sm:px-1 w-[12%] min-w-[50px] text-gray-300">Team</th>
-                <th className="text-left py-1 px-0.5 sm:px-1 w-[16%] min-w-[60px] text-gray-300">Keeper 1</th>
-                <th className="text-right py-1 px-0.5 sm:px-1 w-[10%] min-w-[45px] text-gray-300">Draft Cost 1</th>
-                <th className="text-center py-1 px-0.5 sm:pr-0.5 w-[4%] min-w-[24px] text-gray-300 tag-column">Tag 1</th>
-                <th className="text-right py-1 px-0.5 sm:pl-0.5 sm:pr-1 w-[8%] min-w-[40px] text-gray-300 cost-column">Cost 1</th>
-                <th className="text-left py-1 px-0.5 sm:px-2 w-[16%] min-w-[60px] text-gray-300 keeper2-column">Keeper 2</th>
-                <th className="text-right py-1 px-0.5 sm:px-1 w-[10%] min-w-[45px] text-gray-300">Draft Cost 2</th>
-                <th className="text-center py-1 px-0.5 sm:pr-0.5 w-[4%] min-w-[24px] text-gray-300 tag-column">Tag 2</th>
-                <th className="text-right py-1 px-0.5 sm:pl-0.5 sm:pr-1 w-[8%] min-w-[40px] text-gray-300 cost-column">Cost 2</th>
-                <th className="text-right py-1 px-0.5 sm:px-2 w-[12%] min-w-[50px] text-gray-300 auction-column">Auction $</th>
-                <th className="text-right py-1 px-0.5 sm:px-1 w-[10%] min-w-[45px] text-gray-300">Actions</th>
+              <tr className="border-b">
+                <th className="text-left py-1 px-1 sm:px-2 w-[18%] sm:w-[15%]">Team</th>
+                <th className="text-left py-1 px-1 sm:px-2 w-[18%] sm:w-[15%]">Keeper 1</th>
+                <th className="text-right py-1 px-1 sm:px-2 w-[10%] sm:w-[10%]">Draft Cost</th>
+                <th className="text-center py-1 px-1 sm:px-2 w-[8%] sm:w-[8%]">Tag</th>
+                <th className="text-right py-1 px-1 sm:px-2 w-[8%] sm:w-[8%]">Cost</th>
+                <th className="text-left py-1 px-1 sm:px-2 w-[18%] sm:w-[15%]">Keeper 2</th>
+                <th className="text-right py-1 px-1 sm:px-2 w-[10%] sm:w-[10%]">Draft Cost</th>
+                <th className="text-center py-1 px-1 sm:px-2 w-[8%] sm:w-[8%]">Tag</th>
+                <th className="text-right py-1 px-1 sm:px-2 w-[8%] sm:w-[8%]">Cost</th>
+                <th className="text-right py-1 px-1 sm:px-2 w-[8%] sm:w-[8%]">Remaining</th>
+                {!locks[selectedYear] && <th className="text-right py-1 px-1 sm:px-2 w-[8%] sm:w-[10%]">Actions</th>}
               </tr>
             </thead>
             <tbody>
               {keepers[selectedYear].map((team, index) => {
-                const pending = pendingChanges.keepers[selectedYear]?.[index] || {};
+                const pending = pendingChanges[selectedYear][index] || {};
                 const displayTeam = { ...team, ...pending };
                 return (
-                  <tr key={index} className={`border-b border-gray-700 ${index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-850'}`}>
-                    <td className="py-0.5 px-0.5 sm:px-1 w-[12%] min-w-[50px]">
-                      {locks[selectedYear] ? (
-                        <span className="text-gray-400">{displayTeam.team || '-'}</span>
-                      ) : (
-                        <input
-                          type="text"
-                          value={displayTeam.team || ''}
-                          onChange={(e) => handleKeeperChange(selectedYear, index, 'team', e.target.value)}
-                          className="w-full bg-gray-700 p-0.5 rounded text-xs text-gray-100 focus:ring-2 focus:ring-teal-500"
-                        />
-                      )}
-                    </td>
-                    <td className="py-0.5 px-0.5 sm:px-1 w-[16%] min-w-[60px]">
-                      {locks[selectedYear] ? (
-                        <span className="text-gray-400">{displayTeam.keeper1 || '-'}</span>
-                      ) : (
+                  <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
+                    <td className="py-1 px-1 sm:px-2">{team.team}</td>
+                    <td className="py-1 px-1 sm:px-2">
+                      {!locks[selectedYear] ? (
                         <input
                           type="text"
                           value={displayTeam.keeper1 || ''}
-                          onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper1', e.target.value)}
-                          className="w-full bg-gray-700 p-0.5 rounded text-xs text-gray-100 focus:ring-2 focus:ring-teal-500"
+                          onChange={(e) => window.AppState.handleKeeperChange(selectedYear, index, 'keeper1', e.target.value)}
+                          className="w-full bg-gray-100 p-1 rounded text-xs sm:text-sm"
                         />
+                      ) : (
+                        <span>{team.keeper1 || ''}</span>
                       )}
                     </td>
-                    <td className="text-right py-0.5 px-0.5 sm:px-1 w-[10%] min-w-[45px]">
-                      {locks[selectedYear] ? (
-                        <span className="text-gray-400">{displayTeam.draftCost1 ? `$${displayTeam.draftCost1}` : '-'}</span>
-                      ) : (
+                    <td className="text-right py-1 px-1 sm:px-2">
+                      {!locks[selectedYear] ? (
                         <input
                           type="number"
                           value={displayTeam.draftCost1 || ''}
-                          onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
-                          className="w-full sm:w-10 bg-gray-700 p-0.5 rounded text-xs text-gray-100 text-right no-spinner focus:ring-2 focus:ring-teal-500"
+                          onChange={(e) => window.AppState.handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
+                          onKeyDown={(e) => window.AppState.handleArrowKey(e, selectedYear, index, 'draftCost1')}
+                          className="w-14 sm:w-16 bg-gray-100 p-1 rounded text-xs sm:text-sm text-right no-spinner"
                         />
+                      ) : (
+                        <span>${team.draftCost1 || 0}</span>
                       )}
                     </td>
-                    <td className="text-center py-0.5 px-0.5 sm:pr-0.5 w-[4%] min-w-[24px] tag-column">
-                      <input
-                        type="checkbox"
-                        checked={displayTeam.tag1 || false}
-                        disabled={locks[selectedYear]}
-                        onChange={(e) => handleKeeperChange(selectedYear, index, 'tag1', e.target.checked)}
-                        className="h-3 w-3 text-teal-500 rounded focus:ring-teal-500 disabled:opacity-50"
-                      />
-                    </td>
-                    <td className="text-right py-0.5 px-0.5 sm:pl-0.5 sm:pr-1 w-[8%] min-w-[40px] text-gray-400 cost-column">{displayTeam.cost1 ? `$${displayTeam.cost1}` : '-'}</td>
-                    <td className="py-0.5 px-0.5 sm:px-2 w-[16%] min-w-[60px] keeper2-column">
-                      {locks[selectedYear] ? (
-                        <span className="text-gray-400">{displayTeam.keeper2 || '-'}</span>
+                    <td className="text-center py-1 px-1 sm:px-2">
+                      {!locks[selectedYear] ? (
+                        <input
+                          type="checkbox"
+                          checked={displayTeam.tag1 || false}
+                          onChange={(e) => window.AppState.handleKeeperChange(selectedYear, index, 'tag1', e.target.checked)}
+                          className="h-4 w-4 sm:h-5 sm:w-5"
+                        />
                       ) : (
+                        <span>{team.tag1 ? 'Yes' : 'No'}</span>
+                      )}
+                    </td>
+                    <td className="text-right py-1 px-1 sm:px-2">${displayTeam.cost1 || 0}</td>
+                    <td className="py-1 px-1 sm:px-2">
+                      {!locks[selectedYear] ? (
                         <input
                           type="text"
                           value={displayTeam.keeper2 || ''}
-                          onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper2', e.target.value)}
-                          className="w-full bg-gray-700 p-0.5 rounded text-xs text-gray-100 focus:ring-2 focus:ring-teal-500"
+                          onChange={(e) => window.AppState.handleKeeperChange(selectedYear, index, 'keeper2', e.target.value)}
+                          className="w-full bg-gray-100 p-1 rounded text-xs sm:text-sm"
                         />
+                      ) : (
+                        <span>{team.keeper2 || ''}</span>
                       )}
                     </td>
-                    <td className="text-right py-0.5 px-0.5 sm:px-1 w-[10%] min-w-[45px]">
-                      {locks[selectedYear] ? (
-                        <span className="text-gray-400">{displayTeam.draftCost2 ? `$${displayTeam.draftCost2}` : '-'}</span>
-                      ) : (
+                    <td className="text-right py-1 px-1 sm:px-2">
+                      {!locks[selectedYear] ? (
                         <input
                           type="number"
                           value={displayTeam.draftCost2 || ''}
-                          onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
-                          className="w-full sm:w-10 bg-gray-700 p-0.5 rounded text-xs text-gray-100 text-right no-spinner focus:ring-2 focus:ring-teal-500"
+                          onChange={(e) => window.AppState.handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
+                          onKeyDown={(e) => window.AppState.handleArrowKey(e, selectedYear, index, 'draftCost2')}
+                          className="w-14 sm:w-16 bg-gray-100 p-1 rounded text-xs sm:text-sm text-right no-spinner"
                         />
+                      ) : (
+                        <span>${team.draftCost2 || 0}</span>
                       )}
                     </td>
-                    <td className="text-center py-0.5 px-0.5 sm:pr-0.5 w-[4%] min-w-[24px] tag-column">
-                      <input
-                        type="checkbox"
-                        checked={displayTeam.tag2 || false}
-                        disabled={locks[selectedYear]}
-                        onChange={(e) => handleKeeperChange(selectedYear, index, 'tag2', e.target.checked)}
-                        className="h-3 w-3 text-teal-500 rounded focus:ring-teal-500 disabled:opacity-50"
-                      />
+                    <td className="text-center py-1 px-1 sm:px-2">
+                      {!locks[selectedYear] ? (
+                        <input
+                          type="checkbox"
+                          checked={displayTeam.tag2 || false}
+                          onChange={(e) => window.AppState.handleKeeperChange(selectedYear, index, 'tag2', e.target.checked)}
+                          className="h-4 w-4 sm:h-5 sm:w-5"
+                        />
+                      ) : (
+                        <span>{team.tag2 ? 'Yes' : 'No'}</span>
+                      )}
                     </td>
-                    <td className="text-right py-0.5 px-0.5 sm:pl-0.5 sm:pr-1 w-[8%] min-w-[40px] text-gray-400 cost-column">{displayTeam.cost2 ? `$${displayTeam.cost2}` : '-'}</td>
-                    <td className="text-right py-1 px-0.5 sm:px-2 w-[12%] min-w-[50px] text-gray-400 auction-column">{displayTeam.remaining ? `$${displayTeam.remaining}` : '-'}</td>
-                    <td className="text-right py-0.5 px-0.5 sm:px-1 w-[10%] min-w-[45px]">
-                      {!locks[selectedYear] && (
+                    <td className="text-right py-1 px-1 sm:px-2">${displayTeam.cost2 || 0}</td>
+                    <td className="text-right py-1 px-1 sm:px-2">${displayTeam.remaining || 200}</td>
+                    {!locks[selectedYear] && (
+                      <td className="text-right py-1 px-1 sm:px-2">
                         <button
-                          onClick={() => enhancedHandleSaveRow(selectedYear, index)}
-                          className="px-1 py-0.5 text-xs bg-teal-500 text-white rounded-full hover:bg-teal-600 transition-all"
+                          onClick={() => window.AppState.handleSaveRow(selectedYear, index)}
+                          className="px-2 py-1 text-xs sm:text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
                         >
                           Save
                         </button>
-                      )}
-                    </td>
+                      </td>
+                    )}
                   </tr>
                 );
               })}
