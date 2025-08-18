@@ -1,9 +1,19 @@
 window.Keepers = () => {
   const { keepers, locks, selectedYear, setSelectedYear, pendingChanges, isAdminAuthenticated, handleToggleLock, initializeKeepers } = window.AppState;
+  const [savingStates, setSavingStates] = React.useState({}); // Track saving state per row
 
   React.useEffect(() => {
     initializeKeepers(selectedYear);
   }, [selectedYear]);
+
+  const handleSaveClick = (year, index) => {
+    setSavingStates(prev => ({ ...prev, [index]: true })); // Set saving state
+    window.AppState.handleSaveRow(year, index).then(() => {
+      setTimeout(() => {
+        setSavingStates(prev => ({ ...prev, [index]: false })); // Reset after 1s
+      }, 1000);
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -138,10 +148,13 @@ window.Keepers = () => {
                     {!locks[selectedYear] && (
                       <td className="text-right py-1 px-1 sm:px-2">
                         <button
-                          onClick={() => window.AppState.handleSaveRow(selectedYear, index)}
-                          className="px-2 py-1 text-xs sm:text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+                          onClick={() => handleSaveClick(selectedYear, index)}
+                          className={`px-2 py-1 text-xs sm:text-sm rounded text-white transition-all ${
+                            savingStates[index] ? 'bg-blue-500' : 'bg-teal-500 hover:bg-teal-600'
+                          }`}
+                          disabled={savingStates[index]}
                         >
-                          Save
+                          {savingStates[index] ? 'Saving...' : 'Save'}
                         </button>
                       </td>
                     )}
