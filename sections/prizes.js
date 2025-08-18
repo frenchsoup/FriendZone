@@ -37,16 +37,12 @@ window.Prizes = () => {
                     <td className="py-2 px-2 sm:px-3">{score.week}</td>
                     <td className="py-2 px-2 sm:px-3">
                       {isAdminAuthenticated ? (
-                        <select
+                        <input
+                          type="text"
                           value={score.team || ''}
-                          onChange={(e) => window.AppState.handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
                           className="w-full bg-gray-100 p-1 rounded text-sm"
-                        >
-                          <option value="">Select Team</option>
-                          {window.AppState.getRemainingTeams(selectedYear).map(team => (
-                            <option key={team} value={team}>{team}</option>
-                          ))}
-                        </select>
+                          readOnly
+                        />
                       ) : (
                         <span>{score.team || ''}</span>
                       )}
@@ -56,8 +52,8 @@ window.Prizes = () => {
                         <input
                           type="number"
                           value={score.total || ''}
-                          onChange={(e) => window.AppState.handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
                           className="w-full sm:w-16 bg-gray-100 p-1 rounded text-sm text-right no-spinner"
+                          readOnly
                         />
                       ) : (
                         <span>{score.total || ''}</span>

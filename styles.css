@@ -5,33 +5,32 @@ body {
   @apply bg-gray-800 text-gray-100;
 }
 
-/* Responsive table container */
-.table-container {
-  @apply overflow-x-auto max-w-[100%] w-full; /* Full width, allow scrolling */
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
-  scrollbar-width: auto; /* Scrollbar visibility for Firefox */
-  scrollbar-color: #4b5563 #1f2937; /* Custom scrollbar colors */
+/* Responsive table/grid container */
+.table-container, .grid {
+  @apply overflow-x-auto max-w-[100%] w-full;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: auto;
+  scrollbar-color: #4b5563 #1f2937;
 }
 
-.table-container::-webkit-scrollbar {
-  height: 8px; /* Scrollbar height for WebKit */
+.table-container::-webkit-scrollbar, .grid::-webkit-scrollbar {
+  height: 8px;
 }
 
-.table-container::-webkit-scrollbar-thumb {
-  @apply bg-gray-600 rounded; /* Scrollbar thumb */
+.table-container::-webkit-scrollbar-thumb, .grid::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded;
 }
 
-.table-container::-webkit-scrollbar-track {
-  @apply bg-gray-800; /* Scrollbar track */
+.table-container::-webkit-scrollbar-track, .grid::-webkit-scrollbar-track {
+  @apply bg-gray-800;
 }
 
 .table-container .card {
-  @apply w-full min-w-[300px]; /* Reduced min-width for Prizes */
-  @apply bg-white text-gray-800 rounded-lg shadow-md; /* Match Prizes card */
+  @apply w-full min-w-[300px] bg-white text-gray-800 rounded-lg shadow-md;
 }
 
 .table-container table {
-  @apply w-full min-w-[300px] border-collapse; /* Match card min-width */
+  @apply w-full min-w-[300px] border-collapse;
 }
 
 /* Navigation */
@@ -59,11 +58,11 @@ nav a:hover, nav button:hover {
 
 /* Table row striping */
 .table-row-even {
-  @apply bg-white; /* Match Prizes */
+  @apply bg-white;
 }
 
 .table-row-odd {
-  @apply bg-gray-50; /* Match Prizes */
+  @apply bg-gray-50;
 }
 
 /* Modal */
@@ -111,6 +110,11 @@ button.bg-blue-500 {
   background-color: #3b82f6; /* Tailwind blue-500 */
 }
 
+/* Delete button */
+button.text-red-500:hover {
+  @apply text-red-700;
+}
+
 /* Hide spinners for number inputs */
 input[type="number"].no-spinner::-webkit-inner-spin-button,
 input[type="number"].no-spinner::-webkit-outer-spin-button {
@@ -125,7 +129,8 @@ input[type="number"].no-spinner {
 /* Ensure inputs and buttons are compact */
 input[type="text"],
 input[type="number"],
-select {
+select,
+textarea {
   @apply w-full p-0.5 text-xs;
 }
 
@@ -143,7 +148,7 @@ button {
 
 /* Responsive padding for table cells */
 th, td {
-  @apply px-0.5 py-0.5 sm:px-1 sm:py-1 whitespace-nowrap; /* Prevent text wrapping */
+  @apply px-0.5 py-0.5 sm:px-1 sm:py-1 whitespace-nowrap;
 }
 
 /* Responsive typography */
@@ -174,6 +179,15 @@ th {
 
 td {
   @apply text-gray-800;
+}
+
+/* List styling for rules */
+ul {
+  @apply space-y-2;
+}
+
+ul.list-disc {
+  @apply pl-6 mt-1;
 }
 
 /* Responsive padding for main content */
