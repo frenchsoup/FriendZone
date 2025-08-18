@@ -1,4 +1,4 @@
-window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges, handleWeeklyScoreChange, handleWeeklyScoreSave, handleSurvivorChange, handleSurvivorSave, getRemainingTeams }) => {
+window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, getRemainingTeams }) => {
   const yearPrizes = prizes[selectedYear] || { weeklyHighScores: [], survivor: [] };
   const weeklyHighScores = yearPrizes.weeklyHighScores?.length > 0 ? yearPrizes.weeklyHighScores : Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' }));
   const survivor = yearPrizes.survivor?.length > 0 ? yearPrizes.survivor : Array(12).fill().map((_, i) => (i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' }));
@@ -6,46 +6,6 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
   if (!prizes[selectedYear]) {
     return <div className="text-center text-gray-300">Loading prizes...</div>;
   }
-
-  const enhancedHandleWeeklyScoreChange = (year, index, field, value) => {
-    handleWeeklyScoreChange(year, index, field, value);
-  };
-
-  const enhancedHandleWeeklyScoreSave = async (year, index) => {
-    try {
-      const scoreData = pendingChanges.prizes?.[year]?.weeklyHighScores?.[index] || yearPrizes.weeklyHighScores[index];
-      const payload = {
-        file: `prizes_${year}.json`,
-        data: { ...yearPrizes, weeklyHighScores: yearPrizes.weeklyHighScores.map((item, i) => (i === index ? scoreData : item)) },
-        action: 'update',
-      };
-      console.log('Saving weeklyHighScores payload:', JSON.stringify(payload, null, 2));
-      await handleWeeklyScoreSave(year, index, payload);
-    } catch (err) {
-      console.error('Save error:', err);
-      alert(`Failed to save: ${err.message}`);
-    }
-  };
-
-  const enhancedHandleSurvivorChange = (year, index, value) => {
-    handleSurvivorChange(year, index, value);
-  };
-
-  const enhancedHandleSurvivorSave = async (year, index) => {
-    try {
-      const survivorData = pendingChanges.prizes?.[year]?.survivor?.[index] || yearPrizes.survivor[index];
-      const payload = {
-        file: `prizes_${year}.json`,
-        data: { ...yearPrizes, survivor: yearPrizes.survivor.map((item, i) => (i === index ? survivorData : item)) },
-        action: 'update',
-      };
-      console.log('Saving survivor payload:', JSON.stringify(payload, null, 2));
-      await handleSurvivorSave(year, index, payload);
-    } catch (err) {
-      console.error('Save error:', err);
-      alert(`Failed to save: ${err.message}`);
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -73,51 +33,14 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                   <th className="text-left py-2 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-300">Week</th>
                   <th className="text-left py-2 px-1 sm:px-2 w-[40%] min-w-[100px] text-gray-300">Team</th>
                   <th className="text-right py-2 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-300">Total</th>
-                  {isAdminAuthenticated && <th className="text-right py-2 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-300">Actions</th>}
                 </tr>
               </thead>
               <tbody>
                 {weeklyHighScores.map((score, index) => (
                   <tr key={index} className={`border-b border-gray-700 ${index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-850'}`}>
                     <td className="py-1 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-400">{score.week}</td>
-                    <td className="py-1 px-1 sm:px-2 w-[40%] min-w-[100px]">
-                      {isAdminAuthenticated ? (
-                        <select
-                          value={(pendingChanges.prizes?.[selectedYear]?.weeklyHighScores?.[index]?.team || score.team) || ''}
-                          onChange={(e) => enhancedHandleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
-                          className="w-full bg-gray-700 p-1 rounded text-xs sm:text-sm text-gray-100 focus:ring-2 focus:ring-teal-500"
-                        >
-                          <option value="">Select Team</option>
-                          {(getRemainingTeams(selectedYear, -1) || []).map(team => (
-                            <option key={team} value={team}>{team}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span className="text-gray-400">{score.team || '-'}</span>
-                      )}
-                    </td>
-                    <td className="text-right py-1 px-1 sm:px-2 w-[20%] min-w-[60px]">
-                      {isAdminAuthenticated ? (
-                        <input
-                          type="number"
-                          value={(pendingChanges.prizes?.[selectedYear]?.weeklyHighScores?.[index]?.total || score.total) || ''}
-                          onChange={(e) => enhancedHandleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
-                          className="w-full sm:w-12 bg-gray-700 p-1 rounded text-xs sm:text-sm text-gray-100 text-right no-spinner focus:ring-2 focus:ring-teal-500"
-                        />
-                      ) : (
-                        <span className="text-gray-400">{score.total || '-'}</span>
-                      )}
-                    </td>
-                    {isAdminAuthenticated && (
-                      <td className="text-right py-1 px-1 sm:px-2 w-[20%] min-w-[60px]">
-                        <button
-                          onClick={() => enhancedHandleWeeklyScoreSave(selectedYear, index)}
-                          className="px-2 py-1 text-xs sm:text-sm bg-teal-500 text-white rounded-full hover:bg-teal-600 transition-all"
-                        >
-                          Save
-                        </button>
-                      </td>
-                    )}
+                    <td className="py-1 px-1 sm:px-2 w-[40%] min-w-[100px] text-gray-400">{score.team || '-'}</td>
+                    <td className="text-right py-1 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-400">{score.total || '-'}</td>
                   </tr>
                 ))}
               </tbody>
@@ -132,39 +55,13 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                 <tr className="border-b border-gray-700 bg-gray-800">
                   <th className="text-left py-2 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-300">Week</th>
                   <th className="text-left py-2 px-1 sm:px-2 w-[60%] min-w-[100px] text-gray-300">Team</th>
-                  {isAdminAuthenticated && <th className="text-right py-2 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-300">Actions</th>}
                 </tr>
               </thead>
               <tbody>
                 {survivor.map((entry, index) => (
                   <tr key={index} className={`border-b border-gray-700 ${index === 11 ? 'bg-teal-900/50 font-semibold text-gray-100' : index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-850'}`}>
                     <td className="py-1 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-400">{index === 11 ? 'Winner' : entry.week}</td>
-                    <td className="py-1 px-1 sm:px-2 w-[60%] min-w-[100px]">
-                      {isAdminAuthenticated ? (
-                        <select
-                          value={(pendingChanges.prizes?.[selectedYear]?.survivor?.[index]?.[index === 11 ? 'winner' : 'eliminated'] || (index === 11 ? entry.winner : entry.eliminated)) || ''}
-                          onChange={(e) => enhancedHandleSurvivorChange(selectedYear, index, e.target.value)}
-                          className="w-full bg-gray-700 p-1 rounded text-xs sm:text-sm text-gray-100 focus:ring-2 focus:ring-teal-500"
-                        >
-                          <option value="">Select Team</option>
-                          {(getRemainingTeams(selectedYear, index) || []).map(team => (
-                            <option key={team} value={team}>{team}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span className="text-gray-400">{index === 11 ? (entry.winner || '-') : (entry.eliminated || '-')}</span>
-                      )}
-                    </td>
-                    {isAdminAuthenticated && (
-                      <td className="text-right py-1 px-1 sm:px-2 w-[20%] min-w-[60px]">
-                        <button
-                          onClick={() => enhancedHandleSurvivorSave(selectedYear, index)}
-                          className="px-2 py-1 text-xs sm:text-sm bg-teal-500 text-white rounded-full hover:bg-teal-600 transition-all"
-                        >
-                          Save
-                        </button>
-                      </td>
-                    )}
+                    <td className="py-1 px-1 sm:px-2 w-[60%] min-w-[100px] text-gray-400">{index === 11 ? (entry.winner || '-') : (entry.eliminated || '-')}</td>
                   </tr>
                 ))}
               </tbody>

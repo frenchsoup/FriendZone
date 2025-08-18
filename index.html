@@ -42,7 +42,7 @@
       const [view, setView] = React.useState('home');
       const [isNavOpen, setIsNavOpen] = React.useState(false);
       const [isLoading, setIsLoading] = React.useState(true);
-      const [pendingChanges, setPendingChanges] = React.useState({ keepers: {}, prizes: {} });
+      const [pendingChanges, setPendingChanges] = React.useState({ keepers: {} });
 
       React.useEffect(() => {
         window.AppState.setRules = setRules;
@@ -200,64 +200,6 @@
           }));
         } else {
           alert('Failed to save keeper changes');
-        }
-      };
-
-      const handleWeeklyScoreChange = (year, index, field, value) => {
-        if (!isAdminAuthenticated) return;
-        setPendingChanges(prev => {
-          const updatedPending = { ...prev, prizes: { ...prev.prizes, [year]: { ...prev.prizes[year], weeklyHighScores: [...(prev.prizes[year]?.weeklyHighScores || [])] } } };
-          updatedPending.prizes[year].weeklyHighScores[index] = {
-            ...updatedPending.prizes[year]?.weeklyHighScores[index] || prizes[year].weeklyHighScores[index],
-            [field]: field === 'total' ? (value === '' ? '' : parseFloat(value)) : value,
-          };
-          return updatedPending;
-        });
-      };
-
-      const handleWeeklyScoreSave = async (year, index, payload) => {
-        if (!isAdminAuthenticated) return;
-        const result = await updateData(payload.file, payload.data, payload.action);
-        if (result) {
-          setPrizes(prev => ({
-            ...prev,
-            [year]: payload.data,
-          }));
-          setPendingChanges(prev => ({
-            ...prev,
-            prizes: { ...prev.prizes, [year]: { ...prev.prizes[year], weeklyHighScores: [] } },
-          }));
-        } else {
-          alert('Failed to save Weekly High Score');
-        }
-      };
-
-      const handleSurvivorChange = (year, index, value) => {
-        if (!isAdminAuthenticated) return;
-        setPendingChanges(prev => {
-          const updatedPending = { ...prev, prizes: { ...prev.prizes, [year]: { ...prev.prizes[year], survivor: [...(prev.prizes[year]?.survivor || [])] } } };
-          updatedPending.prizes[year].survivor[index] = {
-            ...updatedPending.prizes[year]?.survivor[index] || prizes[year].survivor[index],
-            [index === 11 ? 'winner' : 'eliminated']: value,
-          };
-          return updatedPending;
-        });
-      };
-
-      const handleSurvivorSave = async (year, index, payload) => {
-        if (!isAdminAuthenticated) return;
-        const result = await updateData(payload.file, payload.data, payload.action);
-        if (result) {
-          setPrizes(prev => ({
-            ...prev,
-            [year]: payload.data,
-          }));
-          setPendingChanges(prev => ({
-            ...prev,
-            prizes: { ...prev.prizes, [year]: { ...prev.prizes[year], survivor: [] } },
-          }));
-        } else {
-          alert('Failed to save Survivor');
         }
       };
 
@@ -435,12 +377,6 @@
               keepers={keepers}
               selectedYear={selectedYear}
               setSelectedYear={setSelectedYear}
-              isAdminAuthenticated={isAdminAuthenticated}
-              pendingChanges={pendingChanges}
-              handleWeeklyScoreChange={handleWeeklyScoreChange}
-              handleWeeklyScoreSave={handleWeeklyScoreSave}
-              handleSurvivorChange={handleSurvivorChange}
-              handleSurvivorSave={handleSurvivorSave}
               getRemainingTeams={getRemainingTeams}
             />}
             {view === 'admin' && window.Admin && <window.Admin handleAdminLogin={handleAdminLogin} />}
