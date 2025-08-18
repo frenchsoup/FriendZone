@@ -6,13 +6,27 @@ body {
 
 /* Responsive table container */
 .table-container {
-  @apply overflow-x-auto w-full;
-  -webkit-overflow-scrolling: touch;
+  @apply w-full max-w-full overflow-x-auto; /* Ensure full width and scrolling */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
+  scrollbar-width: auto; /* Ensure scrollbar visibility */
+  scrollbar-color: #4b5563 #1f2937; /* Custom scrollbar for Firefox */
+}
+
+.table-container::-webkit-scrollbar {
+  height: 8px; /* Scrollbar height for WebKit browsers */
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  @apply bg-gray-600 rounded; /* Scrollbar thumb style */
+}
+
+.table-container::-webkit-scrollbar-track {
+  @apply bg-gray-800; /* Scrollbar track style */
 }
 
 /* Ensure table is responsive */
 table {
-  @apply w-full text-sm border-collapse min-w-[800px]; /* Set min-width to force horizontal scroll on small screens */
+  @apply w-full border-collapse min-w-[900px]; /* Increased min-width for scroll */
 }
 
 /* Table headers and cells */
