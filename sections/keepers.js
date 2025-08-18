@@ -19,8 +19,8 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
           </button>
         ))}
       </div>
-      <div className="table-container overflow-x-auto max-w-[100%]">
-        <div className="card bg-gray-900 text-gray-100 rounded-lg shadow-lg p-2 sm:p-3 w-full min-w-full">
+      <div className="table-container overflow-x-auto max-w-[100%] w-full">
+        <div className="card bg-gray-900 text-gray-100 rounded-lg shadow-lg p-2 sm:p-3 w-full min-w-[540px]">
           <div className="flex justify-between items-center mb-2 sm:mb-3">
             <h3 className="text-base sm:text-lg font-bold text-teal-400">Keepers {selectedYear}</h3>
             {isAdminAuthenticated && (
@@ -40,13 +40,13 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                 <th className="text-left py-1 px-0.5 sm:px-1 w-[12%] min-w-[50px] text-gray-300">Team</th>
                 <th className="text-left py-1 px-0.5 sm:px-1 w-[16%] min-w-[60px] text-gray-300">Keeper 1</th>
                 <th className="text-right py-1 px-0.5 sm:px-1 w-[10%] min-w-[45px] text-gray-300">Draft Cost 1</th>
-                <th className="text-center py-1 px-0.5 sm:pr-0.5 w-[4%] min-w-[24px] text-gray-300">Tag 1</th>
-                <th className="text-right py-1 px-0.5 sm:pl-0.5 sm:pr-1 w-[8%] min-w-[40px] text-gray-300">Cost 1</th>
-                <th className="text-left py-1 px-0.5 sm:px-2 w-[16%] min-w-[60px] text-gray-300">Keeper 2</th>
+                <th className="text-center py-1 px-0.5 sm:pr-0.5 w-[4%] min-w-[24px] text-gray-300 tag-column">Tag 1</th>
+                <th className="text-right py-1 px-0.5 sm:pl-0.5 sm:pr-1 w-[8%] min-w-[40px] text-gray-300 cost-column">Cost 1</th>
+                <th className="text-left py-1 px-0.5 sm:px-2 w-[16%] min-w-[60px] text-gray-300 keeper2-column">Keeper 2</th>
                 <th className="text-right py-1 px-0.5 sm:px-1 w-[10%] min-w-[45px] text-gray-300">Draft Cost 2</th>
-                <th className="text-center py-1 px-0.5 sm:pr-0.5 w-[4%] min-w-[24px] text-gray-300">Tag 2</th>
-                <th className="text-right py-1 px-0.5 sm:pl-0.5 sm:pr-1 w-[8%] min-w-[40px] text-gray-300">Cost 2</th>
-                <th className="text-right py-1 px-0.5 sm:px-2 w-[12%] min-w-[50px] text-gray-300">Auction $</th>
+                <th className="text-center py-1 px-0.5 sm:pr-0.5 w-[4%] min-w-[24px] text-gray-300 tag-column">Tag 2</th>
+                <th className="text-right py-1 px-0.5 sm:pl-0.5 sm:pr-1 w-[8%] min-w-[40px] text-gray-300 cost-column">Cost 2</th>
+                <th className="text-right py-1 px-0.5 sm:px-2 w-[12%] min-w-[50px] text-gray-300 auction-column">Auction $</th>
                 <th className="text-right py-1 px-0.5 sm:px-1 w-[10%] min-w-[45px] text-gray-300">Actions</th>
               </tr>
             </thead>
@@ -92,7 +92,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                         />
                       )}
                     </td>
-                    <td className="text-center py-0.5 px-0.5 sm:pr-0.5 w-[4%] min-w-[24px]">
+                    <td className="text-center py-0.5 px-0.5 sm:pr-0.5 w-[4%] min-w-[24px] tag-column">
                       <input
                         type="checkbox"
                         checked={displayTeam.tag1 || false}
@@ -101,8 +101,8 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                         className="h-3 w-3 text-teal-500 rounded focus:ring-teal-500 disabled:opacity-50"
                       />
                     </td>
-                    <td className="text-right py-0.5 px-0.5 sm:pl-0.5 sm:pr-1 w-[8%] min-w-[40px] text-gray-400">{displayTeam.cost1 ? `$${displayTeam.cost1}` : '-'}</td>
-                    <td className="py-0.5 px-0.5 sm:px-2 w-[16%] min-w-[60px]">
+                    <td className="text-right py-0.5 px-0.5 sm:pl-0.5 sm:pr-1 w-[8%] min-w-[40px] text-gray-400 cost-column">{displayTeam.cost1 ? `$${displayTeam.cost1}` : '-'}</td>
+                    <td className="py-0.5 px-0.5 sm:px-2 w-[16%] min-w-[60px] keeper2-column">
                       {locks[selectedYear] ? (
                         <span className="text-gray-400">{displayTeam.keeper2 || '-'}</span>
                       ) : (
@@ -126,7 +126,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                         />
                       )}
                     </td>
-                    <td className="text-center py-0.5 px-0.5 sm:pr-0.5 w-[4%] min-w-[24px]">
+                    <td className="text-center py-0.5 px-0.5 sm:pr-0.5 w-[4%] min-w-[24px] tag-column">
                       <input
                         type="checkbox"
                         checked={displayTeam.tag2 || false}
@@ -135,8 +135,8 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                         className="h-3 w-3 text-teal-500 rounded focus:ring-teal-500 disabled:opacity-50"
                       />
                     </td>
-                    <td className="text-right py-0.5 px-0.5 sm:pl-0.5 sm:pr-1 w-[8%] min-w-[40px] text-gray-400">{displayTeam.cost2 ? `$${displayTeam.cost2}` : '-'}</td>
-                    <td className="text-right py-1 px-0.5 sm:px-2 w-[12%] min-w-[50px] text-gray-400">{displayTeam.remaining ? `$${displayTeam.remaining}` : '-'}</td>
+                    <td className="text-right py-0.5 px-0.5 sm:pl-0.5 sm:pr-1 w-[8%] min-w-[40px] text-gray-400 cost-column">{displayTeam.cost2 ? `$${displayTeam.cost2}` : '-'}</td>
+                    <td className="text-right py-1 px-0.5 sm:px-2 w-[12%] min-w-[50px] text-gray-400 auction-column">{displayTeam.remaining ? `$${displayTeam.remaining}` : '-'}</td>
                     <td className="text-right py-0.5 px-0.5 sm:px-1 w-[10%] min-w-[45px]">
                       {!locks[selectedYear] && (
                         <button
