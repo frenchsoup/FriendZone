@@ -34,20 +34,20 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
               </button>
             )}
           </div>
-          <table className="w-full text-xs sm:text-sm border-collapse">
+          <table className="w-full text-xs border-collapse">
             <thead>
               <tr className="border-b border-gray-700 bg-gray-800">
-                <th className="text-left py-2 px-1 sm:px-3 w-[15%] min-w-[80px] text-gray-300">Team</th>
-                <th className="text-left py-2 px-1 sm:px-3 w-[15%] min-w-[70px] text-gray-300">Keeper 1</th>
-                <th className="text-right py-2 px-1 sm:px-3 w-[10%] min-w-[50px] text-gray-300">Draft Cost 1</th>
-                <th className="text-center py-2 px-1 sm:px-3 w-[5%] min-w-[30px] text-gray-300">Tag 1</th>
-                <th className="text-right py-2 px-1 sm:px-3 w-[10%] min-w-[50px] text-gray-300">Cost 1</th>
-                <th className="text-left py-2 px-1 sm:px-3 w-[15%] min-w-[70px] text-gray-300">Keeper 2</th>
-                <th className="text-right py-2 px-1 sm:px-3 w-[10%] min-w-[50px] text-gray-300">Draft Cost 2</th>
-                <th className="text-center py-2 px-1 sm:px-3 w-[5%] min-w-[30px] text-gray-300">Tag 2</th>
-                <th className="text-right py-2 px-1 sm:px-3 w-[10%] min-w-[50px] text-gray-300">Cost 2</th>
-                <th className="text-right py-2 px-1 sm:px-3 w-[10%] min-w-[60px] text-gray-300">Remaining</th>
-                <th className="text-right py-2 px-1 sm:px-3 w-[10%] min-w-[50px] text-gray-300">Actions</th>
+                <th className="text-left py-2 px-1 w-[12%] min-w-[60px] text-gray-300">Team</th>
+                <th className="text-left py-2 px-1 w-[15%] min-w-[70px] text-gray-300">Keeper 1</th>
+                <th className="text-right py-2 px-1 w-[10%] min-w-[50px] text-gray-300">Drafted $1</th>
+                <th className="text-center py-2 px-1 w-[5%] min-w-[30px] text-gray-300">Tag 1</th>
+                <th className="text-right py-2 px-1 w-[8%] min-w-[40px] text-gray-300">$1</th>
+                <th className="text-left py-2 px-1 w-[15%] min-w-[70px] text-gray-300">Keeper 2</th>
+                <th className="text-right py-2 px-1 w-[10%] min-w-[50px] text-gray-300">Drafted $2</th>
+                <th className="text-center py-2 px-1 w-[5%] min-w-[30px] text-gray-300">Tag 2</th>
+                <th className="text-right py-2 px-1 w-[8%] min-w-[40px] text-gray-300">$2</th>
+                <th className="text-right py-2 px-1 w-[10%] min-w-[50px] text-gray-300">Auction $</th>
+                <th className="text-right py-2 px-1 w-[12%] min-w-[50px] text-gray-300">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -56,7 +56,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                 const displayTeam = { ...team, ...pending };
                 return (
                   <tr key={index} className={`border-b border-gray-700 ${index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-850'}`}>
-                    <td className="py-1 px-1 sm:px-3 w-[15%] min-w-[80px]">
+                    <td className="py-1 px-1 w-[12%] min-w-[60px]">
                       {locks[selectedYear] ? (
                         <span className="text-gray-400">{displayTeam.team || '-'}</span>
                       ) : (
@@ -64,11 +64,11 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                           type="text"
                           value={displayTeam.team || ''}
                           onChange={(e) => handleKeeperChange(selectedYear, index, 'team', e.target.value)}
-                          className="w-full bg-gray-700 p-1 rounded text-xs sm:text-sm text-gray-100 focus:ring-2 focus:ring-teal-500"
+                          className="w-full bg-gray-700 p-1 rounded text-xs text-gray-100 focus:ring-2 focus:ring-teal-500"
                         />
                       )}
                     </td>
-                    <td className="py-1 px-1 sm:px-3 w-[15%] min-w-[70px]">
+                    <td className="py-1 px-1 w-[15%] min-w-[70px]">
                       {locks[selectedYear] ? (
                         <span className="text-gray-400">{displayTeam.keeper1 || '-'}</span>
                       ) : (
@@ -76,36 +76,33 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                           type="text"
                           value={displayTeam.keeper1 || ''}
                           onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper1', e.target.value)}
-                          className="w-full bg-gray-700 p-1 rounded text-xs sm:text-sm text-gray-100 focus:ring-2 focus:ring-teal-500"
+                          className="w-full bg-gray-700 p-1 rounded text-xs text-gray-100 focus:ring-2 focus:ring-teal-500"
                         />
                       )}
                     </td>
-                    <td className="text-right py-1 px-1 sm:px-3 w-[10%] min-w-[50px]">
+                    <td className="text-right py-1 px-1 w-[10%] min-w-[50px]">
                       {locks[selectedYear] ? (
-                        <span className="text-gray-400">{displayTeam.draftCost1 || '-'}</span>
+                        <span className="text-gray-400">{displayTeam.draftCost1 ? `$${displayTeam.draftCost1}` : '-'}</span>
                       ) : (
                         <input
                           type="number"
                           value={displayTeam.draftCost1 || ''}
                           onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
-                          className="w-full sm:w-12 bg-gray-700 p-1 rounded text-xs sm:text-sm text-gray-100 text-right no-spinner focus:ring-2 focus:ring-teal-500"
+                          className="w-full sm:w-12 bg-gray-700 p-1 rounded text-xs text-gray-100 text-right no-spinner focus:ring-2 focus:ring-teal-500"
                         />
                       )}
                     </td>
-                    <td className="text-center py-1 px-1 sm:px-3 w-[5%] min-w-[30px]">
-                      {locks[selectedYear] ? (
-                        <span className="text-gray-400">{displayTeam.tag1 ? 'Yes' : 'No'}</span>
-                      ) : (
-                        <input
-                          type="checkbox"
-                          checked={displayTeam.tag1 || false}
-                          onChange={(e) => handleKeeperChange(selectedYear, index, 'tag1', e.target.checked)}
-                          className="h-4 w-4 text-teal-500 rounded focus:ring-teal-500"
-                        />
-                      )}
+                    <td className="text-center py-1 px-1 w-[5%] min-w-[30px]">
+                      <input
+                        type="checkbox"
+                        checked={displayTeam.tag1 || false}
+                        disabled={locks[selectedYear]}
+                        onChange={(e) => handleKeeperChange(selectedYear, index, 'tag1', e.target.checked)}
+                        className="h-4 w-4 text-teal-500 rounded focus:ring-teal-500 disabled:opacity-50"
+                      />
                     </td>
-                    <td className="text-right py-1 px-1 sm:px-3 w-[10%] min-w-[50px] text-gray-400">{displayTeam.cost1 || '-'}</td>
-                    <td className="py-1 px-1 sm:px-3 w-[15%] min-w-[70px]">
+                    <td className="text-right py-1 px-1 w-[8%] min-w-[40px] text-gray-400">{displayTeam.cost1 ? `$${displayTeam.cost1}` : '-'}</td>
+                    <td className="py-1 px-1 w-[15%] min-w-[70px]">
                       {locks[selectedYear] ? (
                         <span className="text-gray-400">{displayTeam.keeper2 || '-'}</span>
                       ) : (
@@ -113,41 +110,38 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                           type="text"
                           value={displayTeam.keeper2 || ''}
                           onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper2', e.target.value)}
-                          className="w-full bg-gray-700 p-1 rounded text-xs sm:text-sm text-gray-100 focus:ring-2 focus:ring-teal-500"
+                          className="w-full bg-gray-700 p-1 rounded text-xs text-gray-100 focus:ring-2 focus:ring-teal-500"
                         />
                       )}
                     </td>
-                    <td className="text-right py-1 px-1 sm:px-3 w-[10%] min-w-[50px]">
+                    <td className="text-right py-1 px-1 w-[10%] min-w-[50px]">
                       {locks[selectedYear] ? (
-                        <span className="text-gray-400">{displayTeam.draftCost2 || '-'}</span>
+                        <span className="text-gray-400">{displayTeam.draftCost2 ? `$${displayTeam.draftCost2}` : '-'}</span>
                       ) : (
                         <input
                           type="number"
                           value={displayTeam.draftCost2 || ''}
                           onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
-                          className="w-full sm:w-12 bg-gray-700 p-1 rounded text-xs sm:text-sm text-gray-100 text-right no-spinner focus:ring-2 focus:ring-teal-500"
+                          className="w-full sm:w-12 bg-gray-700 p-1 rounded text-xs text-gray-100 text-right no-spinner focus:ring-2 focus:ring-teal-500"
                         />
                       )}
                     </td>
-                    <td className="text-center py-1 px-1 sm:px-3 w-[5%] min-w-[30px]">
-                      {locks[selectedYear] ? (
-                        <span className="text-gray-400">{displayTeam.tag2 ? 'Yes' : 'No'}</span>
-                      ) : (
-                        <input
-                          type="checkbox"
-                          checked={displayTeam.tag2 || false}
-                          onChange={(e) => handleKeeperChange(selectedYear, index, 'tag2', e.target.checked)}
-                          className="h-4 w-4 text-teal-500 rounded focus:ring-teal-500"
-                        />
-                      )}
+                    <td className="text-center py-1 px-1 w-[5%] min-w-[30px]">
+                      <input
+                        type="checkbox"
+                        checked={displayTeam.tag2 || false}
+                        disabled={locks[selectedYear]}
+                        onChange={(e) => handleKeeperChange(selectedYear, index, 'tag2', e.target.checked)}
+                        className="h-4 w-4 text-teal-500 rounded focus:ring-teal-500 disabled:opacity-50"
+                      />
                     </td>
-                    <td className="text-right py-1 px-1 sm:px-3 w-[10%] min-w-[50px] text-gray-400">{displayTeam.cost2 || '-'}</td>
-                    <td className="text-right py-1 px-1 sm:px-3 w-[10%] min-w-[60px] text-gray-400">{displayTeam.remaining || '-'}</td>
-                    <td className="text-right py-1 px-1 sm:px-3 w-[10%] min-w-[50px]">
+                    <td className="text-right py-1 px-1 w-[8%] min-w-[40px] text-gray-400">{displayTeam.cost2 ? `$${displayTeam.cost2}` : '-'}</td>
+                    <td className="text-right py-1 px-1 w-[10%] min-w-[50px] text-gray-400">{displayTeam.remaining ? `$${displayTeam.remaining}` : '-'}</td>
+                    <td className="text-right py-1 px-1 w-[12%] min-w-[50px]">
                       {!locks[selectedYear] && (
                         <button
                           onClick={() => handleSaveRow(selectedYear, index)}
-                          className="px-2 py-1 text-xs sm:text-sm bg-teal-500 text-white rounded-full hover:bg-teal-600 transition-all"
+                          className="px-2 py-1 text-xs bg-teal-500 text-white rounded-full hover:bg-teal-600 transition-all"
                         >
                           Save
                         </button>

@@ -11,7 +11,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-teal-400 text-center">Prizes</h2>
       <div className="flex justify-center mb-4 space-x-2">
-        {['2022', '2023', '2024'].map(year => (
+        {['2023', '2024'].map(year => (
           <button
             key={year}
             onClick={() => setSelectedYear(year)}

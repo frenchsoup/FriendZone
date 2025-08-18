@@ -55,10 +55,11 @@
         setIsLoading(true);
         try {
           const baseUrl = '/.netlify/functions/get-data?filename=';
-          const years = ['2022', '2023', '2024', '2025'];
+          const keeperYears = ['2022', '2023', '2024', '2025'];
+          const prizeYears = ['2023', '2024'];
           const promises = [];
 
-          years.forEach(year => {
+          keeperYears.forEach(year => {
             promises.push(
               fetch(`${baseUrl}keepers_${year}.json`)
                 .then(response => response.json())
@@ -92,38 +93,38 @@
                   }));
                 })
             );
+          });
 
-            if (year !== '2022') {
-              promises.push(
-                fetch(`${baseUrl}prizes_${year}.json`)
-                  .then(response => response.json())
-                  .then(data => {
-                    setPrizes(prev => ({
-                      ...prev,
-                      [year]: data && (data.weeklyHighScores || data.survivor) ? data : {
-                        weeklyHighScores: Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' })),
-                        survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
-                      }
-                    }));
-                  })
-                  .catch(() => {
-                    setPrizes(prev => ({
-                      ...prev,
-                      [year]: {
-                        weeklyHighScores: Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' })),
-                        survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
-                      }
-                    }));
-                  })
-              );
-            }
-
+          prizeYears.forEach(year => {
             promises.push(
-              fetch(`${baseUrl}locks.json`)
+              fetch(`${baseUrl}prizes_${year}.json`)
                 .then(response => response.json())
-                .then(data => setLocks(data || { [year]: year !== '2025' }))
+                .then(data => {
+                  setPrizes(prev => ({
+                    ...prev,
+                    [year]: data && (data.weeklyHighScores || data.survivor) ? data : {
+                      weeklyHighScores: Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' })),
+                      survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
+                    }
+                  }));
+                })
+                .catch(() => {
+                  setPrizes(prev => ({
+                    ...prev,
+                    [year]: {
+                      weeklyHighScores: Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' })),
+                      survivor: Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' })
+                    }
+                  }));
+                })
             );
           });
+
+          promises.push(
+            fetch(`${baseUrl}locks.json`)
+              .then(response => response.json())
+              .then(data => setLocks(data || { 2022: true, 2023: true, 2024: true, 2025: false }))
+          );
 
           promises.push(
             fetch(`${baseUrl}rules.json`)
