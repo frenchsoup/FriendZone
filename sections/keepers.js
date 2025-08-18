@@ -1,43 +1,26 @@
-window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges, handleKeeperChange, setPendingChanges, setKeepers }) => {
+window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges, handleKeeperChange, handleSaveRow, handleToggleLock }) => {
   if (!keepers[selectedYear]?.length) {
     return <div className="text-center text-gray-300">Loading keepers...</div>;
   }
 
-  const handleSaveRow = async (year, index) => {
+  const enhancedHandleSaveRow = async (year, index) => {
     try {
       const teamData = pendingChanges.keepers[year]?.[index] || keepers[year][index];
       const payload = {
         file: `keepers_${year}.json`,
         data: teamData,
         action: 'update',
-        index,
+        indexData: index,
       };
       console.log('Saving keeper payload:', JSON.stringify(payload, null, 2));
-      const response = await fetch('/.netlify/functions/update-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Save failed');
-      }
-      // Update local state
-      const updatedKeepers = { ...keepers };
-      updatedKeepers[year][index] = teamData;
-      setKeepers(updatedKeepers);
-      setPendingChanges({
-        ...pendingChanges,
-        keepers: { ...pendingChanges.keepers, [year]: [] },
-      });
-      console.log('Save successful:', await response.json());
+      await handleSaveRow(year, index, payload);
     } catch (err) {
       console.error('Save error:', err);
       alert(`Failed to save: ${err.message}`);
     }
   };
 
-  const handleToggleLock = async (year) => {
+  const enhancedHandleToggleLock = async (year) => {
     try {
       const updatedLocks = { ...locks, [year]: !locks[year] };
       const payload = {
@@ -46,18 +29,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
         action: 'update',
       };
       console.log('Saving locks payload:', JSON.stringify(payload, null, 2));
-      const response = await fetch('/.netlify/functions/update-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Lock toggle failed');
-      }
-      // Update local state
-      window.locks = updatedLocks; // Assuming global locks state
-      console.log('Lock toggle successful:', await response.json());
+      await handleToggleLock(year, payload);
     } catch (err) {
       console.error('Lock toggle error:', err);
       alert(`Failed to toggle lock: ${err.message}`);
@@ -86,7 +58,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
             <h3 className="text-base sm:text-lg font-bold text-teal-400">Keepers {selectedYear}</h3>
             {isAdminAuthenticated && (
               <button
-                onClick={() => handleToggleLock(selectedYear)}
+                onClick={() => enhancedHandleToggleLock(selectedYear)}
                 className={`px-2 py-1 text-xs rounded-full lock-button ${
                   locks[selectedYear] ? 'bg-red-600 hover:bg-red-700' : 'bg-teal-500 hover:bg-teal-600'
                 } text-white transition-all`}
@@ -201,7 +173,7 @@ window.Keepers = ({ keepers, locks, selectedYear, setSelectedYear, isAdminAuthen
                     <td className="text-right py-0.5 px-0.5 sm:px-1 w-[10%] min-w-[45px]">
                       {!locks[selectedYear] && (
                         <button
-                          onClick={() => handleSaveRow(selectedYear, index)}
+                          onClick={() => enhancedHandleSaveRow(selectedYear, index)}
                           className="px-1 py-0.5 text-xs bg-teal-500 text-white rounded-full hover:bg-teal-600 transition-all"
                         >
                           Save

@@ -42,8 +42,7 @@
       const [view, setView] = React.useState('home');
       const [isNavOpen, setIsNavOpen] = React.useState(false);
       const [isLoading, setIsLoading] = React.useState(true);
-      const [pendingChanges, setPendingChanges] = React.useState({ keepers: {} });
-      const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: null });
+      const [pendingChanges, setPendingChanges] = React.useState({ keepers: {}, prizes: {} });
 
       React.useEffect(() => {
         window.AppState.setRules = setRules;
@@ -148,10 +147,16 @@
         try {
           const response = await fetch('/.netlify/functions/update-data', {
             method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ file: filename, data, action, indexData }),
           });
-          return response.ok;
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Update failed');
+          }
+          return true;
         } catch (error) {
+          console.error('Update error:', error);
           return false;
         }
       };
@@ -181,20 +186,18 @@
         });
       };
 
-      const handleSaveRow = async (year, index) => {
+      const handleSaveRow = async (year, index, payload) => {
         if (locks[year]) return;
-        const updatedKeepers = { ...keepers };
-        const pending = pendingChanges.keepers[year]?.[index] || {};
-        const team = { ...updatedKeepers[year][index], ...pending };
-        updatedKeepers[year][index] = team;
-        const result = await updateData(`keepers_${year}.json`, updatedKeepers[year]);
+        const result = await updateData(payload.file, payload.data, payload.action, payload.indexData);
         if (result) {
-          setKeepers(updatedKeepers);
-          setPendingChanges(prev => {
-            const updatedPending = { ...prev, keepers: { ...prev.keepers, [year]: { ...prev.keepers[year] } } };
-            updatedPending.keepers[year][index] = {};
-            return updatedPending;
-          });
+          setKeepers(prev => ({
+            ...prev,
+            [year]: prev[year].map((team, i) => (i === index ? payload.data : team)),
+          }));
+          setPendingChanges(prev => ({
+            ...prev,
+            keepers: { ...prev.keepers, [year]: { ...prev.keepers[year], [index]: {} } },
+          }));
         } else {
           alert('Failed to save keeper changes');
         }
@@ -202,42 +205,70 @@
 
       const handleWeeklyScoreChange = (year, index, field, value) => {
         if (!isAdminAuthenticated) return;
-        const updatedPrizes = { ...prizes };
-        updatedPrizes[year].weeklyHighScores[index] = {
-          ...updatedPrizes[year].weeklyHighScores[index],
-          [field]: field === 'total' ? (value === '' ? '' : parseFloat(value)) : value
-        };
-        setPrizes(updatedPrizes);
+        setPendingChanges(prev => {
+          const updatedPending = { ...prev, prizes: { ...prev.prizes, [year]: { ...prev.prizes[year], weeklyHighScores: [...(prev.prizes[year]?.weeklyHighScores || [])] } } };
+          updatedPending.prizes[year].weeklyHighScores[index] = {
+            ...updatedPending.prizes[year]?.weeklyHighScores[index] || prizes[year].weeklyHighScores[index],
+            [field]: field === 'total' ? (value === '' ? '' : parseFloat(value)) : value,
+          };
+          return updatedPending;
+        });
       };
 
-      const handleWeeklyScoreSave = async (year, index) => {
+      const handleWeeklyScoreSave = async (year, index, payload) => {
         if (!isAdminAuthenticated) return;
-        const result = await updateData(`prizes_${year}.json`, prizes[year]);
-        if (!result) alert('Failed to save Weekly High Score');
+        const result = await updateData(payload.file, payload.data, payload.action);
+        if (result) {
+          setPrizes(prev => ({
+            ...prev,
+            [year]: payload.data,
+          }));
+          setPendingChanges(prev => ({
+            ...prev,
+            prizes: { ...prev.prizes, [year]: { ...prev.prizes[year], weeklyHighScores: [] } },
+          }));
+        } else {
+          alert('Failed to save Weekly High Score');
+        }
       };
 
       const handleSurvivorChange = (year, index, value) => {
         if (!isAdminAuthenticated) return;
-        const updatedPrizes = { ...prizes };
-        updatedPrizes[year].survivor[index] = {
-          ...updatedPrizes[year].survivor[index],
-          [index === 11 ? 'winner' : 'eliminated']: value
-        };
-        setPrizes(updatedPrizes);
+        setPendingChanges(prev => {
+          const updatedPending = { ...prev, prizes: { ...prev.prizes, [year]: { ...prev.prizes[year], survivor: [...(prev.prizes[year]?.survivor || [])] } } };
+          updatedPending.prizes[year].survivor[index] = {
+            ...updatedPending.prizes[year]?.survivor[index] || prizes[year].survivor[index],
+            [index === 11 ? 'winner' : 'eliminated']: value,
+          };
+          return updatedPending;
+        });
       };
 
-      const handleSurvivorSave = async (year, index) => {
+      const handleSurvivorSave = async (year, index, payload) => {
         if (!isAdminAuthenticated) return;
-        const result = await updateData(`prizes_${year}.json`, prizes[year]);
-        if (!result) alert('Failed to save Survivor');
+        const result = await updateData(payload.file, payload.data, payload.action);
+        if (result) {
+          setPrizes(prev => ({
+            ...prev,
+            [year]: payload.data,
+          }));
+          setPendingChanges(prev => ({
+            ...prev,
+            prizes: { ...prev.prizes, [year]: { ...prev.prizes[year], survivor: [] } },
+          }));
+        } else {
+          alert('Failed to save Survivor');
+        }
       };
 
-      const handleToggleLock = async (year) => {
+      const handleToggleLock = async (year, payload) => {
         if (!isAdminAuthenticated) return;
-        const updatedLocks = { ...locks, [year]: !locks[year] };
-        const result = await updateData('locks.json', updatedLocks);
-        if (result) setLocks(updatedLocks);
-        else alert('Failed to toggle lock');
+        const result = await updateData(payload.file, payload.data, payload.action);
+        if (result) {
+          setLocks(payload.data);
+        } else {
+          alert('Failed to toggle lock');
+        }
       };
 
       const getRemainingTeams = (year, currentIndex = -1) => {
@@ -405,6 +436,7 @@
               selectedYear={selectedYear}
               setSelectedYear={setSelectedYear}
               isAdminAuthenticated={isAdminAuthenticated}
+              pendingChanges={pendingChanges}
               handleWeeklyScoreChange={handleWeeklyScoreChange}
               handleWeeklyScoreSave={handleWeeklyScoreSave}
               handleSurvivorChange={handleSurvivorChange}

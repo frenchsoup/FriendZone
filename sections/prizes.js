@@ -1,96 +1,46 @@
-window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges, setPendingChanges, setPrizes, getRemainingTeams }) => {
+window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges, handleWeeklyScoreChange, handleWeeklyScoreSave, handleSurvivorChange, handleSurvivorSave, getRemainingTeams }) => {
   const yearPrizes = prizes[selectedYear] || { weeklyHighScores: [], survivor: [] };
   const weeklyHighScores = yearPrizes.weeklyHighScores?.length > 0 ? yearPrizes.weeklyHighScores : Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' }));
-  const survivor = yearPrizes.survivor?.length > 0 ? yearPrizes.survivor : Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' });
+  const survivor = yearPrizes.survivor?.length > 0 ? yearPrizes.survivor : Array(12).fill().map((_, i) => (i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' }));
 
-  if (!prizes[selectedYear] || !prizes[selectedYear].weeklyHighScores || !prizes[selectedYear].survivor) {
+  if (!prizes[selectedYear]) {
     return <div className="text-center text-gray-300">Loading prizes...</div>;
   }
 
-  const handleWeeklyScoreChange = (year, index, field, value) => {
-    const updatedPending = { ...pendingChanges };
-    if (!updatedPending.prizes[year]) {
-      updatedPending.prizes[year] = { weeklyHighScores: [], survivor: [] };
-    }
-    updatedPending.prizes[year].weeklyHighScores[index] = {
-      ...pendingChanges.prizes[year]?.weeklyHighScores?.[index] || yearPrizes.weeklyHighScores[index],
-      [field]: field === 'week' || field === 'total' ? (value ? parseFloat(value) : '') : value,
-    };
-    setPendingChanges(updatedPending);
+  const enhancedHandleWeeklyScoreChange = (year, index, field, value) => {
+    handleWeeklyScoreChange(year, index, field, value);
   };
 
-  const handleWeeklyScoreSave = async (year, index) => {
+  const enhancedHandleWeeklyScoreSave = async (year, index) => {
     try {
-      const scoreData = pendingChanges.prizes[year]?.weeklyHighScores?.[index] || yearPrizes.weeklyHighScores[index];
+      const scoreData = pendingChanges.prizes?.[year]?.weeklyHighScores?.[index] || yearPrizes.weeklyHighScores[index];
       const payload = {
         file: `prizes_${year}.json`,
         data: { ...yearPrizes, weeklyHighScores: yearPrizes.weeklyHighScores.map((item, i) => (i === index ? scoreData : item)) },
         action: 'update',
       };
       console.log('Saving weeklyHighScores payload:', JSON.stringify(payload, null, 2));
-      const response = await fetch('/.netlify/functions/update-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Save failed');
-      }
-      // Update local state
-      const updatedPrizes = { ...prizes };
-      updatedPrizes[year].weeklyHighScores[index] = scoreData;
-      setPrizes(updatedPrizes);
-      setPendingChanges({
-        ...pendingChanges,
-        prizes: { ...pendingChanges.prizes, [year]: { ...pendingChanges.prizes[year], weeklyHighScores: [] } },
-      });
-      console.log('Save successful:', await response.json());
+      await handleWeeklyScoreSave(year, index, payload);
     } catch (err) {
       console.error('Save error:', err);
       alert(`Failed to save: ${err.message}`);
     }
   };
 
-  const handleSurvivorChange = (year, index, value) => {
-    const updatedPending = { ...pendingChanges };
-    if (!updatedPending.prizes[year]) {
-      updatedPending.prizes[year] = { weeklyHighScores: [], survivor: [] };
-    }
-    updatedPending.prizes[year].survivor[index] = {
-      ...pendingChanges.prizes[year]?.survivor?.[index] || yearPrizes.survivor[index],
-      [index === 11 ? 'winner' : 'eliminated']: value,
-    };
-    setPendingChanges(updatedPending);
+  const enhancedHandleSurvivorChange = (year, index, value) => {
+    handleSurvivorChange(year, index, value);
   };
 
-  const handleSurvivorSave = async (year, index) => {
+  const enhancedHandleSurvivorSave = async (year, index) => {
     try {
-      const survivorData = pendingChanges.prizes[year]?.survivor?.[index] || yearPrizes.survivor[index];
+      const survivorData = pendingChanges.prizes?.[year]?.survivor?.[index] || yearPrizes.survivor[index];
       const payload = {
         file: `prizes_${year}.json`,
         data: { ...yearPrizes, survivor: yearPrizes.survivor.map((item, i) => (i === index ? survivorData : item)) },
         action: 'update',
       };
       console.log('Saving survivor payload:', JSON.stringify(payload, null, 2));
-      const response = await fetch('/.netlify/functions/update-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Save failed');
-      }
-      // Update local state
-      const updatedPrizes = { ...prizes };
-      updatedPrizes[year].survivor[index] = survivorData;
-      setPrizes(updatedPrizes);
-      setPendingChanges({
-        ...pendingChanges,
-        prizes: { ...pendingChanges.prizes, [year]: { ...pendingChanges.prizes[year], survivor: [] } },
-      });
-      console.log('Save successful:', await response.json());
+      await handleSurvivorSave(year, index, payload);
     } catch (err) {
       console.error('Save error:', err);
       alert(`Failed to save: ${err.message}`);
@@ -133,8 +83,8 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                     <td className="py-1 px-1 sm:px-2 w-[40%] min-w-[100px]">
                       {isAdminAuthenticated ? (
                         <select
-                          value={score.team || ''}
-                          onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
+                          value={(pendingChanges.prizes?.[selectedYear]?.weeklyHighScores?.[index]?.team || score.team) || ''}
+                          onChange={(e) => enhancedHandleWeeklyScoreChange(selectedYear, index, 'team', e.target.value)}
                           className="w-full bg-gray-700 p-1 rounded text-xs sm:text-sm text-gray-100 focus:ring-2 focus:ring-teal-500"
                         >
                           <option value="">Select Team</option>
@@ -150,8 +100,8 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                       {isAdminAuthenticated ? (
                         <input
                           type="number"
-                          value={score.total || ''}
-                          onChange={(e) => handleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
+                          value={(pendingChanges.prizes?.[selectedYear]?.weeklyHighScores?.[index]?.total || score.total) || ''}
+                          onChange={(e) => enhancedHandleWeeklyScoreChange(selectedYear, index, 'total', e.target.value)}
                           className="w-full sm:w-12 bg-gray-700 p-1 rounded text-xs sm:text-sm text-gray-100 text-right no-spinner focus:ring-2 focus:ring-teal-500"
                         />
                       ) : (
@@ -161,7 +111,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                     {isAdminAuthenticated && (
                       <td className="text-right py-1 px-1 sm:px-2 w-[20%] min-w-[60px]">
                         <button
-                          onClick={() => handleWeeklyScoreSave(selectedYear, index)}
+                          onClick={() => enhancedHandleWeeklyScoreSave(selectedYear, index)}
                           className="px-2 py-1 text-xs sm:text-sm bg-teal-500 text-white rounded-full hover:bg-teal-600 transition-all"
                         >
                           Save
@@ -192,8 +142,8 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                     <td className="py-1 px-1 sm:px-2 w-[60%] min-w-[100px]">
                       {isAdminAuthenticated ? (
                         <select
-                          value={index === 11 ? (entry.winner || '') : (entry.eliminated || '')}
-                          onChange={(e) => handleSurvivorChange(selectedYear, index, e.target.value)}
+                          value={(pendingChanges.prizes?.[selectedYear]?.survivor?.[index]?.[index === 11 ? 'winner' : 'eliminated'] || (index === 11 ? entry.winner : entry.eliminated)) || ''}
+                          onChange={(e) => enhancedHandleSurvivorChange(selectedYear, index, e.target.value)}
                           className="w-full bg-gray-700 p-1 rounded text-xs sm:text-sm text-gray-100 focus:ring-2 focus:ring-teal-500"
                         >
                           <option value="">Select Team</option>
@@ -208,7 +158,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                     {isAdminAuthenticated && (
                       <td className="text-right py-1 px-1 sm:px-2 w-[20%] min-w-[60px]">
                         <button
-                          onClick={() => handleSurvivorSave(selectedYear, index)}
+                          onClick={() => enhancedHandleSurvivorSave(selectedYear, index)}
                           className="px-2 py-1 text-xs sm:text-sm bg-teal-500 text-white rounded-full hover:bg-teal-600 transition-all"
                         >
                           Save
