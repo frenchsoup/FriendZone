@@ -1,37 +1,42 @@
 /* Base styles */
 body {
   font-family: 'Inter', sans-serif;
-  @apply bg-gray-900 text-gray-100;
+  background-color: #1f2937; /* bg-gray-800 */
+  @apply bg-gray-800 text-gray-100;
+}
+
+/* Custom gray shade for alternating rows */
+.bg-gray-850 {
+  background-color: #1f2937; /* Slightly lighter than gray-900 */
 }
 
 /* Responsive table container */
 .table-container {
-  @apply w-full max-w-full overflow-x-auto; /* Ensure full width and scrolling */
+  @apply overflow-x-auto max-w-[100%] w-full; /* Full width, allow scrolling */
   -webkit-overflow-scrolling: touch; /* Smooth scrolling on mobile */
-  scrollbar-width: auto; /* Ensure scrollbar visibility */
-  scrollbar-color: #4b5563 #1f2937; /* Custom scrollbar for Firefox */
+  scrollbar-width: auto; /* Scrollbar visibility for Firefox */
+  scrollbar-color: #4b5563 #1f2937; /* Custom scrollbar colors */
 }
 
 .table-container::-webkit-scrollbar {
-  height: 8px; /* Scrollbar height for WebKit browsers */
+  height: 8px; /* Scrollbar height for WebKit */
 }
 
 .table-container::-webkit-scrollbar-thumb {
-  @apply bg-gray-600 rounded; /* Scrollbar thumb style */
+  @apply bg-gray-600 rounded; /* Scrollbar thumb */
 }
 
 .table-container::-webkit-scrollbar-track {
-  @apply bg-gray-800; /* Scrollbar track style */
+  @apply bg-gray-800; /* Scrollbar track */
 }
 
-/* Ensure table is responsive */
-table {
-  @apply w-full border-collapse min-w-[900px]; /* Increased min-width for scroll */
+.table-container .card {
+  @apply w-full min-w-[600px]; /* Increased min-width for Keepers table */
+  background-color: #1f2937; /* bg-gray-900 */
 }
 
-/* Table headers and cells */
-th, td {
-  @apply px-2 py-2 sm:px-3 sm:py-3 whitespace-nowrap; /* Prevent text wrapping */
+.table-container table {
+  @apply w-full min-w-[600px] border-collapse; /* Match card min-width */
 }
 
 /* Navigation */
@@ -45,7 +50,7 @@ nav a:hover, nav button:hover {
 
 /* Cards */
 .card {
-  @apply transition-all duration-200 ease-in-out bg-white text-gray-800 rounded-lg shadow-md;
+  @apply transition-all duration-200 ease-in-out bg-gray-900 text-gray-100 rounded-lg shadow-lg;
 }
 
 .card:hover {
@@ -59,11 +64,11 @@ nav a:hover, nav button:hover {
 
 /* Table row striping */
 .table-row-even {
-  @apply bg-white;
+  @apply bg-gray-900;
 }
 
 .table-row-odd {
-  @apply bg-gray-50;
+  @apply bg-gray-850;
 }
 
 /* Modal */
@@ -77,15 +82,15 @@ nav a:hover, nav button:hover {
 
 /* Inputs, selects, and textareas */
 input, select, textarea {
-  @apply transition-all duration-200 ease-in-out rounded border border-gray-300 bg-gray-100 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400;
+  @apply transition-all duration-200 ease-in-out rounded border-none bg-gray-700 text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500;
 }
 
 input:focus, select:focus, textarea:focus {
-  @apply ring-2 ring-teal-400 ring-opacity-50;
+  @apply ring-2 ring-teal-500 ring-opacity-50;
 }
 
 input:disabled, select:disabled, textarea:disabled {
-  @apply bg-gray-200 cursor-not-allowed opacity-75;
+  @apply bg-gray-600 cursor-not-allowed opacity-75;
 }
 
 /* Buttons */
@@ -99,11 +104,16 @@ button:not(.lock-button):hover {
 
 /* Lock button specific styling */
 .lock-button {
-  @apply transition-all duration-200 ease-in-out rounded px-2 py-1 text-sm;
+  @apply transition-all duration-200 ease-in-out rounded-full px-3 py-1 text-sm;
 }
 
 .lock-button:hover {
   @apply scale-105;
+}
+
+/* Save button feedback */
+button.bg-blue-500 {
+  background-color: #3b82f6; /* Tailwind blue-500 */
 }
 
 /* Hide spinners for number inputs */
@@ -115,6 +125,45 @@ input[type="number"].no-spinner::-webkit-outer-spin-button {
 
 input[type="number"].no-spinner {
   -moz-appearance: textfield;
+}
+
+/* Ensure inputs and buttons are compact */
+input[type="text"],
+input[type="number"] {
+  @apply w-full p-0.5 text-xs;
+}
+
+input[type="number"] {
+  @apply text-right;
+}
+
+input[type="checkbox"] {
+  @apply w-3 h-3;
+}
+
+button {
+  @apply px-1 py-0.5 text-xs;
+}
+
+/* Responsive padding for table cells */
+th, td {
+  @apply px-0.5 py-0.5 sm:px-1 sm:py-1 whitespace-nowrap; /* Prevent text wrapping */
+}
+
+th.tag-column, td.tag-column {
+  @apply sm:pr-0.5;
+}
+
+th.cost-column, td.cost-column {
+  @apply sm:pl-0.5 sm:pr-1;
+}
+
+th.keeper2-column, td.keeper2-column {
+  @apply sm:px-2;
+}
+
+th.auction-column, td.auction-column {
+  @apply sm:px-2;
 }
 
 /* Responsive typography */
@@ -134,6 +183,19 @@ h3 {
   @apply text-base sm:text-lg;
 }
 
+/* Table enhancements */
+table {
+  @apply w-full text-xs border-collapse;
+}
+
+th {
+  @apply text-left font-semibold text-gray-300;
+}
+
+td {
+  @apply text-gray-400;
+}
+
 /* Responsive padding for main content */
 main {
   @apply px-4 sm:px-6 py-4;
@@ -147,4 +209,11 @@ main {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive input width */
+@media (min-width: 640px) {
+  input[type="number"] {
+    @apply w-10;
+  }
 }
