@@ -2,7 +2,7 @@ window.Rules = ({ rules, setRules, isAdminAuthenticated, updateData, handleRuleC
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-teal-400 text-center">Rules</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {rules.sections.map((section, sectionIndex) => (
           <div key={sectionIndex} className="card bg-gray-900 text-gray-100 rounded-lg shadow-lg p-4 animate-fade-in">
             <div className="flex items-center justify-between mb-3">

@@ -1,9 +1,9 @@
 window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, handleWeeklyScoreChange, handleWeeklyScoreSave, handleSurvivorChange, handleSurvivorSave, getRemainingTeams }) => {
   const yearPrizes = prizes[selectedYear] || { weeklyHighScores: [], survivor: [] };
-  const weeklyHighScores = yearPrizes.weeklyHighScores.length > 0 ? yearPrizes.weeklyHighScores : Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' }));
-  const survivor = yearPrizes.survivor.length > 0 ? yearPrizes.survivor : Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' });
+  const weeklyHighScores = yearPrizes.weeklyHighScores?.length > 0 ? yearPrizes.weeklyHighScores : Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' }));
+  const survivor = yearPrizes.survivor?.length > 0 ? yearPrizes.survivor : Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' });
 
-  if (!prizes[selectedYear]?.weeklyHighScores || !prizes[selectedYear]?.survivor) {
+  if (!prizes[selectedYear] || !prizes[selectedYear].weeklyHighScores || !prizes[selectedYear].survivor) {
     return <div className="text-center text-gray-300">Loading prizes...</div>;
   }
 
