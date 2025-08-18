@@ -109,15 +109,15 @@
   },
   {
     "team": "Tobin",
-    "keeper1": "",
-    "draftCost1": 0,
+    "keeper1": "Test",
+    "draftCost1": 1,
     "tag1": false,
-    "cost1": 0,
+    "cost1": 6,
     "keeper2": "",
     "draftCost2": 0,
     "tag2": false,
     "cost2": 0,
-    "remaining": 200
+    "remaining": 194
   },
   {
     "team": "CBuck",
