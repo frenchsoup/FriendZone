@@ -1,4 +1,4 @@
-window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, handleWeeklyScoreChange, handleWeeklyScoreSave, handleSurvivorChange, handleSurvivorSave, getRemainingTeams }) => {
+window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated, pendingChanges, setPendingChanges, setPrizes, getRemainingTeams }) => {
   const yearPrizes = prizes[selectedYear] || { weeklyHighScores: [], survivor: [] };
   const weeklyHighScores = yearPrizes.weeklyHighScores?.length > 0 ? yearPrizes.weeklyHighScores : Array(14).fill().map((_, i) => ({ week: i + 1, team: '', total: '' }));
   const survivor = yearPrizes.survivor?.length > 0 ? yearPrizes.survivor : Array(12).fill().map((_, i) => i === 11 ? { week: 12, winner: '' } : { week: i + 1, eliminated: '' });
@@ -6,6 +6,96 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
   if (!prizes[selectedYear] || !prizes[selectedYear].weeklyHighScores || !prizes[selectedYear].survivor) {
     return <div className="text-center text-gray-300">Loading prizes...</div>;
   }
+
+  const handleWeeklyScoreChange = (year, index, field, value) => {
+    const updatedPending = { ...pendingChanges };
+    if (!updatedPending.prizes[year]) {
+      updatedPending.prizes[year] = { weeklyHighScores: [], survivor: [] };
+    }
+    updatedPending.prizes[year].weeklyHighScores[index] = {
+      ...pendingChanges.prizes[year]?.weeklyHighScores?.[index] || yearPrizes.weeklyHighScores[index],
+      [field]: field === 'week' || field === 'total' ? (value ? parseFloat(value) : '') : value,
+    };
+    setPendingChanges(updatedPending);
+  };
+
+  const handleWeeklyScoreSave = async (year, index) => {
+    try {
+      const scoreData = pendingChanges.prizes[year]?.weeklyHighScores?.[index] || yearPrizes.weeklyHighScores[index];
+      const payload = {
+        file: `prizes_${year}.json`,
+        data: { ...yearPrizes, weeklyHighScores: yearPrizes.weeklyHighScores.map((item, i) => (i === index ? scoreData : item)) },
+        action: 'update',
+      };
+      console.log('Saving weeklyHighScores payload:', JSON.stringify(payload, null, 2));
+      const response = await fetch('/.netlify/functions/update-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Save failed');
+      }
+      // Update local state
+      const updatedPrizes = { ...prizes };
+      updatedPrizes[year].weeklyHighScores[index] = scoreData;
+      setPrizes(updatedPrizes);
+      setPendingChanges({
+        ...pendingChanges,
+        prizes: { ...pendingChanges.prizes, [year]: { ...pendingChanges.prizes[year], weeklyHighScores: [] } },
+      });
+      console.log('Save successful:', await response.json());
+    } catch (err) {
+      console.error('Save error:', err);
+      alert(`Failed to save: ${err.message}`);
+    }
+  };
+
+  const handleSurvivorChange = (year, index, value) => {
+    const updatedPending = { ...pendingChanges };
+    if (!updatedPending.prizes[year]) {
+      updatedPending.prizes[year] = { weeklyHighScores: [], survivor: [] };
+    }
+    updatedPending.prizes[year].survivor[index] = {
+      ...pendingChanges.prizes[year]?.survivor?.[index] || yearPrizes.survivor[index],
+      [index === 11 ? 'winner' : 'eliminated']: value,
+    };
+    setPendingChanges(updatedPending);
+  };
+
+  const handleSurvivorSave = async (year, index) => {
+    try {
+      const survivorData = pendingChanges.prizes[year]?.survivor?.[index] || yearPrizes.survivor[index];
+      const payload = {
+        file: `prizes_${year}.json`,
+        data: { ...yearPrizes, survivor: yearPrizes.survivor.map((item, i) => (i === index ? survivorData : item)) },
+        action: 'update',
+      };
+      console.log('Saving survivor payload:', JSON.stringify(payload, null, 2));
+      const response = await fetch('/.netlify/functions/update-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Save failed');
+      }
+      // Update local state
+      const updatedPrizes = { ...prizes };
+      updatedPrizes[year].survivor[index] = survivorData;
+      setPrizes(updatedPrizes);
+      setPendingChanges({
+        ...pendingChanges,
+        prizes: { ...pendingChanges.prizes, [year]: { ...pendingChanges.prizes[year], survivor: [] } },
+      });
+      console.log('Save successful:', await response.json());
+    } catch (err) {
+      console.error('Save error:', err);
+      alert(`Failed to save: ${err.message}`);
+    }
+  };
 
   return (
     <div className="space-y-4">
