@@ -6,8 +6,18 @@ body {
 
 /* Responsive table container */
 .table-container {
-  @apply overflow-x-auto;
+  @apply overflow-x-auto w-full;
   -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure table is responsive */
+table {
+  @apply w-full text-sm border-collapse min-w-[800px]; /* Set min-width to force horizontal scroll on small screens */
+}
+
+/* Table headers and cells */
+th, td {
+  @apply px-2 py-2 sm:px-3 sm:py-3 whitespace-nowrap; /* Prevent text wrapping */
 }
 
 /* Navigation */
@@ -108,23 +118,6 @@ h2 {
 
 h3 {
   @apply text-base sm:text-lg;
-}
-
-/* Table enhancements */
-table {
-  @apply w-full text-sm border-collapse;
-}
-
-th, td {
-  @apply px-2 py-2 sm:px-3 sm:py-3;
-}
-
-th {
-  @apply text-left font-semibold text-gray-700;
-}
-
-td {
-  @apply text-gray-800;
 }
 
 /* Responsive padding for main content */
