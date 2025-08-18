@@ -11,7 +11,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-teal-400 text-center">Prizes</h2>
       <div className="flex justify-center mb-4 space-x-2">
-        {['2023', '2024'].map(year => (
+        {['2023', '2024', '2025'].map(year => (
           <button
             key={year}
             onClick={() => setSelectedYear(year)}
@@ -30,17 +30,17 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
             <table className="w-full text-xs sm:text-sm border-collapse">
               <thead>
                 <tr className="border-b border-gray-700 bg-gray-800">
-                  <th className="text-left py-2 px-1 sm:px-3 w-[20%] min-w-[60px] text-gray-300">Week</th>
-                  <th className="text-left py-2 px-1 sm:px-3 w-[40%] min-w-[100px] text-gray-300">Team</th>
-                  <th className="text-right py-2 px-1 sm:px-3 w-[20%] min-w-[60px] text-gray-300">Total</th>
-                  {isAdminAuthenticated && <th className="text-right py-2 px-1 sm:px-3 w-[20%] min-w-[60px] text-gray-300">Actions</th>}
+                  <th className="text-left py-2 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-300">Week</th>
+                  <th className="text-left py-2 px-1 sm:px-2 w-[40%] min-w-[100px] text-gray-300">Team</th>
+                  <th className="text-right py-2 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-300">Total</th>
+                  {isAdminAuthenticated && <th className="text-right py-2 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-300">Actions</th>}
                 </tr>
               </thead>
               <tbody>
                 {weeklyHighScores.map((score, index) => (
                   <tr key={index} className={`border-b border-gray-700 ${index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-850'}`}>
-                    <td className="py-1 px-1 sm:px-3 w-[20%] min-w-[60px] text-gray-400">{score.week}</td>
-                    <td className="py-1 px-1 sm:px-3 w-[40%] min-w-[100px]">
+                    <td className="py-1 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-400">{score.week}</td>
+                    <td className="py-1 px-1 sm:px-2 w-[40%] min-w-[100px]">
                       {isAdminAuthenticated ? (
                         <select
                           value={score.team || ''}
@@ -56,7 +56,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                         <span className="text-gray-400">{score.team || '-'}</span>
                       )}
                     </td>
-                    <td className="text-right py-1 px-1 sm:px-3 w-[20%] min-w-[60px]">
+                    <td className="text-right py-1 px-1 sm:px-2 w-[20%] min-w-[60px]">
                       {isAdminAuthenticated ? (
                         <input
                           type="number"
@@ -69,7 +69,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                       )}
                     </td>
                     {isAdminAuthenticated && (
-                      <td className="text-right py-1 px-1 sm:px-3 w-[20%] min-w-[60px]">
+                      <td className="text-right py-1 px-1 sm:px-2 w-[20%] min-w-[60px]">
                         <button
                           onClick={() => handleWeeklyScoreSave(selectedYear, index)}
                           className="px-2 py-1 text-xs sm:text-sm bg-teal-500 text-white rounded-full hover:bg-teal-600 transition-all"
@@ -90,16 +90,16 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
             <table className="w-full text-xs sm:text-sm border-collapse">
               <thead>
                 <tr className="border-b border-gray-700 bg-gray-800">
-                  <th className="text-left py-2 px-1 sm:px-3 w-[20%] min-w-[60px] text-gray-300">Week</th>
-                  <th className="text-left py-2 px-1 sm:px-3 w-[60%] min-w-[100px] text-gray-300">Team</th>
-                  {isAdminAuthenticated && <th className="text-right py-2 px-1 sm:px-3 w-[20%] min-w-[60px] text-gray-300">Actions</th>}
+                  <th className="text-left py-2 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-300">Week</th>
+                  <th className="text-left py-2 px-1 sm:px-2 w-[60%] min-w-[100px] text-gray-300">Team</th>
+                  {isAdminAuthenticated && <th className="text-right py-2 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-300">Actions</th>}
                 </tr>
               </thead>
               <tbody>
                 {survivor.map((entry, index) => (
                   <tr key={index} className={`border-b border-gray-700 ${index === 11 ? 'bg-teal-900/50 font-semibold text-gray-100' : index % 2 === 0 ? 'bg-gray-900' : 'bg-gray-850'}`}>
-                    <td className="py-1 px-1 sm:px-3 w-[20%] min-w-[60px] text-gray-400">{index === 11 ? 'Winner' : entry.week}</td>
-                    <td className="py-1 px-1 sm:px-3 w-[60%] min-w-[100px]">
+                    <td className="py-1 px-1 sm:px-2 w-[20%] min-w-[60px] text-gray-400">{index === 11 ? 'Winner' : entry.week}</td>
+                    <td className="py-1 px-1 sm:px-2 w-[60%] min-w-[100px]">
                       {isAdminAuthenticated ? (
                         <select
                           value={index === 11 ? (entry.winner || '') : (entry.eliminated || '')}
@@ -116,7 +116,7 @@ window.Prizes = ({ prizes, keepers, selectedYear, setSelectedYear, isAdminAuthen
                       )}
                     </td>
                     {isAdminAuthenticated && (
-                      <td className="text-right py-1 px-1 sm:px-3 w-[20%] min-w-[60px]">
+                      <td className="text-right py-1 px-1 sm:px-2 w-[20%] min-w-[60px]">
                         <button
                           onClick={() => handleSurvivorSave(selectedYear, index)}
                           className="px-2 py-1 text-xs sm:text-sm bg-teal-500 text-white rounded-full hover:bg-teal-600 transition-all"
