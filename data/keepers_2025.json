@@ -113,11 +113,11 @@
     "draftCost1": 45,
     "tag1": false,
     "cost1": 55,
-    "keeper2": "",
-    "draftCost2": 0,
-    "tag2": false,
-    "cost2": 0,
-    "remaining": 145
+    "keeper2": "Terry Mclaurin",
+    "draftCost2": 12,
+    "tag2": true,
+    "cost2": 12,
+    "remaining": 133
   },
   {
     "team": "CBuck",
