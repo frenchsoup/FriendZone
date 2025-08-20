@@ -49,15 +49,15 @@
   },
   {
     "team": "Trudy",
-    "keeper1": "",
-    "draftCost1": 0,
-    "tag1": false,
-    "cost1": 0,
+    "keeper1": "Meyers",
+    "draftCost1": 5,
+    "tag1": true,
+    "cost1": 5,
     "keeper2": "",
     "draftCost2": 0,
     "tag2": false,
     "cost2": 0,
-    "remaining": 200
+    "remaining": 195
   },
   {
     "team": "TLew",
