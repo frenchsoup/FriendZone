@@ -75,13 +75,13 @@
     "team": "ALeF",
     "keeper1": "BT Jr. ",
     "draftCost1": 11,
-    "tag1": false,
-    "cost1": 17,
+    "tag1": true,
+    "cost1": 11,
     "keeper2": "",
     "draftCost2": 0,
     "tag2": false,
     "cost2": 0,
-    "remaining": 183
+    "remaining": 189
   },
   {
     "team": "JLusa",
