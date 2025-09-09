@@ -1,124 +1,39 @@
 {
   "weeklyHighScores": [
-    {
-      "week": 1,
-      "team": "Tobin",
-      "total": 151.36
-    },
-    {
-      "week": 2,
-      "team": "Lusa",
-      "total": 174.58
-    },
-    {
-      "week": 3,
-      "team": "Ayer",
-      "total": 152.22
-    },
-    {
-      "week": 4,
-      "team": "Ayer",
-      "total": 161.76
-    },
-    {
-      "week": 5,
-      "team": "Trudy",
-      "total": 157.08
-    },
-    {
-      "week": 6,
-      "team": "Tobin",
-      "total": 175.98
-    },
-    {
-      "week": 7,
-      "team": "Ayer",
-      "total": 147
-    },
-    {
-      "week": 8,
-      "team": "Dgatz",
-      "total": 174.56
-    },
-    {
-      "week": 9,
-      "team": "Lewis",
-      "total": 190.52
-    },
-    {
-      "week": 10,
-      "team": "Buck",
-      "total": 131.86
-    },
-    {
-      "week": 11,
-      "team": "Ayer",
-      "total": 155.82
-    },
-    {
-      "week": 12,
-      "team": "Mante",
-      "total": 174.22
-    },
-    {
-      "week": 13,
-      "team": "Tobin",
-      "total": 170.9
-    },
-    {
-      "week": 14,
-      "team": "Tobin",
-      "total": 170.9
-    }
+    { "week": 1, "team": "Tobin", "total": 151.36 },
+    { "week": 2, "team": "Lusa", "total": 174.58 },
+    { "week": 3, "team": "Ayer", "total": 152.22 },
+    { "week": 4, "team": "Ayer", "total": 161.76 },
+    { "week": 5, "team": "Trudy", "total": 157.08 },
+    { "week": 6, "team": "Tobin", "total": 175.98 },
+    { "week": 7, "team": "Ayer", "total": 147 },
+    { "week": 8, "team": "Dgatz", "total": 174.56 },
+    { "week": 9, "team": "Lewis", "total": 190.52 },
+    { "week": 10, "team": "Buck", "total": 131.86 },
+    { "week": 11, "team": "Ayer", "total": 155.82 },
+    { "week": 12, "team": "Mante", "total": 174.22 },
+    { "week": 13, "team": "Tobin", "total": 170.9 },
+    { "week": 14, "team": "Tobin", "total": 170.9 }
   ],
   "survivor": [
-    {
-      "week": 1,
-      "eliminated": "LeFevre"
-    },
-    {
-      "week": 2,
-      "eliminated": "Mante"
-    },
-    {
-      "week": 3,
-      "eliminated": "Dgatz"
-    },
-    {
-      "week": 4,
-      "eliminated": "Lewis"
-    },
-    {
-      "week": 5,
-      "eliminated": "Yacob"
-    },
-    {
-      "week": 6,
-      "eliminated": "Jordan"
-    },
-    {
-      "week": 7,
-      "eliminated": "Trudy"
-    },
-    {
-      "week": 8,
-      "eliminated": "Byz"
-    },
-    {
-      "week": 9,
-      "eliminated": "Ayer"
-    },
-    {
-      "week": 10,
-      "eliminated": "Tobin"
-    },
-    {
-      "week": 11,
-      "eliminated": "Lusa"
-    },
-    {
-      "week": 12,
-      "winner": "Buck"
-    }
+    { "week": 1, "eliminated": "LeFevre" },
+    { "week": 2, "eliminated": "Mante" },
+    { "week": 3, "eliminated": "Dgatz" },
+    { "week": 4, "eliminated": "Lewis" },
+    { "week": 5, "eliminated": "Yacob" },
+    { "week": 6, "eliminated": "Jordan" },
+    { "week": 7, "eliminated": "Trudy" },
+    { "week": 8, "eliminated": "Byz" },
+    { "week": 9, "eliminated": "Ayer" },
+    { "week": 10, "eliminated": "Tobin" },
+    { "week": 11, "eliminated": "Lusa" },
+    { "week": 12, "winner": "Buck" }
+  ],
+  "yearlyWinners": [
+    { "category": "Playoff Champ", "team": "Buck" },
+    { "category": "Playoff Runner Up", "team": "Tobin" },
+    { "category": "Playoff 3rd Place", "team": "Mante" },
+    { "category": "Regular Season Champ", "team": "Ayer" },
+    { "category": "Survivor", "team": "Buck" }
   ]
 }

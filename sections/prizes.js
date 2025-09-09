@@ -206,6 +206,47 @@ window.Prizes = () => {
             </div>
           </div>
         </div>
+        <div className="table-container">
+          <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
+            <h3 className="text-base sm:text-lg font-bold mb-3">Yearly Winners</h3>
+            <table className="w-full text-sm mb-4">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-2 px-2 sm:px-3 w-[40%]">Category</th>
+                  <th className="text-left py-2 px-2 sm:px-3 w-[60%]">Team</th>
+                </tr>
+              </thead>
+              <tbody>
+                {prizes[selectedYear].yearlyWinners?.map((winner, idx) => (
+                  <tr key={idx} className={`border-b ${idx % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
+                    <td className="py-2 px-2 sm:px-3">{winner.category}</td>
+                    <td className="py-2 px-2 sm:px-3">
+                      {isAdminAuthenticated ? (
+                        <select
+                          value={winner.team || ''}
+                          onChange={e => {
+                            const updated = { ...prizes };
+                            updated[selectedYear].yearlyWinners[idx].team = e.target.value;
+                            window.AppState.setPrizes(updated);
+                            window.AppState.persistPrizes(selectedYear, updated[selectedYear]);
+                          }}
+                          className="w-full bg-gray-100 p-1 rounded text-sm"
+                        >
+                          <option value="">Select Team</option>
+                          {getTeamsForYear(selectedYear).map(team => (
+                            <option key={team} value={team}>{team}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <span>{winner.team || ''}</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   );

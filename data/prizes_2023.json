@@ -120,5 +120,27 @@
       "team": "Jordan",
       "total": 133.38
     }
+  ],
+  "yearlyWinners": [
+    {
+      "category": "Playoff Champ",
+      "team": "Byz"
+    },
+    {
+      "category": "Playoff Runner Up",
+      "team": "Buck"
+    },
+    {
+      "category": "Playoff 3rd Place",
+      "team": "Lusa"
+    },
+    {
+      "category": "Regular Season Champ",
+      "team": "Ayer"
+    },
+    {
+      "category": "Survivor",
+      "team": "Byz"
+    }
   ]
 }
