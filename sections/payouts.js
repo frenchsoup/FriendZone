@@ -30,7 +30,7 @@ window.Payouts = () => {
             </tr>
           </thead>
           <tbody>
-            {payouts.map((payout, index) => (
+            {(payouts.prizes || []).map((payout, index) => (
               <tr key={index} className="border-b">
                 <td className="py-2">
                   {isAdminAuthenticated ? (
