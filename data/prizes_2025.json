@@ -2,8 +2,7 @@
   "survivor": [
     {
       "week": 1,
-      "eliminated": "",
-      "winner": ""
+      "eliminated": "TLew"
     },
     {
       "week": 2,
@@ -53,8 +52,8 @@
   "weeklyHighScores": [
     {
       "week": 1,
-      "team": "",
-      "total": ""
+      "team": "Tobin",
+      "total": "157.28"
     },
     {
       "week": 2,
