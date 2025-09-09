@@ -5,34 +5,6 @@ window.Home = () => (
       <div className="card bg-white text-gray-800 rounded-lg shadow-md hover:scale-105 transition-transform duration-200 animate-fade-in">
         <div className="bg-gradient-to-r from-teal-500 to-teal-700 text-white rounded-t-lg p-4 flex items-center">
           <span className="text-lg mr-2">🏈</span>
-          <h3 className="text-lg sm:text-xl font-bold">2023 Season</h3>
-        </div>
-        <div className="p-4 space-y-3">
-          <div className="flex items-center border-l-4 border-teal-500 pl-2">
-            <span className="text-sm sm:text-base font-medium mr-2">🏆 1st Place:</span>
-            <span className="text-sm sm:text-base font-semibold">Alex Bzydrya</span>
-          </div>
-          <div className="flex items-center border-l-4 border-teal-500 pl-2">
-            <span className="text-sm sm:text-base font-medium mr-2">🥈 2nd Place:</span>
-            <span className="text-sm sm:text-base font-semibold">Jake LeFevre</span>
-          </div>
-          <div className="flex items-center border-l-4 border-teal-500 pl-2">
-            <span className="text-sm sm:text-base font-medium mr-2">🥉 3rd Place:</span>
-            <span className="text-sm sm:text-base font-semibold">Jordan Picard</span>
-          </div>
-          <div className="flex items-center border-l-4 border-teal-500 pl-2">
-            <span className="text-sm sm:text-base font-medium mr-2">⭐ Regular Season:</span>
-            <span className="text-sm sm:text-base font-semibold">Jake LeFevre</span>
-          </div>
-          <div className="flex items-center border-l-4 border-teal-500 pl-2">
-            <span className="text-sm sm:text-base font-medium mr-2">🛡️ Survivor:</span>
-            <span className="text-sm sm:text-base font-semibold">Alex Bzydrya</span>
-          </div>
-        </div>
-      </div>
-      <div className="card bg-white text-gray-800 rounded-lg shadow-md hover:scale-105 transition-transform duration-200 animate-fade-in">
-        <div className="bg-gradient-to-r from-teal-500 to-teal-700 text-white rounded-t-lg p-4 flex items-center">
-          <span className="text-lg mr-2">🏈</span>
           <h3 className="text-lg sm:text-xl font-bold">2024 Season</h3>
         </div>
         <div className="p-4 space-y-3">
@@ -55,6 +27,34 @@ window.Home = () => (
           <div className="flex items-center border-l-4 border-teal-500 pl-2">
             <span className="text-sm sm:text-base font-medium mr-2">🛡️ Survivor:</span>
             <span className="text-sm sm:text-base font-semibold">Connor Buckley</span>
+          </div>
+        </div>
+      </div>
+            <div className="card bg-white text-gray-800 rounded-lg shadow-md hover:scale-105 transition-transform duration-200 animate-fade-in">
+        <div className="bg-gradient-to-r from-teal-500 to-teal-700 text-white rounded-t-lg p-4 flex items-center">
+          <span className="text-lg mr-2">🏈</span>
+          <h3 className="text-lg sm:text-xl font-bold">2023 Season</h3>
+        </div>
+        <div className="p-4 space-y-3">
+          <div className="flex items-center border-l-4 border-teal-500 pl-2">
+            <span className="text-sm sm:text-base font-medium mr-2">🏆 1st Place:</span>
+            <span className="text-sm sm:text-base font-semibold">Alex Bzydrya</span>
+          </div>
+          <div className="flex items-center border-l-4 border-teal-500 pl-2">
+            <span className="text-sm sm:text-base font-medium mr-2">🥈 2nd Place:</span>
+            <span className="text-sm sm:text-base font-semibold">Jake LeFevre</span>
+          </div>
+          <div className="flex items-center border-l-4 border-teal-500 pl-2">
+            <span className="text-sm sm:text-base font-medium mr-2">🥉 3rd Place:</span>
+            <span className="text-sm sm:text-base font-semibold">Jordan Picard</span>
+          </div>
+          <div className="flex items-center border-l-4 border-teal-500 pl-2">
+            <span className="text-sm sm:text-base font-medium mr-2">⭐ Regular Season:</span>
+            <span className="text-sm sm:text-base font-semibold">Jake LeFevre</span>
+          </div>
+          <div className="flex items-center border-l-4 border-teal-500 pl-2">
+            <span className="text-sm sm:text-base font-medium mr-2">🛡️ Survivor:</span>
+            <span className="text-sm sm:text-base font-semibold">Alex Bzydrya</span>
           </div>
         </div>
       </div>
