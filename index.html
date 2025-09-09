@@ -23,6 +23,7 @@
   <script type="text/babel" src="/sections/keepers.js"></script>
   <script type="text/babel" src="/sections/prizes.js"></script>
   <script type="text/babel" src="/sections/admin.js"></script>
+  <script type="text/babel" src="/sections/financials.js"></script>
   <script type="text/babel">
     const App = () => {
       const [currentTab, setCurrentTab] = React.useState('home');
@@ -349,6 +350,7 @@
           case 'payouts': return <window.Payouts />;
           case 'keepers': return <window.Keepers />;
           case 'prizes': return <window.Prizes />;
+          case 'financials': return <window.Financials />;
           case 'admin': return <window.Admin />;
           default: return null;
         }
@@ -368,7 +370,7 @@
                 </button>
               </div>
               <ul className={`sm:flex sm:space-x-4 ${window.AppState.isMenuOpen ? 'block' : 'hidden'} sm:block mt-2 sm:mt-0 p-3 sm:p-0 sm:bg-transparent bg-gray-800 shadow-lg sm:shadow-none`}>
-                {['home', 'rules', 'payouts', 'keepers', 'prizes', window.AppState.isAdminAuthenticated ? 'logout' : 'admin'].map(tab => (
+                {['home', 'rules', 'payouts', 'keepers', 'prizes', 'financials', window.AppState.isAdminAuthenticated ? 'logout' : 'admin'].map(tab => (
                   <li key={tab} className="my-2 sm:my-0">
                     <button
                       onClick={() => {
