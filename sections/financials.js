@@ -31,7 +31,7 @@ window.Financials = () => {
     // Weekly High Score
     const whsPrize = payoutMap['Weekly High Score (Weeks 1-14)'];
     const whsCount = (p.weeklyHighScores || []).filter(w => w.team === team).length;
-    weeklyHighScore = whsPrize && whsCount ? Math.round((whsPrize / 14) * whsCount * 100) / 100 : 0;
+    weeklyHighScore = whsPrize && whsCount ? Math.round((whsPrize / 14) * whsCount) : 0;
 
     // Survivor
     const survivorPrize = payoutMap['Survivor (Week 13 Winner)'];
@@ -70,14 +70,17 @@ window.Financials = () => {
       total: 0
     };
     years.forEach(year => {
-      const w = calcWinnings(team, year);
-      sum.weeklyHighScore += w.weeklyHighScore;
-      sum.survivor += w.survivor;
-      sum.regularSeason += w.regularSeason;
-      sum.playoffChamp += w.playoffChamp;
-      sum.playoffRunnerUp += w.playoffRunnerUp;
-      sum.playoffThird += w.playoffThird;
-      sum.total += w.total;
+      // Only add if team is present in that year
+      if (keepers[year].some(t => t.team === team)) {
+        const w = calcWinnings(team, year);
+        sum.weeklyHighScore += w.weeklyHighScore;
+        sum.survivor += w.survivor;
+        sum.regularSeason += w.regularSeason;
+        sum.playoffChamp += w.playoffChamp;
+        sum.playoffRunnerUp += w.playoffRunnerUp;
+        sum.playoffThird += w.playoffThird;
+        sum.total += w.total;
+      }
     });
     return { team, ...sum };
   });
@@ -91,13 +94,13 @@ window.Financials = () => {
             <thead>
               <tr className="border-b">
                 <th className="text-left">Team</th>
-                <th className="text-right">Weekly High Score</th>
+                <th className="text-right">Weekly HS</th>
                 <th className="text-right">Survivor</th>
-                <th className="text-right">Regular Season</th>
-                <th className="text-right">Playoff Champ</th>
-                <th className="text-right">Runner Up</th>
-                <th className="text-right">3rd Place</th>
-                <th className="text-right">Total Won</th>
+                <th className="text-right">RS</th>
+                <th className="text-right">Champ</th>
+                <th className="text-right">2nd</th>
+                <th className="text-right">3rd</th>
+                <th className="text-right">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -112,17 +115,17 @@ window.Financials = () => {
                         : 'table-row-odd'
                     } hover:bg-teal-50`}
                     style={{ cursor: 'pointer' }}
-                    title="Click to view yearly breakdown"
+                    title="Tap to view yearly breakdown"
                     onClick={() => setExpandedTeam(expandedTeam === row.team ? null : row.team)}
                   >
                     <td>{row.team}</td>
-                    <td className="text-right">${Math.round(row.weeklyHighScore)}</td>
-                    <td className="text-right">${Math.round(row.survivor)}</td>
-                    <td className="text-right">${Math.round(row.regularSeason)}</td>
-                    <td className="text-right">${Math.round(row.playoffChamp)}</td>
-                    <td className="text-right">${Math.round(row.playoffRunnerUp)}</td>
-                    <td className="text-right">${Math.round(row.playoffThird)}</td>
-                    <td className="text-right font-bold">${Math.round(row.total)}</td>
+                    <td className="text-right">{row.weeklyHighScore ? `$${row.weeklyHighScore}` : '-'}</td>
+                    <td className="text-right">{row.survivor ? `$${row.survivor}` : '-'}</td>
+                    <td className="text-right">{row.regularSeason ? `$${row.regularSeason}` : '-'}</td>
+                    <td className="text-right">{row.playoffChamp ? `$${row.playoffChamp}` : '-'}</td>
+                    <td className="text-right">{row.playoffRunnerUp ? `$${row.playoffRunnerUp}` : '-'}</td>
+                    <td className="text-right">{row.playoffThird ? `$${row.playoffThird}` : '-'}</td>
+                    <td className="text-right font-bold">{row.total ? `$${row.total}` : '-'}</td>
                   </tr>
                   {expandedTeam === row.team && (
                     <tr className="bg-gray-50 border-b">
@@ -132,28 +135,28 @@ window.Financials = () => {
                             <thead>
                               <tr>
                                 <th className="text-left">Year</th>
-                                <th className="text-right">Weekly High Score</th>
+                                <th className="text-right">Weekly HS</th>
                                 <th className="text-right">Survivor</th>
-                                <th className="text-right">Regular Season</th>
-                                <th className="text-right">Playoff Champ</th>
-                                <th className="text-right">Runner Up</th>
-                                <th className="text-right">3rd Place</th>
+                                <th className="text-right">RS</th>
+                                <th className="text-right">Champ</th>
+                                <th className="text-right">2nd</th>
+                                <th className="text-right">3rd</th>
                                 <th className="text-right">Total</th>
                               </tr>
                             </thead>
                             <tbody>
-                              {years.map(year => {
+                              {years.filter(year => keepers[year].some(t => t.team === row.team)).map(year => {
                                 const w = calcWinnings(row.team, year);
                                 return (
                                   <tr key={year}>
                                     <td>{year}</td>
-                                    <td className="text-right">${Math.round(w.weeklyHighScore)}</td>
-                                    <td className="text-right">${Math.round(w.survivor)}</td>
-                                    <td className="text-right">${Math.round(w.regularSeason)}</td>
-                                    <td className="text-right">${Math.round(w.playoffChamp)}</td>
-                                    <td className="text-right">${Math.round(w.playoffRunnerUp)}</td>
-                                    <td className="text-right">${Math.round(w.playoffThird)}</td>
-                                    <td className="text-right font-bold">${Math.round(w.total)}</td>
+                                    <td className="text-right">{w.weeklyHighScore ? `$${w.weeklyHighScore}` : '-'}</td>
+                                    <td className="text-right">{w.survivor ? `$${w.survivor}` : '-'}</td>
+                                    <td className="text-right">{w.regularSeason ? `$${w.regularSeason}` : '-'}</td>
+                                    <td className="text-right">{w.playoffChamp ? `$${w.playoffChamp}` : '-'}</td>
+                                    <td className="text-right">{w.playoffRunnerUp ? `$${w.playoffRunnerUp}` : '-'}</td>
+                                    <td className="text-right">{w.playoffThird ? `$${w.playoffThird}` : '-'}</td>
+                                    <td className="text-right font-bold">{w.total ? `$${w.total}` : '-'}</td>
                                   </tr>
                                 );
                               })}
