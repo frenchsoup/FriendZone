@@ -70,7 +70,7 @@ window.Keepers = () => {
           </button>
         )}
       </div>
-      <div className="table-container overflow-x-auto">
+      <div className="table-container flex justify-center overflow-x-auto">
         <div className="card bg-white text-gray-800 rounded-lg shadow-md p-1 sm:p-3" style={{ display: 'block', width: 'fit-content', minWidth: '600px' }}>
           <table className="w-full text-xs sm:text-sm border-collapse min-w-[600px]">
             <thead>

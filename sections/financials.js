@@ -88,7 +88,7 @@ window.Financials = () => {
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Financials</h2>
-      <div className="table-container overflow-x-auto">
+      <div className="table-container flex justify-center overflow-x-auto">
         <div className="card bg-white text-gray-800 rounded-lg shadow-md p-1 sm:p-4" style={{ display: 'block', width: 'fit-content', minWidth: '500px' }}>
           <table className="w-full text-xs sm:text-sm border-collapse min-w-[500px]">
             <thead>
