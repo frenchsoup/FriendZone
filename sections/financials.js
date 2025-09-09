@@ -104,17 +104,25 @@ window.Financials = () => {
               {teamTotals.map((row, idx) => (
                 <React.Fragment key={row.team}>
                   <tr
-                    className={`border-b cursor-pointer ${expandedTeam === row.team ? 'bg-teal-100 font-bold' : idx % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}
+                    className={`border-b cursor-pointer transition-colors duration-150 ${
+                      expandedTeam === row.team
+                        ? 'bg-teal-100 font-bold'
+                        : idx % 2 === 0
+                        ? 'table-row-even'
+                        : 'table-row-odd'
+                    } hover:bg-teal-50`}
+                    style={{ cursor: 'pointer' }}
+                    title="Click to view yearly breakdown"
                     onClick={() => setExpandedTeam(expandedTeam === row.team ? null : row.team)}
                   >
                     <td>{row.team}</td>
-                    <td className="text-right">${row.weeklyHighScore.toFixed(2)}</td>
-                    <td className="text-right">${row.survivor.toFixed(2)}</td>
-                    <td className="text-right">${row.regularSeason.toFixed(2)}</td>
-                    <td className="text-right">${row.playoffChamp.toFixed(2)}</td>
-                    <td className="text-right">${row.playoffRunnerUp.toFixed(2)}</td>
-                    <td className="text-right">${row.playoffThird.toFixed(2)}</td>
-                    <td className="text-right font-bold">${row.total.toFixed(2)}</td>
+                    <td className="text-right">${Math.round(row.weeklyHighScore)}</td>
+                    <td className="text-right">${Math.round(row.survivor)}</td>
+                    <td className="text-right">${Math.round(row.regularSeason)}</td>
+                    <td className="text-right">${Math.round(row.playoffChamp)}</td>
+                    <td className="text-right">${Math.round(row.playoffRunnerUp)}</td>
+                    <td className="text-right">${Math.round(row.playoffThird)}</td>
+                    <td className="text-right font-bold">${Math.round(row.total)}</td>
                   </tr>
                   {expandedTeam === row.team && (
                     <tr className="bg-gray-50 border-b">
@@ -139,13 +147,13 @@ window.Financials = () => {
                                 return (
                                   <tr key={year}>
                                     <td>{year}</td>
-                                    <td className="text-right">${w.weeklyHighScore.toFixed(2)}</td>
-                                    <td className="text-right">${w.survivor.toFixed(2)}</td>
-                                    <td className="text-right">${w.regularSeason.toFixed(2)}</td>
-                                    <td className="text-right">${w.playoffChamp.toFixed(2)}</td>
-                                    <td className="text-right">${w.playoffRunnerUp.toFixed(2)}</td>
-                                    <td className="text-right">${w.playoffThird.toFixed(2)}</td>
-                                    <td className="text-right font-bold">${w.total.toFixed(2)}</td>
+                                    <td className="text-right">${Math.round(w.weeklyHighScore)}</td>
+                                    <td className="text-right">${Math.round(w.survivor)}</td>
+                                    <td className="text-right">${Math.round(w.regularSeason)}</td>
+                                    <td className="text-right">${Math.round(w.playoffChamp)}</td>
+                                    <td className="text-right">${Math.round(w.playoffRunnerUp)}</td>
+                                    <td className="text-right">${Math.round(w.playoffThird)}</td>
+                                    <td className="text-right font-bold">${Math.round(w.total)}</td>
                                   </tr>
                                 );
                               })}
@@ -159,6 +167,9 @@ window.Financials = () => {
               ))}
             </tbody>
           </table>
+          <div className="mt-2 text-xs text-gray-500">
+            <span>Click a team row to view yearly breakdown.</span>
+          </div>
         </div>
       </div>
     </div>
