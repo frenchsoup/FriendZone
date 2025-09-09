@@ -1,6 +1,73 @@
 window.Prizes = () => {
   const { prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated } = window.AppState;
 
+  // Helper: get all teams for the selected year
+  const getTeamsForYear = (year) => {
+    return keepers[year]?.map(k => k.team) || [];
+  };
+
+  // Helper: get remaining teams for survivor for a given week
+  const getSurvivorRemainingTeams = (year, upToWeek = null) => {
+    const allTeams = getTeamsForYear(year);
+    const survivorEntries = prizes[year]?.survivor || [];
+    let eliminated = [];
+    let winner = '';
+    for (let i = 0; i < survivorEntries.length; i++) {
+      if (upToWeek !== null && i > upToWeek) break;
+      if (i === 11 && survivorEntries[i].winner) {
+        winner = survivorEntries[i].winner;
+      } else if (survivorEntries[i].eliminated) {
+        eliminated.push(survivorEntries[i].eliminated);
+      }
+    }
+    let remaining = allTeams.filter(t => !eliminated.includes(t) && t !== winner);
+    return remaining;
+  };
+
+  // Handler for weekly high score change
+  const handleHighScoreChange = (year, weekIdx, field, value) => {
+    const updated = { ...prizes };
+    updated[year].weeklyHighScores = updated[year].weeklyHighScores.map((score, idx) =>
+      idx === weekIdx ? { ...score, [field]: value } : score
+    );
+    window.AppState.setPrizes(updated);
+    window.AppState.persistPrizes(year, updated[year]);
+  };
+
+  // Handler for survivor change
+  const handleSurvivorChange = (year, weekIdx, field, value) => {
+    const updated = { ...prizes };
+    updated[year].survivor = updated[year].survivor.map((entry, idx) => {
+      if (idx === weekIdx) {
+        if (weekIdx === 11) {
+          return { ...entry, winner: value };
+        } else {
+          return { ...entry, eliminated: value };
+        }
+      }
+      return entry;
+    });
+    window.AppState.setPrizes(updated);
+    window.AppState.persistPrizes(year, updated[year]);
+  };
+
+  // Persist function (calls Netlify function)
+  window.AppState.persistPrizes = async (year, data) => {
+    try {
+      await fetch('/.netlify/functions/update-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          file: `prizes_${year}.json`,
+          data,
+          action: 'update'
+        })
+      });
+    } catch (e) {
+      alert('Failed to save prizes data!');
+    }
+  };
+
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Prizes</h2>
@@ -32,35 +99,39 @@ window.Prizes = () => {
                 </tr>
               </thead>
               <tbody>
-                {prizes[selectedYear].weeklyHighScores.map((score, index) => (
-                  <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
-                    <td className="py-2 px-2 sm:px-3">{score.week}</td>
-                    <td className="py-2 px-2 sm:px-3">
-                      {isAdminAuthenticated ? (
-                        <input
-                          type="text"
-                          value={score.team || ''}
-                          className="w-full bg-gray-100 p-1 rounded text-sm"
-                          readOnly
-                        />
-                      ) : (
-                        <span>{score.team || ''}</span>
-                      )}
-                    </td>
-                    <td className="text-right py-2 px-2 sm:px-3">
-                      {isAdminAuthenticated ? (
-                        <input
-                          type="number"
-                          value={score.total || ''}
-                          className="w-full sm:w-16 bg-gray-100 p-1 rounded text-sm text-right no-spinner"
-                          readOnly
-                        />
-                      ) : (
-                        <span>{score.total || ''}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                  {prizes[selectedYear].weeklyHighScores.map((score, index) => (
+                    <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
+                      <td className="py-2 px-2 sm:px-3">{score.week}</td>
+                      <td className="py-2 px-2 sm:px-3">
+                        {isAdminAuthenticated ? (
+                          <select
+                            value={score.team || ''}
+                            onChange={e => handleHighScoreChange(selectedYear, index, 'team', e.target.value)}
+                            className="w-full bg-gray-100 p-1 rounded text-sm"
+                          >
+                            <option value="">Select Team</option>
+                            {getTeamsForYear(selectedYear).map(team => (
+                              <option key={team} value={team}>{team}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span>{score.team || ''}</span>
+                        )}
+                      </td>
+                      <td className="text-right py-2 px-2 sm:px-3">
+                        {isAdminAuthenticated ? (
+                          <input
+                            type="text"
+                            value={score.total || ''}
+                            onChange={e => handleHighScoreChange(selectedYear, index, 'total', e.target.value)}
+                            className="w-full sm:w-16 bg-gray-100 p-1 rounded text-sm text-right"
+                          />
+                        ) : (
+                          <span>{score.total || ''}</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
@@ -76,53 +147,61 @@ window.Prizes = () => {
                 </tr>
               </thead>
               <tbody>
-                {prizes[selectedYear].survivor.map((entry, index) => (
-                  <tr
-                    key={index}
-                    className={`border-b ${
-                      index === 11
-                        ? 'bg-teal-100 font-semibold text-gray-900'
-                        : index % 2 === 0
-                        ? 'table-row-even'
-                        : 'table-row-odd'
-                    }`}
-                  >
-                    <td className="py-2 px-2 sm:px-3">{index === 11 ? 'Winner' : entry.week}</td>
-                    <td className="py-2 px-2 sm:px-3">
-                      {isAdminAuthenticated ? (
-                        <select
-                          value={index === 11 ? (entry.winner || '') : (entry.eliminated || '')}
-                          onChange={(e) => window.AppState.handleSurvivorChange(selectedYear, index, 'team', e.target.value)}
-                          className="w-full bg-gray-100 p-1 rounded text-sm"
-                        >
-                          <option value="">Select Team</option>
-                          {window.AppState.getRemainingTeams(selectedYear, index).map(team => (
-                            <option key={team} value={team}>{team}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span>{index === 11 ? (entry.winner || '') : (entry.eliminated || '')}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                  {prizes[selectedYear].survivor.map((entry, index) => {
+                    const value = index === 11 ? (entry.winner || '') : (entry.eliminated || '');
+                    const isLocked = !!value;
+                    return (
+                      <tr
+                        key={index}
+                        className={`border-b ${
+                          index === 11
+                            ? 'bg-teal-100 font-semibold text-gray-900'
+                            : index % 2 === 0
+                            ? 'table-row-even'
+                            : 'table-row-odd'
+                        }`}
+                      >
+                        <td className="py-2 px-2 sm:px-3">{index === 11 ? 'Winner' : entry.week}</td>
+                        <td className="py-2 px-2 sm:px-3">
+                          {isAdminAuthenticated ? (
+                            isLocked ? (
+                              <span>{value}</span>
+                            ) : (
+                              <select
+                                value={value}
+                                onChange={e => handleSurvivorChange(selectedYear, index, index === 11 ? 'winner' : 'eliminated', e.target.value)}
+                                className="w-full bg-gray-100 p-1 rounded text-sm"
+                              >
+                                <option value="">Select Team</option>
+                                {getSurvivorRemainingTeams(selectedYear, index).map(team => (
+                                  <option key={team} value={team}>{team}</option>
+                                ))}
+                              </select>
+                            )
+                          ) : (
+                            <span>{value}</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
             <div className="mt-4">
               <h4 className="text-sm font-semibold text-gray-800 mb-2">Remaining Teams</h4>
               <div className="flex flex-wrap gap-2">
-                {window.AppState.getRemainingTeams(selectedYear).length > 0 ? (
-                  window.AppState.getRemainingTeams(selectedYear).map(team => (
-                    <span
-                      key={team}
-                      className="inline-block bg-teal-500 text-white text-xs font-medium px-2 py-1 rounded-full"
-                    >
-                      {team}
-                    </span>
-                  ))
-                ) : (
-                  <span className="text-sm text-gray-600">No teams remaining</span>
-                )}
+                  {getSurvivorRemainingTeams(selectedYear).length > 0 ? (
+                    getSurvivorRemainingTeams(selectedYear).map(team => (
+                      <span
+                        key={team}
+                        className="inline-block bg-teal-500 text-white text-xs font-medium px-2 py-1 rounded-full"
+                      >
+                        {team}
+                      </span>
+                    ))
+                  ) : (
+                    <span className="text-sm text-gray-600">No teams remaining</span>
+                  )}
               </div>
             </div>
           </div>

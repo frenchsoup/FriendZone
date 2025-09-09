@@ -5,30 +5,64 @@ Welcome to the **FriendZone Fantasy Football League** web app—a platform for m
 ## Features
 
 - **Responsive Navigation**: Mobile-friendly tabs for Home, Rules, Payouts, Keepers, Prizes, and Admin.
-- **Rules Management**: Admins can add, edit, or delete rule sections/items (stored in `rules.json`).
-- **Payouts Configuration**: View/edit payout categories, percentages, and prize amounts (`payouts.json`).
-- **Keeper Tracking**: Manage keeper players, draft costs, tags, and budgets for 2022–2025 (`keepers_*.json`).
-- **Prize Tracking**: Record weekly high scores and survivor pool results for 2023–2025 (`prizes_*.json`).
-- **Admin Authentication**: Password-protected admin login with data editing and locking.
-- **Data Persistence**: Netlify Functions for reading/writing JSON files.
-- **Modal Confirmations**: Safe deletion of rules/sections.
-- **Styling**: Responsive design with Tailwind CSS and custom styles.
+- **Rules Management**: Admins can add, edit, or delete rule sections/items (stored in [`data/rules.json`](data/rules.json)).
+- **Payouts Configuration**: View/edit payout categories, percentages, and prize amounts ([`data/payouts.json`](data/payouts.json)).
+- **Keeper Tracking**: Manage keeper players, draft costs, tags, and budgets for 2022–2025 ([`data/keepers_2022.json`](data/keepers_2022.json), [`data/keepers_2023.json`](data/keepers_2023.json), [`data/keepers_2024.json`](data/keepers_2024.json), [`data/keepers_2025.json`](data/keepers_2025.json)).
+- **Prize Tracking**: Record weekly high scores and survivor pool results for 2023–2025 ([`data/prizes_2023.json`](data/prizes_2023.json), [`data/prizes_2024.json`](data/prizes_2024.json), [`data/prizes_2025.json`](data/prizes_2025.json)).
+- **Admin Authentication**: Password-protected admin login with data editing and locking ([`sections/admin.js`](sections/admin.js)).
+- **Data Persistence**: Netlify Function ([`.netlify/functions/update-data.js`](.netlify/functions/update-data.js)) for reading/writing JSON files via GitHub API.
+- **Modal Confirmations**: Safe deletion of rules/sections ([`sections/modal.js`](sections/modal.js)).
+- **Styling**: Responsive design with Tailwind CSS and custom [`styles.css`](styles.css).
+
+## Project Structure
+
+```
+FriendZone/
+├── index.html
+├── styles.css
+├── netlify.toml
+├── LICENSE
+├── package.json
+├── README.md
+├── data/
+│   ├── keepers_2022.json
+│   ├── keepers_2023.json
+│   ├── keepers_2024.json
+│   ├── keepers_2025.json
+│   ├── locks.json
+│   ├── payouts.json
+│   ├── prizes_2023.json
+│   ├── prizes_2024.json
+│   ├── prizes_2025.json
+│   └── rules.json
+├── .netlify/
+│   └── functions/
+│       └── update-data.js
+└── sections/
+    ├── admin.js
+    ├── home.js
+    ├── keepers.js
+    ├── modal.js
+    ├── payouts.js
+    ├── prizes.js
+    └── rules.js
+```
 
 ## Tech Stack
 
-- **Frontend**: React (18.2.0), JSX, Tailwind CSS, Babel Standalone
-- **Backend**: Netlify Functions (`/.netlify/functions/update-data`)
-- **Data Storage**: JSON files (`/data/*.json`) on Netlify
-- **Styling**: Tailwind CSS, custom `styles.css`, Inter font (Google Fonts)
+- **Frontend**: React (via CDN), JSX, Tailwind CSS, Babel Standalone
+- **Backend**: Netlify Functions ([`.netlify/functions/update-data.js`](.netlify/functions/update-data.js)), uses GitHub API to persist data
+- **Data Storage**: JSON files in [`data/`](data/)
+- **Styling**: Tailwind CSS, custom [`styles.css`](styles.css)
 - **Deployment**: Netlify
 
 ## Setup Instructions
 
 ### Prerequisites
 
-- **Node.js**: For local development (optional for Netlify deployment)
-- **Git**: For cloning/managing the repo
-- **Netlify CLI**: Optional for local Netlify Functions (`npm install -g netlify-cli`)
+- **Node.js** (optional, for local development)
+- **Git**
+- **Netlify CLI** (optional, for local Netlify Functions: `npm install -g netlify-cli`)
 
 ### Local Development
 
@@ -37,35 +71,13 @@ Welcome to the **FriendZone Fantasy Football League** web app—a platform for m
     git clone https://github.com/frenchsoup/FriendZone.git
     cd FriendZone
     ```
-2. Project structure:
-    ```
-    FriendZone/
-    ├── data/
-    │   ├── keepers_2022.json
-    │   ├── keepers_2023.json
-    │   ├── keepers_2024.json
-    │   ├── keepers_2025.json
-    │   ├── prizes_2023.json
-    │   ├── prizes_2024.json
-    │   ├── prizes_2025.json
-    │   ├── payouts.json
-    │   ├── rules.json
-    │   └── locks.json
-    ├── .netlify/
-    │   └── functions/
-    │       └── update-data.js
-    ├── index.html
-    ├── styles.css
-    ├── netlify.toml
-    └── README.md
-    ```
-3. Serve locally:
+2. Serve locally:
     ```sh
     npx serve .
     ```
     Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-4. **Netlify Functions (Optional)**:
+3. **Netlify Functions (Optional)**:
     - Install Netlify CLI: `npm install -g netlify-cli`
     - Run: `netlify dev`
     - Test `/data/*.json` updates locally.
@@ -110,34 +122,10 @@ Initialize `/data/` with these JSON files (create empty versions if needed):
 
 ### Netlify Function
 
-Ensure `/.netlify/functions/update-data.js` exists for data persistence. Example implementation:
+The Netlify function ([`.netlify/functions/update-data.js`](.netlify/functions/update-data.js)) updates JSON files in the GitHub repo using the GitHub API. It supports `update` and `delete` actions for all data files.
 
-```js
-const fs = require('fs').promises;
-const path = require('path');
-
-exports.handler = async (event) => {
-  try {
-    const { file, data, action, index } = JSON.parse(event.body);
-    const filePath = path.join(__dirname, '../../data', file);
-    let currentData = [];
-    try {
-      currentData = JSON.parse(await fs.readFile(filePath));
-    } catch (err) {
-      // File may not exist yet
-    }
-    if (action === 'update') {
-      await fs.writeFile(filePath, JSON.stringify(data, null, 2));
-    } else if (action === 'delete' && index != null) {
-      currentData.splice(index, 1);
-      await fs.writeFile(filePath, JSON.stringify(currentData, null, 2));
-    }
-    return { statusCode: 200, body: JSON.stringify({ success: true }) };
-  } catch (err) {
-    return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
-  }
-};
-```
+**Environment Variable Required:**  
+Set `GITHUB_TOKEN` in your Netlify site for authentication.
 
 ## Deployment to Netlify
 
@@ -155,15 +143,10 @@ exports.handler = async (event) => {
         - **Publish directory**: `.`
         - **Build command**: _(leave blank)_
         - **Functions directory**: `.netlify/functions`
-    - Deploy the site (URL like `https://friendzoneff.netlify.app`)
+    - Add environment variable `GITHUB_TOKEN` for GitHub API access
+    - Deploy the site
 
-3. **Environment Variables**:
-    - Move the admin password to a Netlify environment variable:
-        - Site Settings > Environment Variables
-        - Add `ADMIN_PASSWORD` with value `friendzone2025`
-        - Update `index.html` to fetch password via Netlify Function (contact for help)
-
-4. **Verify Deployment**:
+3. **Verify Deployment**:
     - Visit your Netlify URL
     - Open browser console for errors
     - Test admin login, keeper updates, and data persistence
@@ -191,8 +174,4 @@ exports.handler = async (event) => {
     - Use consistent JSX syntax and close all tags
     - Follow Tailwind CSS conventions
     - Use the Netlify Function for data updates
-<<<<<<< HEAD
     - Test changes in the browser and check console for errors
-=======
-    - Test changes in the browser and check console for errors
->>>>>>> 639ba520f7d890df803f8a943c19c78d24746cf4
