@@ -19,8 +19,8 @@ window.Payouts = () => {
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Payouts</h2>
-      <div className="card bg-white text-gray-800 rounded-lg shadow-md p-4">
-        <table className="w-full text-sm">
+      <div className="card bg-white text-gray-800 rounded-lg shadow-md p-2 sm:p-4">
+        <table className="w-full text-xs sm:text-sm min-w-[350px] border-collapse">
           <thead>
             <tr className="border-b">
               <th className="text-left py-2">Category</th>
@@ -31,14 +31,16 @@ window.Payouts = () => {
           </thead>
           <tbody>
             {(payouts.prizes || []).map((payout, index) => (
-              <tr key={index} className="border-b">
+              <tr key={index} className={`border-b hover:bg-teal-50 transition-colors`}>
                 <td className="py-2">
                   {isAdminAuthenticated ? (
                     <input
                       type="text"
                       value={payout.category}
                       onChange={(e) => window.AppState.handlePayoutChange(index, 'category', e.target.value)}
-                      className="w-full bg-gray-100 p-1 rounded text-sm"
+                      className="w-full bg-gray-100 p-2 rounded text-base"
+                      style={{ minHeight: '2.25rem' }}
+                      aria-label="Edit payout category"
                     />
                   ) : (
                     <span>{payout.category}</span>
@@ -50,7 +52,9 @@ window.Payouts = () => {
                       type="number"
                       value={payout.percentage}
                       onChange={(e) => window.AppState.handlePayoutChange(index, 'percentage', e.target.value)}
-                      className="w-20 bg-gray-100 p-1 rounded text-sm text-right"
+                      className="w-20 bg-gray-100 p-2 rounded text-base text-right"
+                      style={{ minHeight: '2.25rem' }}
+                      aria-label="Edit payout percentage"
                     />
                   ) : (
                     <span>{payout.percentage}%</span>
@@ -62,7 +66,9 @@ window.Payouts = () => {
                       type="number"
                       value={payout.prize}
                       onChange={(e) => window.AppState.handlePayoutChange(index, 'prize', e.target.value)}
-                      className="w-20 bg-gray-100 p-1 rounded text-sm text-right"
+                      className="w-20 bg-gray-100 p-2 rounded text-base text-right"
+                      style={{ minHeight: '2.25rem' }}
+                      aria-label="Edit payout prize"
                     />
                   ) : (
                     <span>${payout.prize}</span>
@@ -72,7 +78,9 @@ window.Payouts = () => {
                   <td className="text-right py-2">
                     <button
                       onClick={() => handleDeletePayout(index)}
-                      className="text-red-500 hover:text-red-700 text-lg"
+                      className="text-red-500 hover:text-red-700 text-lg px-2 py-1 rounded"
+                      style={{ minHeight: '2.25rem' }}
+                      aria-label="Delete payout"
                     >
                       🗑️
                     </button>
@@ -85,7 +93,9 @@ window.Payouts = () => {
         {isAdminAuthenticated && (
           <button
             onClick={handleAddPayout}
-            className="mt-3 w-full px-2 py-1 text-sm bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+            className="mt-3 w-full px-2 py-2 text-base bg-teal-500 text-white rounded hover:bg-teal-600 transition-all"
+            style={{ minHeight: '2.25rem' }}
+            aria-label="Add payout"
           >
             Add Payout
           </button>

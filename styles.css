@@ -211,3 +211,39 @@ main {
     @apply w-10;
   }
 }
+
+/* Mobile table responsiveness */
+@media (max-width: 640px) {
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #4b5563 #1f2937;
+  }
+  table {
+    font-size: 0.85rem;
+    min-width: 500px;
+  }
+  th, td {
+    padding: 0.25rem 0.25rem;
+    white-space: nowrap;
+  }
+  .card {
+    padding: 0.5rem;
+  }
+  .mobile-nav {
+    padding: 0.5rem;
+  }
+  main {
+    padding: 0.5rem;
+  }
+  h1, h2, h3 {
+    font-size: 1rem;
+  }
+}
+
+/* Make buttons and selects easier to tap */
+button, select, input, textarea {
+  min-height: 2.25rem;
+  font-size: 1rem;
+}

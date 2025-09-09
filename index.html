@@ -358,12 +358,13 @@
 
       return (
         <div className="min-h-screen bg-gray-900">
-          <nav className="bg-gray-800 text-white p-3 shadow-lg mobile-nav">
+          <nav className="bg-gray-800 text-white p-3 shadow-lg mobile-nav sticky top-0 z-50">
             <div className="container mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div className="flex justify-between items-center w-full sm:w-auto">
                 <h1 className="text-xl sm:text-2xl font-bold">FriendZone FF</h1>
                 <button
-                  className="sm:hidden text-xl focus:outline-none"
+                  className="sm:hidden text-2xl px-2 py-1 focus:outline-none"
+                  aria-label="Open menu"
                   onClick={() => window.AppState.setIsMenuOpen(!window.AppState.isMenuOpen)}
                 >
                   ☰
@@ -383,7 +384,8 @@
                         }
                         window.AppState.setIsMenuOpen(false);
                       }}
-                      className={`w-full sm:w-auto text-left capitalize hover:text-teal-400 focus:outline-none ${window.AppState.currentTab === tab ? 'text-teal-400' : ''}`}
+                      className={`w-full sm:w-auto text-left capitalize hover:text-teal-400 focus:outline-none px-2 py-2 rounded ${window.AppState.currentTab === tab ? 'text-teal-400 bg-gray-700' : ''}`}
+                      style={{ fontSize: '1.1rem' }}
                     >
                       {tab}
                     </button>
