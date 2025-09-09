@@ -45,12 +45,14 @@
       const [isMenuOpen, setIsMenuOpen] = React.useState(false);
       const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: null });
       const [pendingChanges, setPendingChanges] = React.useState({ 2022: {}, 2023: {}, 2024: {}, 2025: {} });
+      const [loading, setLoading] = React.useState(true);
 
       const ADMIN_PASSWORD = 'friendzone2025';
 
       // Fetch data
       React.useEffect(() => {
         const fetchData = async () => {
+          setLoading(true);
           const files = [
             { path: '/data/rules.json', setter: setRules, default: { sections: [] } },
             { path: '/data/payouts.json', setter: setPayouts, default: [] },
@@ -114,6 +116,7 @@
               console.warn(`Error fetching ${file.path}:`, err);
             }
           }
+          setLoading(false);
         };
         fetchData();
       }, []);
@@ -342,6 +345,13 @@
         },
       };
 
+      // Spinner component
+      const Spinner = () => (
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-teal-500 border-b-4 border-gray-200"></div>
+        </div>
+      );
+
       // Render tab
       const renderTab = () => {
         switch (window.AppState.currentTab) {
@@ -355,6 +365,8 @@
           default: return null;
         }
       };
+
+      if (loading) return <Spinner />;
 
       return (
         <div className="min-h-screen bg-gray-900">
