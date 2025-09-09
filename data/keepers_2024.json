@@ -22,7 +22,7 @@
     "cost2": 22.6,
     "remaining": 155.4  },
   {
-    "team": "Buck",
+    "team": "CBuck",
     "keeper1": "Rashee Rice",
     "draftCost1": 1,
     "tag1": true,
@@ -44,7 +44,7 @@
     "cost2": 10.5,
     "remaining": 161.5  },
   {
-    "team": "Dgatz",
+    "team": "DGatz",
     "keeper1": "CJ Stroud",
     "draftCost1": 9,
     "tag1": false,
@@ -77,7 +77,7 @@
     "cost2": 6.1,
     "remaining": 188.9  },
   {
-    "team": "Lewis",
+    "team": "TLew",
     "keeper1": "Z Flowers",
     "draftCost1": 8,
     "tag1": false,
@@ -88,7 +88,7 @@
     "cost2": 10,
     "remaining": 176.2  },
   {
-    "team": "Lusa",
+    "team": "JLusa",
     "keeper1": "Kyler",
     "draftCost1": 10,
     "tag1": false,

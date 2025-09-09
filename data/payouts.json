@@ -6,15 +6,5 @@
     { "category": "Regular Season Champ", "percentage": 8, "prize": 200 },
     { "category": "Weekly High Score (Weeks 1-14)", "percentage": 23, "prize": 560 },
     { "category": "Survivor (Week 13 Winner)", "percentage": 8, "prize": 200 }
-  ],
-  "yearlyWinners": [
-    { "year": 2023, "team": "Byz", "category": "Playoff Champ", "amount": 840 },
-    { "year": 2023, "team": "Buck", "category": "Playoff Runner Up", "amount": 400 },
-    { "year": 2023, "team": "Lusa", "category": "Playoff 3rd Place", "amount": 200 },
-    { "year": 2023, "team": "Ayer", "category": "Regular Season Champ", "amount": 200 },
-    { "year": 2024, "team": "Buck", "category": "Playoff Champ", "amount": 840 },
-    { "year": 2024, "team": "Tobin", "category": "Playoff Runner Up", "amount": 400 },
-    { "year": 2024, "team": "Mante", "category": "Playoff 3rd Place", "amount": 200 },
-    { "year": 2024, "team": "Ayer", "category": "Regular Season Champ", "amount": 200 }
   ]
 }

@@ -22,7 +22,7 @@
     "cost2": 3,
     "remaining": 181  },
   {
-    "team": "Buck",
+    "team": "CBuck",
     "keeper1": "J Jacobs",
     "draftCost1": 25,
     "tag1": true,
@@ -44,7 +44,7 @@
     "cost2": 28,
     "remaining": 153.8  },
   {
-    "team": "Dgatz",
+    "team": "DGatz",
     "keeper1": "J Burrow",
     "draftCost1": 27,
     "tag1": true,
@@ -77,7 +77,7 @@
     "cost2": 5,
     "remaining": 183  },
   {
-    "team": "Lewis",
+    "team": "TLew",
     "keeper1": "J Herbet",
     "draftCost1": 24,
     "tag1": true,
@@ -88,7 +88,7 @@
     "cost2": 6.1,
     "remaining": 169.9  },
   {
-    "team": "Lusa",
+    "team": "JLusa",
     "keeper1": "G Wilson",
     "draftCost1": 2,
     "tag1": false,

@@ -1,5 +1,6 @@
 window.Financials = () => {
   const { prizes, payouts, keepers } = window.AppState;
+  const [expandedTeam, setExpandedTeam] = React.useState(null);
 
   // Get payout amounts by category
   const payoutMap = {};
@@ -57,25 +58,28 @@ window.Financials = () => {
     };
   }
 
-  // Build table data
-  const tableRows = [];
-  teamList.forEach(team => {
-    let grandTotal = 0;
+  // Calculate totals per team across all years
+  const teamTotals = teamList.map(team => {
+    let sum = {
+      weeklyHighScore: 0,
+      survivor: 0,
+      regularSeason: 0,
+      playoffChamp: 0,
+      playoffRunnerUp: 0,
+      playoffThird: 0,
+      total: 0
+    };
     years.forEach(year => {
       const w = calcWinnings(team, year);
-      grandTotal += w.total;
-      tableRows.push({ team, year, ...w });
+      sum.weeklyHighScore += w.weeklyHighScore;
+      sum.survivor += w.survivor;
+      sum.regularSeason += w.regularSeason;
+      sum.playoffChamp += w.playoffChamp;
+      sum.playoffRunnerUp += w.playoffRunnerUp;
+      sum.playoffThird += w.playoffThird;
+      sum.total += w.total;
     });
-    tableRows.push({ team, year: 'Total', ...calcWinnings(team, years[0]), total: grandTotal });
-  });
-
-  // Build summary per team
-  const summaryRows = teamList.map(team => {
-    let total = 0;
-    years.forEach(year => {
-      total += calcWinnings(team, year).total;
-    });
-    return { team, total };
+    return { team, ...sum };
   });
 
   return (
@@ -87,7 +91,6 @@ window.Financials = () => {
             <thead>
               <tr className="border-b">
                 <th className="text-left">Team</th>
-                <th className="text-left">Year</th>
                 <th className="text-right">Weekly High Score</th>
                 <th className="text-right">Survivor</th>
                 <th className="text-right">Regular Season</th>
@@ -98,35 +101,62 @@ window.Financials = () => {
               </tr>
             </thead>
             <tbody>
-              {teamList.map(team =>
-                years.map(year => {
-                  const w = calcWinnings(team, year);
-                  return (
-                    <tr key={team + year} className="border-b">
-                      <td>{team}</td>
-                      <td>{year}</td>
-                      <td className="text-right">${w.weeklyHighScore.toFixed(2)}</td>
-                      <td className="text-right">${w.survivor.toFixed(2)}</td>
-                      <td className="text-right">${w.regularSeason.toFixed(2)}</td>
-                      <td className="text-right">${w.playoffChamp.toFixed(2)}</td>
-                      <td className="text-right">${w.playoffRunnerUp.toFixed(2)}</td>
-                      <td className="text-right">${w.playoffThird.toFixed(2)}</td>
-                      <td className="text-right font-bold">${w.total.toFixed(2)}</td>
+              {teamTotals.map((row, idx) => (
+                <React.Fragment key={row.team}>
+                  <tr
+                    className={`border-b cursor-pointer ${expandedTeam === row.team ? 'bg-teal-100 font-bold' : idx % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}
+                    onClick={() => setExpandedTeam(expandedTeam === row.team ? null : row.team)}
+                  >
+                    <td>{row.team}</td>
+                    <td className="text-right">${row.weeklyHighScore.toFixed(2)}</td>
+                    <td className="text-right">${row.survivor.toFixed(2)}</td>
+                    <td className="text-right">${row.regularSeason.toFixed(2)}</td>
+                    <td className="text-right">${row.playoffChamp.toFixed(2)}</td>
+                    <td className="text-right">${row.playoffRunnerUp.toFixed(2)}</td>
+                    <td className="text-right">${row.playoffThird.toFixed(2)}</td>
+                    <td className="text-right font-bold">${row.total.toFixed(2)}</td>
+                  </tr>
+                  {expandedTeam === row.team && (
+                    <tr className="bg-gray-50 border-b">
+                      <td colSpan={8}>
+                        <div className="py-2">
+                          <table className="w-full text-xs">
+                            <thead>
+                              <tr>
+                                <th className="text-left">Year</th>
+                                <th className="text-right">Weekly High Score</th>
+                                <th className="text-right">Survivor</th>
+                                <th className="text-right">Regular Season</th>
+                                <th className="text-right">Playoff Champ</th>
+                                <th className="text-right">Runner Up</th>
+                                <th className="text-right">3rd Place</th>
+                                <th className="text-right">Total</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {years.map(year => {
+                                const w = calcWinnings(row.team, year);
+                                return (
+                                  <tr key={year}>
+                                    <td>{year}</td>
+                                    <td className="text-right">${w.weeklyHighScore.toFixed(2)}</td>
+                                    <td className="text-right">${w.survivor.toFixed(2)}</td>
+                                    <td className="text-right">${w.regularSeason.toFixed(2)}</td>
+                                    <td className="text-right">${w.playoffChamp.toFixed(2)}</td>
+                                    <td className="text-right">${w.playoffRunnerUp.toFixed(2)}</td>
+                                    <td className="text-right">${w.playoffThird.toFixed(2)}</td>
+                                    <td className="text-right font-bold">${w.total.toFixed(2)}</td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </td>
                     </tr>
-                  );
-                })
-              )}
-              {/* Grand total per team */}
-              <tr className="bg-teal-100 font-semibold">
-                <td colSpan={2}>Grand Total</td>
-                <td colSpan={7}>
-                  {summaryRows.map(row => (
-                    <span key={row.team} className="mr-4">
-                      {row.team}: ${row.total.toFixed(2)}
-                    </span>
-                  ))}
-                </td>
-              </tr>
+                  )}
+                </React.Fragment>
+              ))}
             </tbody>
           </table>
         </div>

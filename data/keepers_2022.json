@@ -22,7 +22,7 @@
     "cost2": 11.6,
     "remaining": 186.4  },
   {
-    "team": "Buck",
+    "team": "CBuck",
     "keeper1": "Tom Brady",
     "draftCost1": 11,
     "tag1": true,
@@ -66,7 +66,7 @@
     "cost2": 32,
     "remaining": 159.7  },
   {
-    "team": "Lewis",
+    "team": "TLew",
     "keeper1": "Justin Herbert",
     "draftCost1": 17,
     "tag1": false,
@@ -77,7 +77,7 @@
     "cost2": 19.3,
     "remaining": 157  },
   {
-    "team": "Lusa",
+    "team": "JLusa",
     "keeper1": "Jonathan Taylor",
     "draftCost1": 45,
     "tag1": true,
@@ -121,7 +121,7 @@
     "cost2": 35,
     "remaining": 158.9  },
   {
-    "team": "Zach",
+    "team": "DGatz",
     "keeper1": "Ja'Marr Chase",
     "draftCost1": 9,
     "tag1": false,
