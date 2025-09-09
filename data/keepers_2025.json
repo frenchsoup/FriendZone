@@ -13,15 +13,15 @@
   },
   {
     "team": "Byz",
-    "keeper1": "",
-    "draftCost1": 0,
+    "keeper1": "Nabers",
+    "draftCost1": 22,
     "tag1": false,
-    "cost1": 0,
+    "cost1": 29,
     "keeper2": "",
     "draftCost2": 0,
     "tag2": false,
     "cost2": 0,
-    "remaining": 200
+    "remaining": 171
   },
   {
     "team": "Mante",
@@ -49,15 +49,15 @@
   },
   {
     "team": "Trudy",
-    "keeper1": "",
-    "draftCost1": 0,
-    "tag1": false,
-    "cost1": 0,
+    "keeper1": "Meyers",
+    "draftCost1": 5,
+    "tag1": true,
+    "cost1": 5,
     "keeper2": "",
     "draftCost2": 0,
     "tag2": false,
     "cost2": 0,
-    "remaining": 200
+    "remaining": 195
   },
   {
     "team": "TLew",
@@ -75,13 +75,13 @@
     "team": "ALeF",
     "keeper1": "BT Jr. ",
     "draftCost1": 11,
-    "tag1": true,
-    "cost1": 11,
-    "keeper2": "J Williams",
-    "draftCost2": 4,
-    "tag2": false,
-    "cost2": 9,
-    "remaining": 180
+    "tag1": false,
+    "cost1": 17,
+    "keeper2": "Josh Jacobs",
+    "draftCost2": 29,
+    "tag2": true,
+    "cost2": 29,
+    "remaining": 154
   },
   {
     "team": "JLusa",
@@ -97,39 +97,39 @@
   },
   {
     "team": "Ayer",
-    "keeper1": "",
-    "draftCost1": 0,
+    "keeper1": "Kittle",
+    "draftCost1": 11,
     "tag1": false,
-    "cost1": 0,
-    "keeper2": "",
-    "draftCost2": 0,
-    "tag2": false,
-    "cost2": 0,
-    "remaining": 200
+    "cost1": 17,
+    "keeper2": "JT",
+    "draftCost2": 23,
+    "tag2": true,
+    "cost2": 23,
+    "remaining": 160
   },
   {
     "team": "Tobin",
-    "keeper1": "",
-    "draftCost1": 0,
+    "keeper1": "Josh Allen",
+    "draftCost1": 45,
     "tag1": false,
-    "cost1": 0,
+    "cost1": 55,
     "keeper2": "",
     "draftCost2": 0,
     "tag2": false,
     "cost2": 0,
-    "remaining": 194
+    "remaining": 145
   },
   {
     "team": "CBuck",
-    "keeper1": "",
-    "draftCost1": 0,
-    "tag1": false,
-    "cost1": 0,
-    "keeper2": "",
-    "draftCost2": 0,
+    "keeper1": "Lamar",
+    "draftCost1": 40,
+    "tag1": true,
+    "cost1": 40,
+    "keeper2": "Ladd",
+    "draftCost2": 12,
     "tag2": false,
-    "cost2": 0,
-    "remaining": 200
+    "cost2": 18,
+    "remaining": 142
   },
   {
     "team": "DGatz",
