@@ -89,18 +89,18 @@ window.Financials = () => {
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Financials</h2>
       <div className="table-container flex justify-center overflow-x-auto">
-        <div className="card bg-white text-gray-800 rounded-lg shadow-md p-1 sm:p-4" style={{ display: 'block', width: 'fit-content', minWidth: '900px' }}>
-          <table className="w-full text-xs sm:text-sm border-collapse min-w-[900px]">
+        <div className="card bg-white text-gray-800 rounded-lg shadow-md p-1 sm:p-4" style={{ display: 'block', width: 'fit-content', minWidth: '1100px' }}>
+          <table className="w-full text-xs sm:text-sm border-collapse min-w-[1100px]">
             <thead>
               <tr className="border-b">
-                <th className="text-left">Team</th>
-                <th className="text-right">Weekly HS</th>
-                <th className="text-right">Survivor</th>
-                <th className="text-right">RS</th>
-                <th className="text-right">Champ</th>
-                <th className="text-right">2nd</th>
-                <th className="text-right">3rd</th>
-                <th className="text-right">Total</th>
+                <th className="text-left whitespace-nowrap">Team</th>
+                <th className="text-right whitespace-nowrap">Weekly HS</th>
+                <th className="text-right whitespace-nowrap">Survivor</th>
+                <th className="text-right whitespace-nowrap">RS</th>
+                <th className="text-right whitespace-nowrap">Champ</th>
+                <th className="text-right whitespace-nowrap">2nd</th>
+                <th className="text-right whitespace-nowrap">3rd</th>
+                <th className="text-right whitespace-nowrap">Total</th>
               </tr>
             </thead>
             <tbody>
