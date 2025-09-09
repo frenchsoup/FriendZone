@@ -71,143 +71,145 @@ window.Keepers = () => {
         )}
       </div>
       <div className="table-container overflow-x-auto">
-        <div className="card bg-white text-gray-800 rounded-lg shadow-md p-1 sm:p-3 w-full">
-          <table className="w-full text-xs sm:text-sm border-collapse min-w-[1100px]">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left py-1 px-1 w-[12%] whitespace-nowrap">Team</th>
-                <th className="text-left py-1 px-1 w-[16%] whitespace-nowrap">Keeper 1</th>
-                <th className="text-right py-1 px-1 w-[10%] whitespace-nowrap">Draft Cost 1</th>
-                <th className="text-center py-1 px-1 w-[7%] whitespace-nowrap">Tag 1</th>
-                <th className="text-right py-1 px-1 w-[8%] whitespace-nowrap">Cost 1</th>
-                <th className="text-left py-1 px-1 w-[16%] whitespace-nowrap">Keeper 2</th>
-                <th className="text-right py-1 px-1 w-[10%] whitespace-nowrap">Draft Cost 2</th>
-                <th className="text-center py-1 px-1 w-[7%] whitespace-nowrap">Tag 2</th>
-                <th className="text-right py-1 px-1 w-[8%] whitespace-nowrap">Cost 2</th>
-                <th className="text-right py-1 px-1 w-[12%] whitespace-nowrap">Auction $</th>
-                {!locks[selectedYear] && <th className="text-right py-1 px-1 w-[10%] whitespace-nowrap">Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {keepers[selectedYear].map((team, index) => {
-                const pending = pendingChanges[selectedYear]?.[index] || {};
-                const displayTeam = { ...team, ...pending };
-                return (
-                  <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'} hover:bg-teal-50 transition-colors`}>
-                    <td className="py-1 px-1 w-[12%]">
-                      {locks[selectedYear] ? (
-                        <span className="text-gray-800">{displayTeam.team || '-'}</span>
-                      ) : (
-                        <input
-                          type="text"
-                          value={displayTeam.team || ''}
-                          onChange={(e) => handleKeeperChange(selectedYear, index, 'team', e.target.value)}
-                          className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 focus:ring-2 focus:ring-teal-500"
-                          style={{ minHeight: '2.25rem' }}
-                        />
-                      )}
-                    </td>
-                    <td className="py-1 px-1 w-[16%]">
-                      {locks[selectedYear] ? (
-                        <span className="text-gray-800">{displayTeam.keeper1 || '-'}</span>
-                      ) : (
-                        <input
-                          type="text"
-                          value={displayTeam.keeper1 || ''}
-                          onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper1', e.target.value)}
-                          className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 focus:ring-2 focus:ring-teal-500"
-                          style={{ minHeight: '2.25rem' }}
-                        />
-                      )}
-                    </td>
-                    <td className="text-right py-1 px-1 w-[10%]">
-                      {locks[selectedYear] ? (
-                        <span className="text-gray-800">{displayTeam.draftCost1 ? `$${displayTeam.draftCost1}` : '-'}</span>
-                      ) : (
-                        <input
-                          type="number"
-                          value={displayTeam.draftCost1 || ''}
-                          onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
-                          className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 text-right no-spinner focus:ring-2 focus:ring-teal-500"
-                          style={{ minHeight: '2.25rem' }}
-                        />
-                      )}
-                    </td>
-                    <td className="text-center py-1 px-1 w-[7%]">
-                      <input
-                        type="checkbox"
-                        checked={displayTeam.tag1 || false}
-                        disabled={locks[selectedYear]}
-                        onChange={(e) => handleKeeperChange(selectedYear, index, 'tag1', e.target.checked)}
-                        className="h-5 w-5 text-teal-500 rounded focus:ring-teal-500 disabled:opacity-50"
-                        style={{ minHeight: '2.25rem' }}
-                      />
-                    </td>
-                    <td className="text-right py-1 px-1 w-[8%] text-gray-800">
-                      {displayTeam.cost1 ? `$${displayTeam.cost1}` : '-'}
-                    </td>
-                    <td className="py-1 px-1 w-[16%]">
-                      {locks[selectedYear] ? (
-                        <span className="text-gray-800">{displayTeam.keeper2 || '-'}</span>
-                      ) : (
-                        <input
-                          type="text"
-                          value={displayTeam.keeper2 || ''}
-                          onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper2', e.target.value)}
-                          className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 focus:ring-2 focus:ring-teal-500"
-                          style={{ minHeight: '2.25rem' }}
-                        />
-                      )}
-                    </td>
-                    <td className="text-right py-1 px-1 w-[10%]">
-                      {locks[selectedYear] ? (
-                        <span className="text-gray-800">{displayTeam.draftCost2 ? `$${displayTeam.draftCost2}` : '-'}</span>
-                      ) : (
-                        <input
-                          type="number"
-                          value={displayTeam.draftCost2 || ''}
-                          onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
-                          className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 text-right no-spinner focus:ring-2 focus:ring-teal-500"
-                          style={{ minHeight: '2.25rem' }}
-                        />
-                      )}
-                    </td>
-                    <td className="text-center py-1 px-1 w-[7%]">
-                      <input
-                        type="checkbox"
-                        checked={displayTeam.tag2 || false}
-                        disabled={locks[selectedYear]}
-                        onChange={(e) => handleKeeperChange(selectedYear, index, 'tag2', e.target.checked)}
-                        className="h-5 w-5 text-teal-500 rounded focus:ring-teal-500 disabled:opacity-50"
-                        style={{ minHeight: '2.25rem' }}
-                      />
-                    </td>
-                    <td className="text-right py-1 px-1 w-[8%] text-gray-800">
-                      {displayTeam.cost2 ? `$${displayTeam.cost2}` : '-'}
-                    </td>
-                    <td className="text-right py-1 px-1 w-[12%] text-gray-800">
-                      {displayTeam.remaining ? `$${displayTeam.remaining}` : '-'}
-                    </td>
-                    {!locks[selectedYear] && (
-                      <td className="text-right py-1 px-1 w-[10%]">
-                        <button
-                          onClick={() => enhancedHandleSaveRow(selectedYear, index)}
-                          className={`px-2 py-1 text-base rounded text-white transition-all ${
-                            savingStates[index] ? 'bg-blue-500' : 'bg-teal-500 hover:bg-teal-600'
-                          }`}
-                          disabled={savingStates[index]}
-                          style={{ minHeight: '2.25rem' }}
-                          aria-label="Save keeper row"
-                        >
-                          {savingStates[index] ? 'Saving...' : 'Save'}
-                        </button>
+        <div className="inline-block align-top">
+          <div className="card bg-white text-gray-800 rounded-lg shadow-md p-1 sm:p-3">
+            <table className="min-w-[600px] sm:min-w-[900px] w-full text-xs sm:text-sm border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-1 px-1 w-[12%] whitespace-nowrap">Team</th>
+                  <th className="text-left py-1 px-1 w-[16%] whitespace-nowrap">Keeper 1</th>
+                  <th className="text-right py-1 px-1 w-[10%] whitespace-nowrap">Draft Cost 1</th>
+                  <th className="text-center py-1 px-1 w-[7%] whitespace-nowrap">Tag 1</th>
+                  <th className="text-right py-1 px-1 w-[8%] whitespace-nowrap">Cost 1</th>
+                  <th className="text-left py-1 px-1 w-[16%] whitespace-nowrap">Keeper 2</th>
+                  <th className="text-right py-1 px-1 w-[10%] whitespace-nowrap">Draft Cost 2</th>
+                  <th className="text-center py-1 px-1 w-[7%] whitespace-nowrap">Tag 2</th>
+                  <th className="text-right py-1 px-1 w-[8%] whitespace-nowrap">Cost 2</th>
+                  <th className="text-right py-1 px-1 w-[12%] whitespace-nowrap">Auction $</th>
+                  {!locks[selectedYear] && <th className="text-right py-1 px-1 w-[10%] whitespace-nowrap">Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {keepers[selectedYear].map((team, index) => {
+                  const pending = pendingChanges[selectedYear]?.[index] || {};
+                  const displayTeam = { ...team, ...pending };
+                  return (
+                    <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'} hover:bg-teal-50 transition-colors`}>
+                      <td className="py-1 px-1 w-[12%]">
+                        {locks[selectedYear] ? (
+                          <span className="text-gray-800">{displayTeam.team || '-'}</span>
+                        ) : (
+                          <input
+                            type="text"
+                            value={displayTeam.team || ''}
+                            onChange={(e) => handleKeeperChange(selectedYear, index, 'team', e.target.value)}
+                            className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 focus:ring-2 focus:ring-teal-500"
+                            style={{ minHeight: '2.25rem' }}
+                          />
+                        )}
                       </td>
-                    )}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      <td className="py-1 px-1 w-[16%]">
+                        {locks[selectedYear] ? (
+                          <span className="text-gray-800">{displayTeam.keeper1 || '-'}</span>
+                        ) : (
+                          <input
+                            type="text"
+                            value={displayTeam.keeper1 || ''}
+                            onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper1', e.target.value)}
+                            className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 focus:ring-2 focus:ring-teal-500"
+                            style={{ minHeight: '2.25rem' }}
+                          />
+                        )}
+                      </td>
+                      <td className="text-right py-1 px-1 w-[10%]">
+                        {locks[selectedYear] ? (
+                          <span className="text-gray-800">{displayTeam.draftCost1 ? `$${displayTeam.draftCost1}` : '-'}</span>
+                        ) : (
+                          <input
+                            type="number"
+                            value={displayTeam.draftCost1 || ''}
+                            onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
+                            className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 text-right no-spinner focus:ring-2 focus:ring-teal-500"
+                            style={{ minHeight: '2.25rem' }}
+                          />
+                        )}
+                      </td>
+                      <td className="text-center py-1 px-1 w-[7%]">
+                        <input
+                          type="checkbox"
+                          checked={displayTeam.tag1 || false}
+                          disabled={locks[selectedYear]}
+                          onChange={(e) => handleKeeperChange(selectedYear, index, 'tag1', e.target.checked)}
+                          className="h-5 w-5 text-teal-500 rounded focus:ring-teal-500 disabled:opacity-50"
+                          style={{ minHeight: '2.25rem' }}
+                        />
+                      </td>
+                      <td className="text-right py-1 px-1 w-[8%] text-gray-800">
+                        {displayTeam.cost1 ? `$${displayTeam.cost1}` : '-'}
+                      </td>
+                      <td className="py-1 px-1 w-[16%]">
+                        {locks[selectedYear] ? (
+                          <span className="text-gray-800">{displayTeam.keeper2 || '-'}</span>
+                        ) : (
+                          <input
+                            type="text"
+                            value={displayTeam.keeper2 || ''}
+                            onChange={(e) => handleKeeperChange(selectedYear, index, 'keeper2', e.target.value)}
+                            className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 focus:ring-2 focus:ring-teal-500"
+                            style={{ minHeight: '2.25rem' }}
+                          />
+                        )}
+                      </td>
+                      <td className="text-right py-1 px-1 w-[10%]">
+                        {locks[selectedYear] ? (
+                          <span className="text-gray-800">{displayTeam.draftCost2 ? `$${displayTeam.draftCost2}` : '-'}</span>
+                        ) : (
+                          <input
+                            type="number"
+                            value={displayTeam.draftCost2 || ''}
+                            onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
+                            className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 text-right no-spinner focus:ring-2 focus:ring-teal-500"
+                            style={{ minHeight: '2.25rem' }}
+                          />
+                        )}
+                      </td>
+                      <td className="text-center py-1 px-1 w-[7%]">
+                        <input
+                          type="checkbox"
+                          checked={displayTeam.tag2 || false}
+                          disabled={locks[selectedYear]}
+                          onChange={(e) => handleKeeperChange(selectedYear, index, 'tag2', e.target.checked)}
+                          className="h-5 w-5 text-teal-500 rounded focus:ring-teal-500 disabled:opacity-50"
+                          style={{ minHeight: '2.25rem' }}
+                        />
+                      </td>
+                      <td className="text-right py-1 px-1 w-[8%] text-gray-800">
+                        {displayTeam.cost2 ? `$${displayTeam.cost2}` : '-'}
+                      </td>
+                      <td className="text-right py-1 px-1 w-[12%] text-gray-800">
+                        {displayTeam.remaining ? `$${displayTeam.remaining}` : '-'}
+                      </td>
+                      {!locks[selectedYear] && (
+                        <td className="text-right py-1 px-1 w-[10%]">
+                          <button
+                            onClick={() => enhancedHandleSaveRow(selectedYear, index)}
+                            className={`px-2 py-1 text-base rounded text-white transition-all ${
+                              savingStates[index] ? 'bg-blue-500' : 'bg-teal-500 hover:bg-teal-600'
+                            }`}
+                            disabled={savingStates[index]}
+                            style={{ minHeight: '2.25rem' }}
+                            aria-label="Save keeper row"
+                          >
+                            {savingStates[index] ? 'Saving...' : 'Save'}
+                          </button>
+                        </td>
+                      )}
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

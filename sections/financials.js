@@ -89,89 +89,91 @@ window.Financials = () => {
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Financials</h2>
       <div className="table-container overflow-x-auto">
-        <div className="card bg-white text-gray-800 rounded-lg shadow-md p-1 sm:p-4 w-full">
-          <table className="w-full text-xs sm:text-sm border-collapse min-w-[1100px]">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left whitespace-nowrap">Team</th>
-                <th className="text-right whitespace-nowrap">Weekly HS</th>
-                <th className="text-right whitespace-nowrap">Survivor</th>
-                <th className="text-right whitespace-nowrap">RS</th>
-                <th className="text-right whitespace-nowrap">Champ</th>
-                <th className="text-right whitespace-nowrap">2nd</th>
-                <th className="text-right whitespace-nowrap">3rd</th>
-                <th className="text-right whitespace-nowrap">Total</th>
-              </tr>
-            </thead>
-            <tbody>
-              {teamTotals.map((row, idx) => (
-                <React.Fragment key={row.team}>
-                  <tr
-                    className={`border-b cursor-pointer transition-colors duration-150 ${
-                      expandedTeam === row.team
-                        ? 'bg-teal-100 font-bold'
-                        : idx % 2 === 0
-                        ? 'table-row-even'
-                        : 'table-row-odd'
-                    } hover:bg-teal-50`}
-                    style={{ cursor: 'pointer' }}
-                    title="Tap to view yearly breakdown"
-                    onClick={() => setExpandedTeam(expandedTeam === row.team ? null : row.team)}
-                  >
-                    <td>{row.team}</td>
-                    <td className="text-right">{row.weeklyHighScore ? `$${row.weeklyHighScore}` : '-'}</td>
-                    <td className="text-right">{row.survivor ? `$${row.survivor}` : '-'}</td>
-                    <td className="text-right">{row.regularSeason ? `$${row.regularSeason}` : '-'}</td>
-                    <td className="text-right">{row.playoffChamp ? `$${row.playoffChamp}` : '-'}</td>
-                    <td className="text-right">{row.playoffRunnerUp ? `$${row.playoffRunnerUp}` : '-'}</td>
-                    <td className="text-right">{row.playoffThird ? `$${row.playoffThird}` : '-'}</td>
-                    <td className="text-right font-bold">{row.total ? `$${row.total}` : '-'}</td>
-                  </tr>
-                  {expandedTeam === row.team && (
-                    <tr className="bg-gray-50 border-b">
-                      <td colSpan={8}>
-                        <div className="py-2">
-                          <table className="w-full text-xs">
-                            <thead>
-                              <tr>
-                                <th className="text-left">Year</th>
-                                <th className="text-right">Weekly HS</th>
-                                <th className="text-right">Survivor</th>
-                                <th className="text-right">RS</th>
-                                <th className="text-right">Champ</th>
-                                <th className="text-right">2nd</th>
-                                <th className="text-right">3rd</th>
-                                <th className="text-right">Total</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {years.filter(year => keepers[year].some(t => t.team === row.team)).map(year => {
-                                const w = calcWinnings(row.team, year);
-                                return (
-                                  <tr key={year}>
-                                    <td>{year}</td>
-                                    <td className="text-right">{w.weeklyHighScore ? `$${w.weeklyHighScore}` : '-'}</td>
-                                    <td className="text-right">{w.survivor ? `$${w.survivor}` : '-'}</td>
-                                    <td className="text-right">{w.regularSeason ? `$${w.regularSeason}` : '-'}</td>
-                                    <td className="text-right">{w.playoffChamp ? `$${w.playoffChamp}` : '-'}</td>
-                                    <td className="text-right">{w.playoffRunnerUp ? `$${w.playoffRunnerUp}` : '-'}</td>
-                                    <td className="text-right">{w.playoffThird ? `$${w.playoffThird}` : '-'}</td>
-                                    <td className="text-right font-bold">{w.total ? `$${w.total}` : '-'}</td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
-                        </div>
-                      </td>
+        <div className="inline-block align-top">
+          <div className="card bg-white text-gray-800 rounded-lg shadow-md p-1 sm:p-4">
+            <table className="min-w-[600px] sm:min-w-[900px] w-full text-xs sm:text-sm border-collapse">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left whitespace-nowrap">Team</th>
+                  <th className="text-right whitespace-nowrap">Weekly HS</th>
+                  <th className="text-right whitespace-nowrap">Survivor</th>
+                  <th className="text-right whitespace-nowrap">RS</th>
+                  <th className="text-right whitespace-nowrap">Champ</th>
+                  <th className="text-right whitespace-nowrap">2nd</th>
+                  <th className="text-right whitespace-nowrap">3rd</th>
+                  <th className="text-right whitespace-nowrap">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {teamTotals.map((row, idx) => (
+                  <React.Fragment key={row.team}>
+                    <tr
+                      className={`border-b cursor-pointer transition-colors duration-150 ${
+                        expandedTeam === row.team
+                          ? 'bg-teal-100 font-bold'
+                          : idx % 2 === 0
+                          ? 'table-row-even'
+                          : 'table-row-odd'
+                      } hover:bg-teal-50`}
+                      style={{ cursor: 'pointer' }}
+                      title="Tap to view yearly breakdown"
+                      onClick={() => setExpandedTeam(expandedTeam === row.team ? null : row.team)}
+                    >
+                      <td>{row.team}</td>
+                      <td className="text-right">{row.weeklyHighScore ? `$${row.weeklyHighScore}` : '-'}</td>
+                      <td className="text-right">{row.survivor ? `$${row.survivor}` : '-'}</td>
+                      <td className="text-right">{row.regularSeason ? `$${row.regularSeason}` : '-'}</td>
+                      <td className="text-right">{row.playoffChamp ? `$${row.playoffChamp}` : '-'}</td>
+                      <td className="text-right">{row.playoffRunnerUp ? `$${row.playoffRunnerUp}` : '-'}</td>
+                      <td className="text-right">{row.playoffThird ? `$${row.playoffThird}` : '-'}</td>
+                      <td className="text-right font-bold">{row.total ? `$${row.total}` : '-'}</td>
                     </tr>
-                  )}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-          <div className="mt-2 text-xs text-gray-500">
-            <span>Tap a team row to view yearly breakdown.</span>
+                    {expandedTeam === row.team && (
+                      <tr className="bg-gray-50 border-b">
+                        <td colSpan={8}>
+                          <div className="py-2">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr>
+                                  <th className="text-left">Year</th>
+                                  <th className="text-right">Weekly HS</th>
+                                  <th className="text-right">Survivor</th>
+                                  <th className="text-right">RS</th>
+                                  <th className="text-right">Champ</th>
+                                  <th className="text-right">2nd</th>
+                                  <th className="text-right">3rd</th>
+                                  <th className="text-right">Total</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {years.filter(year => keepers[year].some(t => t.team === row.team)).map(year => {
+                                  const w = calcWinnings(row.team, year);
+                                  return (
+                                    <tr key={year}>
+                                      <td>{year}</td>
+                                      <td className="text-right">{w.weeklyHighScore ? `$${w.weeklyHighScore}` : '-'}</td>
+                                      <td className="text-right">{w.survivor ? `$${w.survivor}` : '-'}</td>
+                                      <td className="text-right">{w.regularSeason ? `$${w.regularSeason}` : '-'}</td>
+                                      <td className="text-right">{w.playoffChamp ? `$${w.playoffChamp}` : '-'}</td>
+                                      <td className="text-right">{w.playoffRunnerUp ? `$${w.playoffRunnerUp}` : '-'}</td>
+                                      <td className="text-right">{w.playoffThird ? `$${w.playoffThird}` : '-'}</td>
+                                      <td className="text-right font-bold">{w.total ? `$${w.total}` : '-'}</td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+            <div className="mt-2 text-xs text-gray-500">
+              <span>Tap a team row to view yearly breakdown.</span>
+            </div>
           </div>
         </div>
       </div>
