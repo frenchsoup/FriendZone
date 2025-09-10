@@ -15,6 +15,11 @@
 </head>
 
 <body class="bg-gray-900 text-gray-100">
+  <div id="spinner-root">
+    <div class="flex items-center justify-center min-h-screen" id="initial-spinner">
+      <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-teal-500 border-b-4 border-gray-200"></div>
+    </div>
+  </div>
   <div id="root"></div>
   <script type="text/babel" src="/sections/modal.js"></script>
   <script type="text/babel" src="/sections/home.js"></script>
@@ -25,6 +30,12 @@
   <script type="text/babel" src="/sections/admin.js"></script>
   <script type="text/babel" src="/sections/financials.js"></script>
   <script type="text/babel">
+    // Remove initial spinner once React is ready
+    document.addEventListener('DOMContentLoaded', () => {
+      const spinner = document.getElementById('initial-spinner');
+      if (spinner) spinner.style.display = 'block';
+    });
+
     const App = () => {
       const [currentTab, setCurrentTab] = React.useState('home');
       const [adminPassword, setAdminPassword] = React.useState('');
@@ -441,7 +452,13 @@
     };
 
     const root = ReactDOM.createRoot(document.getElementById('root'));
+    // Remove initial spinner when React app is ready
+    const removeInitialSpinner = () => {
+      const spinner = document.getElementById('initial-spinner');
+      if (spinner) spinner.style.display = 'none';
+    };
     root.render(<App />);
+    removeInitialSpinner();
   </script>
 </body>
 

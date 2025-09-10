@@ -74,15 +74,15 @@ window.Keepers = () => {
             <table className="min-w-[600px] sm:min-w-[900px] w-full text-xs sm:text-sm border-collapse">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-1 px-1 w-[12%] whitespace-nowrap">Team</th>
+                  <th className="text-left py-1 px-1 w-[12%] whitespace-nowrap border-r border-gray-300">Team</th>
                   <th className="text-left py-1 px-1 w-[16%] whitespace-nowrap">Keeper 1</th>
-                  <th className="text-right py-1 px-1 w-[10%] whitespace-nowrap">Draft Cost 1</th>
+                  <th className="text-right py-1 px-1 w-[10%] whitespace-nowrap border-r border-gray-300">Draft Cost 1</th>
                   <th className="text-center py-1 px-1 w-[7%] whitespace-nowrap">Tag 1</th>
-                  <th className="text-right py-1 px-1 w-[8%] whitespace-nowrap">Cost 1</th>
+                  <th className="text-right py-1 px-1 w-[8%] whitespace-nowrap border-r border-gray-300">Cost 1</th>
                   <th className="text-left py-1 px-1 w-[16%] whitespace-nowrap">Keeper 2</th>
                   <th className="text-right py-1 px-1 w-[10%] whitespace-nowrap">Draft Cost 2</th>
                   <th className="text-center py-1 px-1 w-[7%] whitespace-nowrap">Tag 2</th>
-                  <th className="text-right py-1 px-1 w-[8%] whitespace-nowrap">Cost 2</th>
+                  <th className="text-right py-1 px-1 w-[8%] whitespace-nowrap border-r border-gray-300">Cost 2</th>
                   <th className="text-right py-1 px-1 w-[12%] whitespace-nowrap">Auction $</th>
                   {!locks[selectedYear] && <th className="text-right py-1 px-1 w-[10%] whitespace-nowrap">Actions</th>}
                 </tr>
@@ -92,8 +92,8 @@ window.Keepers = () => {
                   const pending = pendingChanges[selectedYear]?.[index] || {};
                   const displayTeam = { ...team, ...pending };
                   return (
-                    <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'} hover:bg-teal-50 transition-colors`}>
-                      <td className="py-1 px-1 w-[12%]">
+                    <tr key={index} className={`border-b ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-teal-50 transition-colors`}>
+                      <td className="py-1 px-1 w-[12%] border-r border-gray-300">
                         {locks[selectedYear] ? (
                           <span className="text-gray-800">{displayTeam.team || '-'}</span>
                         ) : (
@@ -119,7 +119,7 @@ window.Keepers = () => {
                           />
                         )}
                       </td>
-                      <td className="text-right py-1 px-1 w-[10%]">
+                      <td className="text-right py-1 px-1 w-[10%] border-r border-gray-300">
                         {locks[selectedYear] ? (
                           <span className="text-gray-800">{displayTeam.draftCost1 ? `$${displayTeam.draftCost1}` : '-'}</span>
                         ) : (
@@ -142,7 +142,7 @@ window.Keepers = () => {
                           style={{ minHeight: '2.25rem' }}
                         />
                       </td>
-                      <td className="text-right py-1 px-1 w-[8%] text-gray-800">
+                      <td className="text-right py-1 px-1 w-[8%] text-gray-800 border-r border-gray-300">
                         {displayTeam.cost1 ? `$${displayTeam.cost1}` : '-'}
                       </td>
                       <td className="py-1 px-1 w-[16%]">
@@ -181,7 +181,7 @@ window.Keepers = () => {
                           style={{ minHeight: '2.25rem' }}
                         />
                       </td>
-                      <td className="text-right py-1 px-1 w-[8%] text-gray-800">
+                      <td className="text-right py-1 px-1 w-[8%] text-gray-800 border-r border-gray-300">
                         {displayTeam.cost2 ? `$${displayTeam.cost2}` : '-'}
                       </td>
                       <td className="text-right py-1 px-1 w-[12%] text-gray-800">

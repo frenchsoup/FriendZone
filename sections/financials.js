@@ -94,8 +94,8 @@ window.Financials = () => {
             <table className="min-w-[600px] sm:min-w-[900px] w-full text-xs sm:text-sm border-collapse">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left whitespace-nowrap">Team</th>
-                  <th className="text-right whitespace-nowrap">Weekly HS</th>
+                  <th className="text-left whitespace-nowrap w-[10%] px-1">Team</th>
+                  <th className="text-right whitespace-nowrap w-[10%] px-1">Weekly HS</th>
                   <th className="text-right whitespace-nowrap">Survivor</th>
                   <th className="text-right whitespace-nowrap">RS</th>
                   <th className="text-right whitespace-nowrap">Champ</th>
@@ -118,14 +118,14 @@ window.Financials = () => {
                       title="Tap to view yearly breakdown"
                       onClick={() => setExpandedTeam(expandedTeam === row.team ? null : row.team)}
                     >
-                      <td>{row.team}</td>
-                      <td className="text-right">{row.weeklyHighScore ? `$${row.weeklyHighScore}` : '-'}</td>
-                      <td className="text-right">{row.survivor ? `$${row.survivor}` : '-'}</td>
-                      <td className="text-right">{row.regularSeason ? `$${row.regularSeason}` : '-'}</td>
-                      <td className="text-right">{row.playoffChamp ? `$${row.playoffChamp}` : '-'}</td>
-                      <td className="text-right">{row.playoffRunnerUp ? `$${row.playoffRunnerUp}` : '-'}</td>
-                      <td className="text-right">{row.playoffThird ? `$${row.playoffThird}` : '-'}</td>
-                      <td className="text-right font-bold">{row.total ? `$${row.total}` : '-'}</td>
+                      <td className="px-1">{row.team}</td>
+                      <td className="text-right px-1">{row.weeklyHighScore ? `$${row.weeklyHighScore}` : '-'}</td>
+                      <td className="text-right px-1">{row.survivor ? `$${row.survivor}` : '-'}</td>
+                      <td className="text-right px-1">{row.regularSeason ? `$${row.regularSeason}` : '-'}</td>
+                      <td className="text-right px-1">{row.playoffChamp ? `$${row.playoffChamp}` : '-'}</td>
+                      <td className="text-right px-1">{row.playoffRunnerUp ? `$${row.playoffRunnerUp}` : '-'}</td>
+                      <td className="text-right px-1">{row.playoffThird ? `$${row.playoffThird}` : '-'}</td>
+                      <td className="text-right font-bold px-1">{row.total ? `$${row.total}` : '-'}</td>
                     </tr>
                     {expandedTeam === row.team && (
                       <tr className="bg-gray-50 border-b">
