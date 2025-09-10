@@ -78,11 +78,10 @@ window.Prizes = () => {
           <button
             key={year}
             onClick={() => setSelectedYear(year)}
-            className={`px-3 py-2 text-base rounded transition-all ${
-              selectedYear === year
+            className={`px-3 py-2 text-base rounded transition-all ${selectedYear === year
                 ? 'bg-teal-500 text-white'
                 : 'bg-gray-700 text-gray-200 hover:bg-teal-600 hover:text-white'
-            }`}
+              }`}
             style={{ minWidth: '60px', fontSize: '1rem' }}
             aria-label={`Show prizes for ${year}`}
           >
@@ -159,13 +158,12 @@ window.Prizes = () => {
                   return (
                     <tr
                       key={index}
-                      className={`border-b ${
-                        index === 11
+                      className={`border-b ${index === 11
                           ? 'bg-teal-100 font-semibold text-gray-900'
                           : index % 2 === 0
-                          ? 'table-row-even'
-                          : 'table-row-odd'
-                      }`}
+                            ? 'table-row-even'
+                            : 'table-row-odd'
+                        }`}
                     >
                       <td className="py-2 px-2 sm:px-3">{index === 11 ? 'Winner' : entry.week}</td>
                       <td className="py-2 px-2 sm:px-3">

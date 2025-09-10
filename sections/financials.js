@@ -1,5 +1,8 @@
 window.Financials = () => {
-  const { prizes, payouts, keepers } = window.AppState;
+  const prizes = window.AppState.prizes;
+  const payouts = window.AppState.payouts;
+  const yearlyAwards = window.AppState.yearlyAwards;
+  const leagueTeams = window.AppState.leagueTeams;
   const [expandedTeam, setExpandedTeam] = React.useState(null);
 
   // Get payout amounts by category
@@ -8,15 +11,10 @@ window.Financials = () => {
     payoutMap[p.category] = p.prize;
   });
 
-  // Get all years and all teams
-  const years = Object.keys(keepers).filter(y => keepers[y]?.length);
-  const allTeams = {};
-  years.forEach(year => {
-    keepers[year].forEach(teamObj => {
-      if (teamObj.team) allTeams[teamObj.team] = true;
-    });
-  });
-  const teamList = Object.keys(allTeams).sort();
+  // Get all years from yearlyAwards, fallback to empty object if undefined
+  const years = Object.keys(yearlyAwards || {}).sort();
+  // Get all teams from leagueTeams, fallback to empty array if undefined
+  const teamList = (leagueTeams || []).map(t => t.team).sort();
 
   // Helper: calculate winnings for a team in a year
   function calcWinnings(team, year) {
@@ -37,8 +35,9 @@ window.Financials = () => {
     const survivorPrize = payoutMap['Survivor (Week 13 Winner)'];
     if ((p.survivor || [])[11]?.winner === team) survivor = survivorPrize || 0;
 
-    // Yearly Winners
-    (p.yearlyWinners || []).forEach(w => {
+    // Yearly Winners from yearlyAwards
+    const awards = yearlyAwards[year] || [];
+    awards.forEach(w => {
       if (w.team === team) {
         if (w.category === 'Regular Season Champ') regularSeason = payoutMap[w.category] || 0;
         if (w.category === 'Playoff Champ') playoffChamp = payoutMap[w.category] || 0;
@@ -69,9 +68,10 @@ window.Financials = () => {
       playoffThird: 0,
       total: 0
     };
+    // Only add if team participated in that year
+    const teamYears = (leagueTeams.find(t => t.team === team)?.years || []).map(String);
     years.forEach(year => {
-      // Only add if team is present in that year
-      if (keepers[year].some(t => t.team === team)) {
+      if (teamYears.includes(year)) {
         const w = calcWinnings(team, year);
         sum.weeklyHighScore += w.weeklyHighScore;
         sum.survivor += w.survivor;
@@ -108,13 +108,12 @@ window.Financials = () => {
                 {teamTotals.map((row, idx) => (
                   <React.Fragment key={row.team}>
                     <tr
-                      className={`border-b cursor-pointer transition-colors duration-150 ${
-                        expandedTeam === row.team
+                      className={`border-b cursor-pointer transition-colors duration-150 ${expandedTeam === row.team
                           ? 'bg-teal-100 font-bold'
                           : idx % 2 === 0
-                          ? 'table-row-even'
-                          : 'table-row-odd'
-                      } hover:bg-teal-50`}
+                            ? 'table-row-even'
+                            : 'table-row-odd'
+                        } hover:bg-teal-50`}
                       style={{ cursor: 'pointer' }}
                       title="Tap to view yearly breakdown"
                       onClick={() => setExpandedTeam(expandedTeam === row.team ? null : row.team)}
@@ -146,7 +145,8 @@ window.Financials = () => {
                                 </tr>
                               </thead>
                               <tbody>
-                                {years.filter(year => keepers[year].some(t => t.team === row.team)).map(year => {
+                                {((leagueTeams.find(t => t.team === row.team)?.years || []).map(String)).map(year => {
+                                  if (!years.includes(year)) return null;
                                   const w = calcWinnings(row.team, year);
                                   return (
                                     <tr key={year}>

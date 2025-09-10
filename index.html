@@ -46,6 +46,8 @@
       const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: null });
       const [pendingChanges, setPendingChanges] = React.useState({ 2022: {}, 2023: {}, 2024: {}, 2025: {} });
       const [loading, setLoading] = React.useState(true);
+      const [yearlyAwards, setYearlyAwards] = React.useState({});
+      const [leagueTeams, setLeagueTeams] = React.useState([]);
 
       const ADMIN_PASSWORD = 'friendzone2025';
 
@@ -54,50 +56,72 @@
         const fetchData = async () => {
           setLoading(true);
           const files = [
-            { path: '/data/rules.json', setter: setRules, default: { sections: [] } },
-            { path: '/data/payouts.json', setter: setPayouts, default: [] },
+            { path: '/data/rules.json', setter: (data) => { setRules(data); window.AppState.rules = data; }, default: { sections: [] } },
+            { path: '/data/payouts.json', setter: (data) => { setPayouts(data); window.AppState.payouts = data; }, default: [] },
+            { path: '/data/yearlyawards.json', setter: (data) => { setYearlyAwards(data); window.AppState.yearlyAwards = data; }, default: {} },
+            { path: '/data/league_teams.json', setter: (data) => { setLeagueTeams(data); window.AppState.leagueTeams = data; }, default: [] },
+            { path: '/data/prizes_2023.json', setter: (data) => { setPrizes(prev => { const updated = { ...prev, 2023: data }; window.AppState.prizes = updated; return updated; }); }, default: { survivor: [], weeklyHighScores: [] } },
+            { path: '/data/prizes_2024.json', setter: (data) => { setPrizes(prev => { const updated = { ...prev, 2024: data }; window.AppState.prizes = updated; return updated; }); }, default: { survivor: [], weeklyHighScores: [] } },
+            { path: '/data/prizes_2025.json', setter: (data) => { setPrizes(prev => { const updated = { ...prev, 2025: data }; window.AppState.prizes = updated; return updated; }); }, default: { survivor: [], weeklyHighScores: [] } },
             {
               path: '/data/keepers_2022.json', setter: (data) => setKeepers(prev => ({
                 ...prev, 2022: data.map(team => ({
-                  ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
+                  ...team,
+                  draftCost1: Math.round(team.draftCost1 || 0),
+                  draftCost2: Math.round(team.draftCost2 || 0),
                   cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
                   cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
-                  remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
+                  remaining: 200 - (
+                    Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) +
+                    Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2))
+                  )
                 }))
               })), default: []
             },
             {
               path: '/data/keepers_2023.json', setter: (data) => setKeepers(prev => ({
                 ...prev, 2023: data.map(team => ({
-                  ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
+                  ...team,
+                  draftCost1: Math.round(team.draftCost1 || 0),
+                  draftCost2: Math.round(team.draftCost2 || 0),
                   cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
                   cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
-                  remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
+                  remaining: 200 - (
+                    Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) +
+                    Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2))
+                  )
                 }))
               })), default: []
             },
             {
               path: '/data/keepers_2024.json', setter: (data) => setKeepers(prev => ({
                 ...prev, 2024: data.map(team => ({
-                  ...team, draftCost1: Math.round(team.draftCost1 || 0), draftCost2: Math.round(team.draftCost2 || 0),
+                  ...team,
+                  draftCost1: Math.round(team.draftCost1 || 0),
+                  draftCost2: Math.round(team.draftCost2 || 0),
                   cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
                   cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
-                  remaining: 200 - (Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) + Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)))
+                  remaining: 200 - (
+                    Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) +
+                    Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2))
+                  )
                 }))
               })), default: []
             },
-            { path: '/data/keepers_2025.json', setter: (data) => setKeepers(prev => ({ ...prev, 2025: data })), default: [] },
-            { path: '/data/prizes_2023.json', setter: (data) => setPrizes(prev => ({ ...prev, 2023: data })), default: { survivor: [], weeklyHighScores: [] } },
-            { path: '/data/prizes_2024.json', setter: (data) => setPrizes(prev => ({ ...prev, 2024: data })), default: { survivor: [], weeklyHighScores: [] } },
             {
-              path: '/data/prizes_2025.json', setter: (data) => setPrizes(prev => {
-                const survivor = data.survivor.length > 0 ? data.survivor : Array.from({ length: 12 }, (_, i) => i < 11 ? { week: i + 1, eliminated: '' } : { week: 12, winner: '' });
-                const weeklyHighScores = data.weeklyHighScores.length > 0 ? data.weeklyHighScores : Array.from({ length: 14 }, (_, i) => ({ week: i + 1, team: '', total: '' }));
-                return { ...prev, 2025: { survivor, weeklyHighScores } };
-              }), default: {
-                survivor: Array.from({ length: 12 }, (_, i) => i < 11 ? { week: i + 1, eliminated: '' } : { week: 12, winner: '' }),
-                weeklyHighScores: Array.from({ length: 14 }, (_, i) => ({ week: i + 1, team: '', total: '' }))
-              }
+              path: '/data/keepers_2025.json', setter: (data) => setKeepers(prev => ({
+                ...prev, 2025: data.map(team => ({
+                  ...team,
+                  draftCost1: Math.round(team.draftCost1 || 0),
+                  draftCost2: Math.round(team.draftCost2 || 0),
+                  cost1: Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)),
+                  cost2: Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2)),
+                  remaining: 200 - (
+                    Math.round(window.AppState.calculateKeeperCost(team.draftCost1 || 0, team.tag1, team.keeper1)) +
+                    Math.round(window.AppState.calculateKeeperCost(team.draftCost2 || 0, team.tag2, team.keeper2))
+                  )
+                }))
+              })), default: []
             },
             { path: '/data/locks.json', setter: setLocks, default: { 2022: false, 2023: false, 2024: false, 2025: false } },
           ];
@@ -136,6 +160,8 @@
         modalState, setModalState,
         pendingChanges, setPendingChanges,
         ADMIN_PASSWORD: 'friendzone2025',
+        yearlyAwards, setYearlyAwards,
+        leagueTeams, setLeagueTeams,
         calculateKeeperCost: (draftCost, tag, keeperName) => {
           if (keeperName === '' && draftCost === 0) return 0;
           if (draftCost === 0 && !tag) return 5;

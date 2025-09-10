@@ -28,12 +28,5 @@
     { "week": 10, "eliminated": "Tobin" },
     { "week": 11, "eliminated": "JLusa" },
     { "week": 12, "winner": "CBuck" }
-  ],
-  "yearlyWinners": [
-    { "category": "Playoff Champ", "team": "Ayer" },
-    { "category": "Playoff Runner Up", "team": "ALef" },
-    { "category": "Playoff 3rd Place", "team": "CBuck" },
-    { "category": "Regular Season Champ", "team": "DGatz" },
-    { "category": "Survivor", "team": "CBuck" }
   ]
 }

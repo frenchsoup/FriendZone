@@ -11,7 +11,7 @@ window.Modal = () => {
         {modalState.type === 'deleteRule' && (
           <div>
             <p className="text-sm mb-2">Are you sure you want to delete this rule?</p>
-            <button 
+            <button
               onClick={() => {
                 const updatedRules = { ...window.AppState.rules };
                 updatedRules.sections[modalState.data.sectionIndex].items.splice(modalState.data.itemIndex, 1);
@@ -21,7 +21,7 @@ window.Modal = () => {
                     window.AppState.setModalState({ isOpen: false, type: '', data: null });
                   }
                 });
-              }} 
+              }}
               className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
             >
               Delete
@@ -31,7 +31,7 @@ window.Modal = () => {
         {modalState.type === 'deleteSection' && (
           <div>
             <p className="text-sm mb-2">Are you sure you want to delete this section?</p>
-            <button 
+            <button
               onClick={() => {
                 const updatedRules = { ...window.AppState.rules };
                 updatedRules.sections.splice(modalState.data.sectionIndex, 1);
@@ -41,7 +41,7 @@ window.Modal = () => {
                     window.AppState.setModalState({ isOpen: false, type: '', data: null });
                   }
                 });
-              }} 
+              }}
               className="w-full px-2 py-1 text-sm bg-red-500 text-white rounded hover:bg-red-600 transition-all"
             >
               Delete

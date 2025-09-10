@@ -28,12 +28,5 @@
     { "week": 12, "team": "DGatz", "total": 165.8 },
     { "week": 13, "team": "ALef", "total": 184.28 },
     { "week": 14, "team": "Jordan", "total": 133.38 }
-  ],
-  "yearlyWinners": [
-    { "category": "Playoff Champ", "team": "Byz" },
-    { "category": "Playoff Runner Up", "team": "Yacob" },
-    { "category": "Playoff 3rd Place", "team": "Jordan" },
-    { "category": "Regular Season Champ", "team": "Yacob" },
-    { "category": "Survivor", "team": "Byz" }
   ]
 }

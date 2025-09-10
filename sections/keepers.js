@@ -50,11 +50,10 @@ window.Keepers = () => {
           <button
             key={year}
             onClick={() => setSelectedYear(year)}
-            className={`px-3 py-1 text-sm rounded transition-all ${
-              selectedYear === year
+            className={`px-3 py-1 text-sm rounded transition-all ${selectedYear === year
                 ? 'bg-teal-500 text-white'
                 : 'bg-gray-700 text-gray-200 hover:bg-teal-600 hover:text-white'
-            }`}
+              }`}
           >
             {year}
           </button>
@@ -62,9 +61,8 @@ window.Keepers = () => {
         {isAdminAuthenticated && (
           <button
             onClick={() => enhancedHandleToggleLock(selectedYear)}
-            className={`px-2 py-1 text-xs rounded lock-button ${
-              locks[selectedYear] ? 'bg-red-600 hover:bg-red-700' : 'bg-teal-500 hover:bg-teal-600'
-            } text-white transition-all`}
+            className={`px-2 py-1 text-xs rounded lock-button ${locks[selectedYear] ? 'bg-red-600 hover:bg-red-700' : 'bg-teal-500 hover:bg-teal-600'
+              } text-white transition-all`}
           >
             {locks[selectedYear] ? 'Unlock' : 'Lock'}
           </button>
@@ -193,9 +191,8 @@ window.Keepers = () => {
                         <td className="text-right py-1 px-1 w-[10%]">
                           <button
                             onClick={() => enhancedHandleSaveRow(selectedYear, index)}
-                            className={`px-2 py-1 text-base rounded text-white transition-all ${
-                              savingStates[index] ? 'bg-blue-500' : 'bg-teal-500 hover:bg-teal-600'
-                            }`}
+                            className={`px-2 py-1 text-base rounded text-white transition-all ${savingStates[index] ? 'bg-blue-500' : 'bg-teal-500 hover:bg-teal-600'
+                              }`}
                             disabled={savingStates[index]}
                             style={{ minHeight: '2.25rem' }}
                             aria-label="Save keeper row"

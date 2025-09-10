@@ -1,0 +1,46 @@
+{
+  "2024": [
+    { "category": "Playoff Champ", "team": "Ayer" },
+    { "category": "Playoff Runner Up", "team": "ALef" },
+    { "category": "Playoff 3rd Place", "team": "Buck" },
+    { "category": "Regular Season Champ", "team": "DGatz" },
+    { "category": "Survivor", "team": "Byz" }
+  ],
+  "2023": [
+    { "category": "Playoff Champ", "team": "Byz" },
+    { "category": "Playoff Runner Up", "team": "Yacob" },
+    { "category": "Playoff 3rd Place", "team": "Jordan" },
+    { "category": "Regular Season Champ", "team": "Yacob" },
+    { "category": "Survivor", "team": "CBuck" }
+  ],
+  "2022": [
+    { "category": "Playoff Champ", "team": "TLew" },
+    { "category": "Playoff Runner Up", "team": "Ayer" },
+    { "category": "Playoff 3rd Place", "team": "Mante" },
+    { "category": "Regular Season Champ", "team": "Mante" }
+  ],
+  "2021": [
+    { "category": "Playoff Champ", "team": "DGatz" },
+    { "category": "Playoff Runner Up", "team": "Yacob" },
+    { "category": "Playoff 3rd Place", "team": "Buck" },
+    { "category": "Regular Season Champ", "team": "Yacob" }
+  ],
+  "2020": [
+    { "category": "Playoff Champ", "team": "TLew" },
+    { "category": "Playoff Runner Up", "team": "Byz" },
+    { "category": "Playoff 3rd Place", "team": "Taiman" },
+    { "category": "Regular Season Champ", "team": "JKaze" }
+  ],
+  "2019": [
+    { "category": "Playoff Champ", "team": "CBuck" },
+    { "category": "Playoff Runner Up", "team": "Ayer" },
+    { "category": "Playoff 3rd Place", "team": "JLusa" },
+    { "category": "Regular Season Champ", "team": "JLusa" }
+  ],
+  "2018": [
+    { "category": "Playoff Champ", "team": "TLew" },
+    { "category": "Playoff Runner Up", "team": "DGatz" },
+    { "category": "Playoff 3rd Place", "team": "ALef" },
+    { "category": "Regular Season Champ", "team": "DGatz" }
+  ]
+}

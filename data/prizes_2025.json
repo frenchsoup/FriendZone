@@ -28,12 +28,5 @@
     { "week": 12, "team": "", "total": "" },
     { "week": 13, "team": "", "total": "" },
     { "week": 14, "team": "", "total": "" }
-  ],
-  "yearlyWinners": [
-    { "category": "Playoff Champ", "team": "" },
-    { "category": "Playoff Runner Up", "team": "" },
-    { "category": "Playoff 3rd Place", "team": "" },
-    { "category": "Regular Season Champ", "team": "" },
-    { "category": "Survivor", "team": "" }
   ]
 }
