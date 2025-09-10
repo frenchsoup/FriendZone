@@ -44,7 +44,7 @@ window.Keepers = () => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg sm:text-xl font-bold text-white">Keepers</h2>
+      <h2 className="text-lg sm:text-xl font-bold text-white text-center">Keepers</h2>
       <div className="flex justify-center mb-4 space-x-2">
         {['2022', '2023', '2024', '2025'].map(year => (
           <button
