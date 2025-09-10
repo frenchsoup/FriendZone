@@ -23,10 +23,10 @@ window.Payouts = () => {
         <table className="w-full text-xs sm:text-sm min-w-[350px] border-collapse">
           <thead>
             <tr className="border-b">
-              <th className="text-left py-2">Category</th>
-              <th className="text-right py-2">Percentage</th>
-              <th className="text-right py-2">Prize</th>
-              {isAdminAuthenticated && <th className="text-right py-2">Actions</th>}
+              <th className=" py-2">Category</th>
+              <th className=" py-2">Percentage</th>
+              <th className=" py-2">Prize</th>
+              {isAdminAuthenticated && <th className=" py-2">Actions</th>}
             </tr>
           </thead>
           <tbody>
@@ -46,13 +46,13 @@ window.Payouts = () => {
                     <span>{payout.category}</span>
                   )}
                 </td>
-                <td className="text-right py-2">
+                <td className=" py-2">
                   {isAdminAuthenticated ? (
                     <input
                       type="number"
                       value={payout.percentage}
                       onChange={(e) => window.AppState.handlePayoutChange(index, 'percentage', e.target.value)}
-                      className="w-20 bg-gray-100 p-2 rounded text-base text-right"
+                      className="w-20 bg-gray-100 p-2 rounded text-base "
                       style={{ minHeight: '2.25rem' }}
                       aria-label="Edit payout percentage"
                     />
@@ -60,13 +60,13 @@ window.Payouts = () => {
                     <span>{payout.percentage}%</span>
                   )}
                 </td>
-                <td className="text-right py-2">
+                <td className=" py-2">
                   {isAdminAuthenticated ? (
                     <input
                       type="number"
                       value={payout.prize}
                       onChange={(e) => window.AppState.handlePayoutChange(index, 'prize', e.target.value)}
-                      className="w-20 bg-gray-100 p-2 rounded text-base text-right"
+                      className="w-20 bg-gray-100 p-2 rounded text-base "
                       style={{ minHeight: '2.25rem' }}
                       aria-label="Edit payout prize"
                     />
@@ -75,7 +75,7 @@ window.Payouts = () => {
                   )}
                 </td>
                 {isAdminAuthenticated && (
-                  <td className="text-right py-2">
+                  <td className=" py-2">
                     <button
                       onClick={() => handleDeletePayout(index)}
                       className="text-red-500 hover:text-red-700 text-lg px-2 py-1 rounded"

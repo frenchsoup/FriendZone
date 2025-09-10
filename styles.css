@@ -134,10 +134,6 @@ textarea {
   @apply w-full p-0.5 text-xs;
 }
 
-input[type="number"] {
-  @apply text-right;
-}
-
 input[type="checkbox"] {
   @apply w-3 h-3;
 }
@@ -174,7 +170,7 @@ table {
 }
 
 th {
-  @apply text-left font-semibold text-gray-700;
+  @apply font-semibold text-gray-700;
 }
 
 td {
@@ -246,4 +242,8 @@ main {
 button, select, input, textarea {
   min-height: 2.25rem;
   font-size: 1rem;
+}
+
+th, td {
+  text-align: center;
 }

@@ -96,9 +96,9 @@ window.Prizes = () => {
             <table className="w-full text-xs sm:text-sm min-w-[350px] border-collapse">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 px-2 sm:px-3 w-[20%]">Week</th>
-                  <th className="text-left py-2 px-2 sm:px-3 w-[50%]">Team</th>
-                  <th className="text-right py-2 px-2 sm:px-3 w-[30%]">Total</th>
+                  <th className=" py-2 px-2 sm:px-3 w-[20%]">Week</th>
+                  <th className=" py-2 px-2 sm:px-3 w-[50%]">Team</th>
+                  <th className=" py-2 px-2 sm:px-3 w-[30%]">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -122,13 +122,13 @@ window.Prizes = () => {
                         <span>{score.team || ''}</span>
                       )}
                     </td>
-                    <td className="text-right py-2 px-2 sm:px-3">
+                    <td className=" py-2 px-2 sm:px-3">
                       {isAdminAuthenticated ? (
                         <input
                           type="text"
                           value={score.total || ''}
                           onChange={e => handleHighScoreChange(selectedYear, index, 'total', e.target.value)}
-                          className="w-full sm:w-16 bg-gray-100 p-2 rounded text-base text-right"
+                          className="w-full sm:w-16 bg-gray-100 p-2 rounded text-base "
                           style={{ minHeight: '2.25rem' }}
                         />
                       ) : (
@@ -147,8 +147,8 @@ window.Prizes = () => {
             <table className="w-full text-xs sm:text-sm min-w-[350px] border-collapse">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-2 px-2 sm:px-3 w-[20%]">Week</th>
-                  <th className="text-left py-2 px-2 sm:px-3 w-[80%]">Team</th>
+                  <th className=" py-2 px-2 sm:px-3 w-[20%]">Week</th>
+                  <th className=" py-2 px-2 sm:px-3 w-[80%]">Team</th>
                 </tr>
               </thead>
               <tbody>

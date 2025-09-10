@@ -44,7 +44,7 @@ window.Keepers = () => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg sm:text-xl font-bold text-white text-center">Keepers</h2>
+      <h2 className="text-lg sm:text-xl font-bold text-white">Keepers</h2>
       <div className="flex justify-center mb-4 space-x-2">
         {['2022', '2023', '2024', '2025'].map(year => (
           <button
@@ -74,17 +74,17 @@ window.Keepers = () => {
             <table className="min-w-[600px] sm:min-w-[900px] w-full text-xs sm:text-sm border-collapse">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-1 px-1 w-[12%] whitespace-nowrap border-r border-gray-300">Team</th>
-                  <th className="text-left py-1 px-1 w-[16%] whitespace-nowrap">Keeper 1</th>
-                  <th className="text-right py-1 px-1 w-[10%] whitespace-nowrap border-r border-gray-300">Draft Cost 1</th>
-                  <th className="text-center py-1 px-1 w-[7%] whitespace-nowrap">Tag 1</th>
-                  <th className="text-right py-1 px-1 w-[8%] whitespace-nowrap border-r border-gray-300">Cost 1</th>
-                  <th className="text-left py-1 px-1 w-[16%] whitespace-nowrap">Keeper 2</th>
-                  <th className="text-right py-1 px-1 w-[10%] whitespace-nowrap">Draft Cost 2</th>
-                  <th className="text-center py-1 px-1 w-[7%] whitespace-nowrap">Tag 2</th>
-                  <th className="text-right py-1 px-1 w-[8%] whitespace-nowrap border-r border-gray-300">Cost 2</th>
-                  <th className="text-right py-1 px-1 w-[12%] whitespace-nowrap">Auction $</th>
-                  {!locks[selectedYear] && <th className="text-right py-1 px-1 w-[10%] whitespace-nowrap">Actions</th>}
+                  <th className="py-1 px-1 w-[12%] whitespace-nowrap border-r border-gray-300">Team</th>
+                  <th className="py-1 px-1 w-[16%] whitespace-nowrap">Keeper 1</th>
+                  <th className="py-1 px-1 w-[10%] whitespace-nowrap border-r border-gray-300">Draft Cost 1</th>
+                  <th className="py-1 px-1 w-[7%] whitespace-nowrap">Tag 1</th>
+                  <th className="py-1 px-1 w-[8%] whitespace-nowrap border-r border-gray-300">Cost 1</th>
+                  <th className="py-1 px-1 w-[16%] whitespace-nowrap">Keeper 2</th>
+                  <th className="py-1 px-1 w-[10%] whitespace-nowrap border-r">Draft Cost 2</th>
+                  <th className="py-1 px-1 w-[7%] whitespace-nowrap">Tag 2</th>
+                  <th className="py-1 px-1 w-[8%] whitespace-nowrap border-r border-gray-300">Cost 2</th>
+                  <th className="y-1 px-1 w-[12%] whitespace-nowrap">Auction $</th>
+                  {!locks[selectedYear] && <th className="py-1 px-1 w-[10%] whitespace-nowrap">Actions</th>}
                 </tr>
               </thead>
               <tbody>
@@ -119,7 +119,7 @@ window.Keepers = () => {
                           />
                         )}
                       </td>
-                      <td className="text-right py-1 px-1 w-[10%] border-r border-gray-300">
+                      <td className="py-1 px-1 w-[10%] border-r border-gray-300">
                         {locks[selectedYear] ? (
                           <span className="text-gray-800">{displayTeam.draftCost1 ? `$${displayTeam.draftCost1}` : '-'}</span>
                         ) : (
@@ -127,12 +127,12 @@ window.Keepers = () => {
                             type="number"
                             value={displayTeam.draftCost1 || ''}
                             onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost1', e.target.value)}
-                            className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 text-right no-spinner focus:ring-2 focus:ring-teal-500"
+                            className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 no-spinner focus:ring-2 focus:ring-teal-500"
                             style={{ minHeight: '2.25rem' }}
                           />
                         )}
                       </td>
-                      <td className="text-center py-1 px-1 w-[7%]">
+                      <td className="py-1 px-1 w-[7%]">
                         <input
                           type="checkbox"
                           checked={displayTeam.tag1 || false}
@@ -142,7 +142,7 @@ window.Keepers = () => {
                           style={{ minHeight: '2.25rem' }}
                         />
                       </td>
-                      <td className="text-right py-1 px-1 w-[8%] text-gray-800 border-r border-gray-300">
+                      <td className="py-1 px-1 w-[8%] text-gray-800 border-r border-gray-300">
                         {displayTeam.cost1 ? `$${displayTeam.cost1}` : '-'}
                       </td>
                       <td className="py-1 px-1 w-[16%]">
@@ -158,7 +158,7 @@ window.Keepers = () => {
                           />
                         )}
                       </td>
-                      <td className="text-right py-1 px-1 w-[10%]">
+                      <td className="py-1 px-1 w-[10%] border-r">
                         {locks[selectedYear] ? (
                           <span className="text-gray-800">{displayTeam.draftCost2 ? `$${displayTeam.draftCost2}` : '-'}</span>
                         ) : (
@@ -166,12 +166,12 @@ window.Keepers = () => {
                             type="number"
                             value={displayTeam.draftCost2 || ''}
                             onChange={(e) => handleKeeperChange(selectedYear, index, 'draftCost2', e.target.value)}
-                            className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 text-right no-spinner focus:ring-2 focus:ring-teal-500"
+                            className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 no-spinner focus:ring-2 focus:ring-teal-500"
                             style={{ minHeight: '2.25rem' }}
                           />
                         )}
                       </td>
-                      <td className="text-center py-1 px-1 w-[7%]">
+                      <td className="py-1 px-1 w-[7%]">
                         <input
                           type="checkbox"
                           checked={displayTeam.tag2 || false}
@@ -181,14 +181,14 @@ window.Keepers = () => {
                           style={{ minHeight: '2.25rem' }}
                         />
                       </td>
-                      <td className="text-right py-1 px-1 w-[8%] text-gray-800 border-r border-gray-300">
+                      <td className="py-1 px-1 w-[8%] text-gray-800 border-r border-gray-300">
                         {displayTeam.cost2 ? `$${displayTeam.cost2}` : '-'}
                       </td>
-                      <td className="text-right py-1 px-1 w-[12%] text-gray-800">
+                      <td className="py-1 px-1 w-[12%] text-gray-800">
                         {displayTeam.remaining ? `$${displayTeam.remaining}` : '-'}
                       </td>
                       {!locks[selectedYear] && (
-                        <td className="text-right py-1 px-1 w-[10%]">
+                        <td className="py-1 px-1 w-[10%]">
                           <button
                             onClick={() => enhancedHandleSaveRow(selectedYear, index)}
                             className={`px-2 py-1 text-base rounded text-white transition-all ${savingStates[index] ? 'bg-blue-500' : 'bg-teal-500 hover:bg-teal-600'
