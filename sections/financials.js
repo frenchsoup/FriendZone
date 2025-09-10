@@ -82,26 +82,53 @@ window.Financials = () => {
         sum.total += w.total;
       }
     });
-    return { team, ...sum };
+    return { team, years: teamYears, ...sum };
   });
+
+  // Top earners (top 3 teams by total)
+  const topEarners = [...teamTotals]
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 3);
+
+  // Helper to format numbers with commas, no decimals
+  function formatMoney(num) {
+    if (!num || isNaN(num)) return '-';
+    return `$${Number(num).toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  }
 
   return (
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Financials</h2>
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
+        <div className="flex flex-row w-full justify-center items-stretch gap-2">
+          {topEarners.map((team, idx) => (
+            <div
+              key={team.team}
+              className="relative bg-teal-600 text-white rounded-lg shadow-lg px-2 py-2 flex flex-col items-center min-w-[90px] max-w-[33vw] sm:min-w-[180px] sm:px-4 sm:py-3 border-4 border-teal-400"
+              style={{ flex: '1 1 0' }}
+            >
+              <div className="text-base sm:text-2xl font-bold mb-1">{team.team}</div>
+              <div className="text-xs sm:text-lg font-semibold mb-1">{formatMoney(team.total)}</div>
+              <div className="text-xs font-medium">{team.years.length} {team.years.length === 1 ? 'year' : 'years'} in league</div>
+              <span style={{position: 'absolute', top: 8, right: 12}} className="text-lg font-bold text-teal-200">#{idx + 1}</span>
+            </div>
+          ))}
+        </div>
+      </div>
       <div className="table-container overflow-x-auto">
         <div className="inline-block align-top">
           <div className="card bg-white text-gray-800 rounded-lg shadow-md p-1 sm:p-4">
             <table className="min-w-[600px] sm:min-w-[900px] w-full text-xs sm:text-sm border-collapse">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left whitespace-nowrap w-[10%] px-1">Team</th>
-                  <th className="text-right whitespace-nowrap w-[10%] px-1">Weekly HS</th>
-                  <th className="text-right whitespace-nowrap">Survivor</th>
-                  <th className="text-right whitespace-nowrap">RS</th>
-                  <th className="text-right whitespace-nowrap">Champ</th>
-                  <th className="text-right whitespace-nowrap">2nd</th>
-                  <th className="text-right whitespace-nowrap">3rd</th>
-                  <th className="text-right whitespace-nowrap">Total</th>
+                  <th className="text-left whitespace-nowrap w-[10%] px-2 border-r">Team</th>
+                  <th className="text-right whitespace-nowrap w-[10%] px-2 border-r">Weekly HS</th>
+                  <th className="text-right whitespace-nowrap px-2 border-r">Survivor</th>
+                  <th className="text-right whitespace-nowrap px-2 border-r">RS</th>
+                  <th className="text-right whitespace-nowrap px-2 border-r">Champ</th>
+                  <th className="text-right whitespace-nowrap px-2 border-r">2nd</th>
+                  <th className="text-right whitespace-nowrap px-2 border-r">3rd</th>
+                  <th className="text-right whitespace-nowrap px-2">Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -118,14 +145,14 @@ window.Financials = () => {
                       title="Tap to view yearly breakdown"
                       onClick={() => setExpandedTeam(expandedTeam === row.team ? null : row.team)}
                     >
-                      <td className="px-1">{row.team}</td>
-                      <td className="text-right px-1">{row.weeklyHighScore ? `$${row.weeklyHighScore}` : '-'}</td>
-                      <td className="text-right px-1">{row.survivor ? `$${row.survivor}` : '-'}</td>
-                      <td className="text-right px-1">{row.regularSeason ? `$${row.regularSeason}` : '-'}</td>
-                      <td className="text-right px-1">{row.playoffChamp ? `$${row.playoffChamp}` : '-'}</td>
-                      <td className="text-right px-1">{row.playoffRunnerUp ? `$${row.playoffRunnerUp}` : '-'}</td>
-                      <td className="text-right px-1">{row.playoffThird ? `$${row.playoffThird}` : '-'}</td>
-                      <td className="text-right font-bold px-1">{row.total ? `$${row.total}` : '-'}</td>
+                      <td className="px-2 border-r">{row.team}</td>
+                      <td className="text-right px-2 border-r">{row.weeklyHighScore ? formatMoney(row.weeklyHighScore) : '-'}</td>
+                      <td className="text-right px-2 border-r">{row.survivor ? formatMoney(row.survivor) : '-'}</td>
+                      <td className="text-right px-2 border-r">{row.regularSeason ? formatMoney(row.regularSeason) : '-'}</td>
+                      <td className="text-right px-2 border-r">{row.playoffChamp ? formatMoney(row.playoffChamp) : '-'}</td>
+                      <td className="text-right px-2 border-r">{row.playoffRunnerUp ? formatMoney(row.playoffRunnerUp) : '-'}</td>
+                      <td className="text-right px-2 border-r">{row.playoffThird ? formatMoney(row.playoffThird) : '-'}</td>
+                      <td className="text-right font-bold px-2">{row.total ? formatMoney(row.total) : '-'}</td>
                     </tr>
                     {expandedTeam === row.team && (
                       <tr className="bg-gray-50 border-b">
@@ -134,14 +161,14 @@ window.Financials = () => {
                             <table className="w-full text-xs">
                               <thead>
                                 <tr>
-                                  <th className="text-left">Year</th>
-                                  <th className="text-right">Weekly HS</th>
-                                  <th className="text-right">Survivor</th>
-                                  <th className="text-right">RS</th>
-                                  <th className="text-right">Champ</th>
-                                  <th className="text-right">2nd</th>
-                                  <th className="text-right">3rd</th>
-                                  <th className="text-right">Total</th>
+                                  <th className="text-left px-2 border-r">Year</th>
+                                  <th className="text-right px-2 border-r">Weekly HS</th>
+                                  <th className="text-right px-2 border-r">Survivor</th>
+                                  <th className="text-right px-2 border-r">RS</th>
+                                  <th className="text-right px-2 border-r">Champ</th>
+                                  <th className="text-right px-2 border-r">2nd</th>
+                                  <th className="text-right px-2 border-r">3rd</th>
+                                  <th className="text-right px-2">Total</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -150,14 +177,14 @@ window.Financials = () => {
                                   const w = calcWinnings(row.team, year);
                                   return (
                                     <tr key={year}>
-                                      <td>{year}</td>
-                                      <td className="text-right">{w.weeklyHighScore ? `$${w.weeklyHighScore}` : '-'}</td>
-                                      <td className="text-right">{w.survivor ? `$${w.survivor}` : '-'}</td>
-                                      <td className="text-right">{w.regularSeason ? `$${w.regularSeason}` : '-'}</td>
-                                      <td className="text-right">{w.playoffChamp ? `$${w.playoffChamp}` : '-'}</td>
-                                      <td className="text-right">{w.playoffRunnerUp ? `$${w.playoffRunnerUp}` : '-'}</td>
-                                      <td className="text-right">{w.playoffThird ? `$${w.playoffThird}` : '-'}</td>
-                                      <td className="text-right font-bold">{w.total ? `$${w.total}` : '-'}</td>
+                                      <td className="px-2 border-r">{year}</td>
+                                      <td className="text-right px-2 border-r">{w.weeklyHighScore ? formatMoney(w.weeklyHighScore) : '-'}</td>
+                                      <td className="text-right px-2 border-r">{w.survivor ? formatMoney(w.survivor) : '-'}</td>
+                                      <td className="text-right px-2 border-r">{w.regularSeason ? formatMoney(w.regularSeason) : '-'}</td>
+                                      <td className="text-right px-2 border-r">{w.playoffChamp ? formatMoney(w.playoffChamp) : '-'}</td>
+                                      <td className="text-right px-2 border-r">{w.playoffRunnerUp ? formatMoney(w.playoffRunnerUp) : '-'}</td>
+                                      <td className="text-right px-2 border-r">{w.playoffThird ? formatMoney(w.playoffThird) : '-'}</td>
+                                      <td className="text-right font-bold px-2">{w.total ? formatMoney(w.total) : '-'}</td>
                                     </tr>
                                   );
                                 })}
