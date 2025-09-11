@@ -107,10 +107,10 @@ window.Financials = () => {
               className="relative bg-teal-600 text-white rounded-lg shadow-lg px-2 py-2 flex flex-col items-center min-w-[90px] max-w-[33vw] sm:min-w-[180px] sm:px-4 sm:py-3 border-4 border-teal-400"
               style={{ flex: '1 1 0' }}
             >
-              <div className="text-base sm:text-2xl font-bold mb-1">{team.team}</div>
-              <div className="text-xs sm:text-lg font-semibold mb-1">{formatMoney(team.total)}</div>
-              <div className="text-xs font-medium">{team.years.length} {team.years.length === 1 ? 'year' : 'years'} in league</div>
-              <span style={{position: 'absolute', top: 8, right: 12}} className="text-lg font-bold text-teal-200">#{idx + 1}</span>
+              <div className="text-md font-bold mb-1">{team.team}</div>
+              <div className="text-sm font-semibold mb-1">{formatMoney(team.total)}</div>
+              <div className="text-sm font-medium">{team.years.length} {team.years.length === 1 ? 'year' : 'years'}</div>
+              <span style={{position: 'absolute', top: 1, right: 2}} className="text-xs font-bold text-teal-200">#{idx + 1}</span>
             </div>
           ))}
         </div>
