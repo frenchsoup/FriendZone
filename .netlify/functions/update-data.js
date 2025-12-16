@@ -17,12 +17,27 @@ exports.handler = async function (event) {
     const { file, data, action, index } = body;
     if (!file) return { statusCode: 400, body: 'Missing file param' };
 
+    // Basic diagnostics
+    console.info('update-data called', { file, action, index });
+
+    if (!process.env.GITHUB_TOKEN) {
+      const msg = 'GITHUB_TOKEN not set in environment';
+      console.error(msg);
+      return { statusCode: 500, body: JSON.stringify({ error: msg }) };
+    }
+
     const owner = process.env.GITHUB_OWNER || DEFAULT_OWNER;
     const repo = process.env.GITHUB_REPO_NAME || DEFAULT_REPO;
     const branch = process.env.GITHUB_BRANCH || DEFAULT_BRANCH;
     const path = `data/${file}`;
 
-    const { Octokit } = await import('@octokit/rest');
+    let Octokit;
+    try {
+      ({ Octokit } = await import('@octokit/rest'));
+    } catch (impErr) {
+      console.error('Failed to import @octokit/rest', impErr);
+      throw impErr;
+    }
     const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
 
     async function getLatestSha() {
@@ -101,6 +116,8 @@ exports.handler = async function (event) {
     console.error('Error in update-data:', err);
     const status = err.status || 500;
     const message = err.message || 'Unknown error';
-    return { statusCode: status, body: JSON.stringify({ error: message }) };
+    const debug = process.env.DEBUG_FUNCTIONS === 'true';
+    const body = debug ? { error: message, stack: err.stack } : { error: message };
+    return { statusCode: status, body: JSON.stringify(body) };
   }
 };
