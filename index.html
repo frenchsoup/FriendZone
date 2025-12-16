@@ -53,6 +53,7 @@
       const [payouts, setPayouts] = React.useState([]);
       const [locks, setLocks] = React.useState({ 2022: false, 2023: false, 2024: false, 2025: false });
       const [selectedYear, setSelectedYear] = React.useState('2025');
+      const [isSaving, setIsSaving] = React.useState(false);
       const [isMenuOpen, setIsMenuOpen] = React.useState(false);
       const [modalState, setModalState] = React.useState({ isOpen: false, type: '', data: null });
       const [pendingChanges, setPendingChanges] = React.useState({ 2022: {}, 2023: {}, 2024: {}, 2025: {} });
@@ -182,6 +183,7 @@
         },
         updateData: async (file, data, action, index = null) => {
           try {
+            setIsSaving(true);
             const res = await fetch('/.netlify/functions/update-data', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -193,6 +195,8 @@
             console.error('Error updating data:', err);
             alert('Failed to update data. Please try again.');
             return null;
+          } finally {
+            setIsSaving(false);
           }
         },
         normalizeNumberInput: (value) => {
@@ -381,6 +385,58 @@
           }
         },
       };
+
+      // Ensure window.AppState.prizes is kept in sync whenever setPrizes is called
+      (function syncPrizesSetter() {
+        const origSetPrizes = setPrizes;
+        window.AppState.setPrizes = (value) => {
+          if (typeof value === 'function') {
+            origSetPrizes(prev => {
+              const updated = value(prev);
+              window.AppState.prizes = updated;
+              return updated;
+            });
+          } else {
+            origSetPrizes(value);
+            window.AppState.prizes = value;
+          }
+        };
+      })();
+
+      // Keep payouts and yearlyAwards synced on set as well (so Financials re-renders)
+      (function syncPayoutsAndAwards() {
+        const origSetPayouts = setPayouts;
+        window.AppState.setPayouts = (value) => {
+          if (typeof value === 'function') {
+            origSetPayouts(prev => {
+              const updated = value(prev);
+              window.AppState.payouts = updated;
+              return updated;
+            });
+          } else {
+            origSetPayouts(value);
+            window.AppState.payouts = value;
+          }
+        };
+
+        const origSetYearlyAwards = setYearlyAwards;
+        window.AppState.setYearlyAwards = (value) => {
+          if (typeof value === 'function') {
+            origSetYearlyAwards(prev => {
+              const updated = value(prev);
+              window.AppState.yearlyAwards = updated;
+              return updated;
+            });
+          } else {
+            origSetYearlyAwards(value);
+            window.AppState.yearlyAwards = value;
+          }
+        };
+      })();
+
+      // expose saving flag
+      window.AppState.isSaving = isSaving;
+      window.AppState.setIsSaving = setIsSaving;
 
       // Spinner component
       const Spinner = () => (

@@ -11,8 +11,11 @@ window.Financials = () => {
     payoutMap[p.category] = p.prize;
   });
 
-  // Get all years from yearlyAwards, fallback to empty object if undefined
-  const years = Object.keys(yearlyAwards || {}).sort();
+  // Get all years from yearlyAwards and prizes so recent prize updates (e.g., 2025)
+  // are included even if `yearlyawards.json` doesn't yet list that year.
+  const awardYears = Object.keys(yearlyAwards || {});
+  const prizeYears = Object.keys(window.AppState.prizes || {});
+  const years = Array.from(new Set([...awardYears, ...prizeYears])).sort();
   // Get all teams from leagueTeams, fallback to empty array if undefined
   const teamList = (leagueTeams || []).map(t => t.team).sort();
 

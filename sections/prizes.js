@@ -51,9 +51,10 @@ window.Prizes = () => {
     window.AppState.persistPrizes(year, updated[year]);
   };
 
-  // Persist function (calls Netlify function)
+  // Persist function (calls Netlify function) with saving flag
   window.AppState.persistPrizes = async (year, data) => {
     try {
+      if (window.AppState.setIsSaving) window.AppState.setIsSaving(true);
       await fetch('/.netlify/functions/update-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,6 +66,8 @@ window.Prizes = () => {
       });
     } catch (e) {
       alert('Failed to save prizes data!');
+    } finally {
+      if (window.AppState.setIsSaving) window.AppState.setIsSaving(false);
     }
   };
 
@@ -72,7 +75,7 @@ window.Prizes = () => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg sm:text-xl font-bold text-white text-center">Prizes</h2>
+      <h2 className="text-lg sm:text-xl font-bold text-white text-center">Prizes {window.AppState.isSaving ? <span className="text-sm font-medium text-yellow-200">(Saving...)</span> : null}</h2>
       <div className="flex flex-wrap justify-center mb-4 gap-2">
         {['2023', '2024', '2025'].map(year => (
           <button
@@ -106,10 +109,11 @@ window.Prizes = () => {
                   <tr key={index} className={`border-b ${index % 2 === 0 ? 'table-row-even' : 'table-row-odd'}`}>
                     <td className="py-2 px-2 sm:px-3">{score.week}</td>
                     <td className="py-2 px-2 sm:px-3">
-                      {isAdminAuthenticated ? (
+                          {isAdminAuthenticated ? (
                         <select
                           value={score.team || ''}
                           onChange={e => handleHighScoreChange(selectedYear, index, 'team', e.target.value)}
+                          disabled={window.AppState.isSaving}
                           className="w-full bg-gray-100 p-2 rounded text-base"
                           style={{ minHeight: '2.25rem' }}
                         >
@@ -128,6 +132,7 @@ window.Prizes = () => {
                           type="text"
                           value={score.total || ''}
                           onChange={e => handleHighScoreChange(selectedYear, index, 'total', e.target.value)}
+                          disabled={window.AppState.isSaving}
                           className="w-full sm:w-16 bg-gray-100 p-2 rounded text-base "
                           style={{ minHeight: '2.25rem' }}
                         />
@@ -167,13 +172,14 @@ window.Prizes = () => {
                     >
                       <td className="py-2 px-2 sm:px-3">{index === 11 ? 'Winner' : entry.week}</td>
                       <td className="py-2 px-2 sm:px-3">
-                        {isAdminAuthenticated ? (
+                          {isAdminAuthenticated ? (
                           isLocked ? (
                             <span>{value}</span>
                           ) : (
                             <select
                               value={value}
                               onChange={e => handleSurvivorChange(selectedYear, index, index === 11 ? 'winner' : 'eliminated', e.target.value)}
+                              disabled={window.AppState.isSaving}
                               className="w-full bg-gray-100 p-2 rounded text-base"
                               style={{ minHeight: '2.25rem' }}
                             >

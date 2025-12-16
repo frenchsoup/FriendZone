@@ -1,4 +1,11 @@
 {
+    "2025": [
+    { "category": "Playoff Champ", "team": "" },
+    { "category": "Playoff Runner Up", "team": "" },
+    { "category": "Playoff 3rd Place", "team": "" },
+    { "category": "Regular Season Champ", "team": "DGatz" },
+    { "category": "Survivor", "team": "Byz" }
+  ],
   "2024": [
     { "category": "Playoff Champ", "team": "Ayer" },
     { "category": "Playoff Runner Up", "team": "ALef" },
