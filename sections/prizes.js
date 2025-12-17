@@ -1,14 +1,18 @@
 window.Prizes = () => {
   const { prizes, keepers, selectedYear, setSelectedYear, isAdminAuthenticated } = window.AppState;
 
-  // Helper: get all teams for the selected year
+  // Helper: get all teams for the selected year (use canonical leagueTeams)
   const getTeamsForYear = (year) => {
-    return keepers[year]?.map(k => k.team) || [];
+    try {
+      return (window.AppState.getTeamsForYear(year) || []);
+    } catch (e) {
+      return (keepers[year] || []).map(k => ({ id: window.AppState.getTeamIdByName(k.team) || k.team, team: k.team }));
+    }
   };
 
   // Helper: get remaining teams for survivor for a given week
   const getSurvivorRemainingTeams = (year, upToWeek = null) => {
-    const allTeams = getTeamsForYear(year);
+    const allTeams = getTeamsForYear(year).map(t => t.team);
     const survivorEntries = prizes[year]?.survivor || [];
     let eliminated = [];
     let winner = '';
@@ -20,7 +24,10 @@ window.Prizes = () => {
         eliminated.push(survivorEntries[i].eliminated);
       }
     }
-    let remaining = allTeams.filter(t => !eliminated.includes(t) && t !== winner);
+    // normalize eliminated/winner to names when comparing
+    const eliminatedNames = eliminated.map(e => window.AppState.getTeamById(e)?.team || e);
+    const winnerName = window.AppState.getTeamById(winner)?.team || winner;
+    let remaining = allTeams.filter(t => !eliminatedNames.includes(t) && t !== winnerName);
     return remaining;
   };
 
@@ -55,14 +62,13 @@ window.Prizes = () => {
   window.AppState.persistPrizes = async (year, data) => {
     try {
       if (window.AppState.setIsSaving) window.AppState.setIsSaving(true);
+      const normalized = JSON.parse(JSON.stringify(data));
+      (normalized.weeklyHighScores || []).forEach(s => { s.team = window.AppState.getTeamIdByName(s.team) || s.team; });
+      (normalized.survivor || []).forEach(e => { if (e.winner) e.winner = window.AppState.getTeamIdByName(e.winner) || e.winner; if (e.eliminated) e.eliminated = window.AppState.getTeamIdByName(e.eliminated) || e.eliminated; });
       await fetch('/.netlify/functions/update-data', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          file: `prizes_${year}.json`,
-          data,
-          action: 'update'
-        })
+        body: JSON.stringify({ file: `prizes_${year}.json`, data: normalized, action: 'update' })
       });
     } catch (e) {
       alert('Failed to save prizes data!');
@@ -77,7 +83,7 @@ window.Prizes = () => {
     <div className="space-y-4">
       <h2 className="text-lg sm:text-xl font-bold text-white text-center">Prizes {window.AppState.isSaving ? <span className="text-sm font-medium text-yellow-200">(Saving...)</span> : null}</h2>
       <div className="flex flex-wrap justify-center mb-4 gap-2">
-        {['2023', '2024', '2025'].map(year => (
+        {Object.keys(window.AppState.prizes || {}).sort().map(year => (
           <button
             key={year}
             onClick={() => setSelectedYear(year)}
@@ -111,7 +117,7 @@ window.Prizes = () => {
                     <td className="py-2 px-2 sm:px-3">
                           {isAdminAuthenticated ? (
                         <select
-                          value={score.team || ''}
+                          value={window.AppState.getTeamIdByName(score.team) || score.team || ''}
                           onChange={e => handleHighScoreChange(selectedYear, index, 'team', e.target.value)}
                           disabled={window.AppState.isSaving}
                           className="w-full bg-gray-100 p-2 rounded text-base"
@@ -119,11 +125,11 @@ window.Prizes = () => {
                         >
                           <option value="">Select Team</option>
                           {getTeamsForYear(selectedYear).map(team => (
-                            <option key={team} value={team}>{team}</option>
+                            <option key={team.id} value={team.id}>{team.team}</option>
                           ))}
                         </select>
                       ) : (
-                        <span>{score.team || ''}</span>
+                        <span>{window.AppState.getTeamById(score.team)?.team || score.team || ''}</span>
                       )}
                     </td>
                     <td className=" py-2 px-2 sm:px-3">
@@ -174,7 +180,7 @@ window.Prizes = () => {
                       <td className="py-2 px-2 sm:px-3">
                           {isAdminAuthenticated ? (
                           isLocked ? (
-                            <span>{value}</span>
+                            <span>{window.AppState.getTeamById(value)?.team || value}</span>
                           ) : (
                             <select
                               value={value}
@@ -184,13 +190,15 @@ window.Prizes = () => {
                               style={{ minHeight: '2.25rem' }}
                             >
                               <option value="">Select Team</option>
-                              {getSurvivorRemainingTeams(selectedYear, index).map(team => (
-                                <option key={team} value={team}>{team}</option>
-                              ))}
+                              {getSurvivorRemainingTeams(selectedYear, index).map(teamName => {
+                                const t = getTeamsForYear(selectedYear).find(x => x.team === teamName);
+                                const id = t ? t.id : teamName;
+                                return <option key={id} value={id}>{t ? t.team : teamName}</option>;
+                              })}
                             </select>
                           )
                         ) : (
-                          <span>{value}</span>
+                          <span>{window.AppState.getTeamById(value)?.team || value}</span>
                         )}
                       </td>
                     </tr>

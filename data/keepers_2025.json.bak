@@ -1,6 +1,6 @@
 [
   {
-    "team": "yacob",
+    "team": "Yacob",
     "keeper1": "Achane",
     "draftCost1": 5,
     "tag1": true,
@@ -12,7 +12,7 @@
     "remaining": 183
   },
   {
-    "team": "byz",
+    "team": "Byz",
     "keeper1": "Nabers",
     "draftCost1": 22,
     "tag1": false,
@@ -24,7 +24,7 @@
     "remaining": 171
   },
   {
-    "team": "mante",
+    "team": "Mante",
     "keeper1": "London ",
     "draftCost1": 19,
     "tag1": true,
@@ -36,7 +36,7 @@
     "remaining": 169
   },
   {
-    "team": "jordan",
+    "team": "Jordan",
     "keeper1": "Bo Nix",
     "draftCost1": 4,
     "tag1": false,
@@ -48,7 +48,7 @@
     "remaining": 185
   },
   {
-    "team": "trudy",
+    "team": "Trudy",
     "keeper1": "Meyers",
     "draftCost1": 5,
     "tag1": true,
@@ -60,7 +60,7 @@
     "remaining": 195
   },
   {
-    "team": "tlew",
+    "team": "TLew",
     "keeper1": "Penix",
     "draftCost1": 2,
     "tag1": false,
@@ -72,7 +72,7 @@
     "remaining": 167
   },
   {
-    "team": "alef",
+    "team": "ALef",
     "keeper1": "BT Jr. ",
     "draftCost1": 11,
     "tag1": false,
@@ -84,7 +84,7 @@
     "remaining": 154
   },
   {
-    "team": "jlusa",
+    "team": "JLusa",
     "keeper1": "Kyler",
     "draftCost1": 16,
     "tag1": true,
@@ -96,7 +96,7 @@
     "remaining": 175
   },
   {
-    "team": "ayer",
+    "team": "Ayer",
     "keeper1": "Kittle",
     "draftCost1": 11,
     "tag1": false,
@@ -108,7 +108,7 @@
     "remaining": 160
   },
   {
-    "team": "tobin",
+    "team": "Tobin",
     "keeper1": "Josh Allen",
     "draftCost1": 45,
     "tag1": false,
@@ -120,7 +120,7 @@
     "remaining": 145
   },
   {
-    "team": "cbuck",
+    "team": "CBuck",
     "keeper1": "Lamar",
     "draftCost1": 40,
     "tag1": true,
@@ -132,7 +132,7 @@
     "remaining": 142
   },
   {
-    "team": "dgatz",
+    "team": "DGatz",
     "keeper1": "Gibbs",
     "draftCost1": 41,
     "tag1": true,

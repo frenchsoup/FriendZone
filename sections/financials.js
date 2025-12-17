@@ -16,8 +16,8 @@ window.Financials = () => {
   const awardYears = Object.keys(yearlyAwards || {});
   const prizeYears = Object.keys(window.AppState.prizes || {});
   const years = Array.from(new Set([...awardYears, ...prizeYears])).sort();
-  // Get all teams from leagueTeams, fallback to empty array if undefined
-  const teamList = (leagueTeams || []).map(t => t.team).sort();
+  // Get all team ids from leagueTeams, fallback to empty array if undefined
+  const teamList = (leagueTeams || []).map(t => t.id).sort();
 
   // Helper: calculate winnings for a team in a year
   function calcWinnings(team, year) {
@@ -31,17 +31,25 @@ window.Financials = () => {
 
     // Weekly High Score
     const whsPrize = payoutMap['Weekly High Score (Weeks 1-14)'];
-    const whsCount = (p.weeklyHighScores || []).filter(w => w.team === team).length;
-    weeklyHighScore = whsPrize && whsCount ? Math.round((whsPrize / 14) * whsCount) : 0;
+    const whsCount = (p.weeklyHighScores || []).filter(w => {
+      const wTeamId = window.AppState.getTeamIdByName(w.team) || w.team;
+      return wTeamId === team;
+    }).length;
 
     // Survivor
     const survivorPrize = payoutMap['Survivor (Week 13 Winner)'];
-    if ((p.survivor || [])[11]?.winner === team) survivor = survivorPrize || 0;
+    const winnerEntry = (p.survivor || [])[11];
+    if (winnerEntry) {
+      const winnerId = window.AppState.getTeamIdByName(winnerEntry.winner) || winnerEntry.winner;
+      if (winnerId === team) survivor = survivorPrize || 0;
+    }
 
     // Yearly Winners from yearlyAwards
     const awards = yearlyAwards[year] || [];
     awards.forEach(w => {
-      if (w.team === team) {
+      // yearlyAwards may store team ids or names; normalize to id when possible
+      const awardTeamId = window.AppState.getTeamIdByName(w.team) || w.team;
+      if (awardTeamId === team) {
         if (w.category === 'Regular Season Champ') regularSeason = payoutMap[w.category] || 0;
         if (w.category === 'Playoff Champ') playoffChamp = payoutMap[w.category] || 0;
         if (w.category === 'Playoff Runner Up') playoffRunnerUp = payoutMap[w.category] || 0;
@@ -72,7 +80,7 @@ window.Financials = () => {
       total: 0
     };
     // Only add if team participated in that year
-    const teamYears = (leagueTeams.find(t => t.team === team)?.years || []).map(String);
+    const teamYears = (leagueTeams.find(t => t.id === team)?.years || []).map(String);
     years.forEach(year => {
       if (teamYears.includes(year)) {
         const w = calcWinnings(team, year);
@@ -110,7 +118,7 @@ window.Financials = () => {
               className="relative bg-teal-600 text-white rounded-lg shadow-lg px-2 py-2 flex flex-col items-center min-w-[90px] max-w-[33vw] sm:min-w-[180px] sm:px-4 sm:py-3 border-4 border-teal-400"
               style={{ flex: '1 1 0' }}
             >
-              <div className="text-md font-bold mb-1">{team.team}</div>
+              <div className="text-md font-bold mb-1">{window.AppState.getTeamById(team.team)?.team || team.team}</div>
               <div className="text-sm font-semibold mb-1">{formatMoney(team.total)}</div>
               <div className="text-sm font-medium">{team.years.length} {team.years.length === 1 ? 'year' : 'years'}</div>
               <span style={{position: 'absolute', top: 1, right: 2}} className="text-xs font-bold text-teal-200">#{idx + 1}</span>
@@ -148,7 +156,7 @@ window.Financials = () => {
                       title="Tap to view yearly breakdown"
                       onClick={() => setExpandedTeam(expandedTeam === row.team ? null : row.team)}
                     >
-                      <td className="px-2 border-r">{row.team}</td>
+                      <td className="px-2 border-r">{window.AppState.getTeamById(row.team)?.team || row.team}</td>
                       <td className=" px-2 border-r">{row.weeklyHighScore ? formatMoney(row.weeklyHighScore) : '-'}</td>
                       <td className=" px-2 border-r">{row.survivor ? formatMoney(row.survivor) : '-'}</td>
                       <td className=" px-2 border-r">{row.regularSeason ? formatMoney(row.regularSeason) : '-'}</td>
@@ -175,7 +183,7 @@ window.Financials = () => {
                                 </tr>
                               </thead>
                               <tbody>
-                                {((leagueTeams.find(t => t.team === row.team)?.years || []).map(String)).map(year => {
+                                {((leagueTeams.find(t => t.id === row.team)?.years || []).map(String)).map(year => {
                                   if (!years.includes(year)) return null;
                                   const w = calcWinnings(row.team, year);
                                   return (

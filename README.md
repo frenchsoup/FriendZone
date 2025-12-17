@@ -151,6 +151,37 @@ Set `GITHUB_TOKEN` in your Netlify site for authentication.
     - Open browser console for errors
     - Test admin login, keeper updates, and data persistence
 
+## **Yearly Upgrade Checklist (example: add 2026 support)**
+
+Follow these steps each offseason to add a new year (e.g. 2026) to the app.
+
+- **Create data files:** Add `data/keepers_2026.json` and `data/prizes_2026.json` (use the existing 2025 files as templates). Ensure `data/locks.json` contains a `2026` key (default `false`).
+- **Add defaults in app init:** Update the file-fetch list and default state in `index.html` so the app initializes `keepers[2026]` and `prizes[2026]` (use same structure as other years).
+- **Update UI year selectors:** Add `2026` to any hardcoded year lists in `sections/prizes.js`, `sections/keepers.js`, and other components, or change selectors to derive years dynamically from available data files.
+- **Update league/team metadata:** If teams change, update `data/league_teams.json` (add `2026` to team `years` arrays) and add an entry for `2026` in `data/yearlyawards.json` if you wish to pre-populate awards.
+- **Verify persistence/backend:** The Netlify function `/.netlify/functions/update-data.js` supports arbitrary `data/*.json` files, but confirm `GITHUB_TOKEN`, `GITHUB_REPO`/owner settings, and repository permissions (repo scope) in Netlify environment variables.
+- **UX and saving:** Confirm saving indicators and input disabling cover the new year (we added `isSaving` and wrapped setters for `prizes`, `payouts`, and `yearlyAwards`).
+- **Test locally:** Run `netlify dev` (or serve the site) and exercise keepers/prizes/financials for 2026; verify writes update the repo and the UI (including `Financials`) reflects changes.
+- **Commit & deploy:** Commit your new data files and code changes, push to GitHub, then deploy on Netlify; monitor function logs for errors and fix environment variables if needed.
+- **Optional - safer workflow:** Create a dedicated branch `upgrade/2026`, push changes there, and open a PR for review before merging to `main`.
+
+This checklist is intentionally minimal — if you want I can apply these changes now (create the 2026 files and update `index.html` and selectors) and open a PR for your review.
+
+### Team ID migration script
+
+To migrate existing team name references to canonical IDs (recommended):
+
+1. Review `data/league_teams.json` and ensure each entry has an `id` field (slug-like, unique).
+2. Run the migration script locally:
+
+```bash
+node scripts/migrate-teams-to-ids.js
+```
+
+The script creates `.bak` backups for any file it modifies under `data/` and replaces team name strings with the matching team `id` where possible (in `keepers_*.json`, `prizes_*.json`, and `yearlyawards.json`).
+
+After migration, the app UI will use canonical IDs internally while showing human-friendly team names.
+
 ## Usage
 
 - **Navigation**: Use the top bar (or hamburger menu) to switch tabs.

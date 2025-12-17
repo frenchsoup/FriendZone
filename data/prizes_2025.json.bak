@@ -2,122 +2,122 @@
   "survivor": [
     {
       "week": 1,
-      "eliminated": "tlew"
+      "eliminated": "TLew"
     },
     {
       "week": 2,
-      "eliminated": "cbuck"
+      "eliminated": "CBuck"
     },
     {
       "week": 3,
-      "eliminated": "mante"
+      "eliminated": "Mante"
     },
     {
       "week": 4,
-      "eliminated": "jlusa"
+      "eliminated": "JLusa"
     },
     {
       "week": 5,
-      "eliminated": "jordan"
+      "eliminated": "Jordan"
     },
     {
       "week": 6,
-      "eliminated": "ayer"
+      "eliminated": "Ayer"
     },
     {
       "week": 7,
-      "eliminated": "tobin"
+      "eliminated": "Tobin"
     },
     {
       "week": 8,
-      "eliminated": "yacob"
+      "eliminated": "Yacob"
     },
     {
       "week": 9,
-      "eliminated": "trudy"
+      "eliminated": "Trudy"
     },
     {
       "week": 10,
-      "eliminated": "alef"
+      "eliminated": "ALef"
     },
     {
       "week": 11,
-      "eliminated": "dgatz"
+      "eliminated": "DGatz"
     },
     {
       "week": 12,
-      "winner": "byz"
+      "winner": "Byz"
     }
   ],
   "weeklyHighScores": [
     {
       "week": 1,
-      "team": "tobin",
+      "team": "Tobin",
       "total": "157.28"
     },
     {
       "week": 2,
-      "team": "trudy",
+      "team": "Trudy",
       "total": "157.72"
     },
     {
       "week": 3,
-      "team": "yacob",
+      "team": "Yacob",
       "total": "159.28"
     },
     {
       "week": 4,
-      "team": "jordan",
+      "team": "Jordan",
       "total": "187.74"
     },
     {
       "week": 5,
-      "team": "mante",
+      "team": "Mante",
       "total": "155.26"
     },
     {
       "week": 6,
-      "team": "mante",
+      "team": "Mante",
       "total": "183.34"
     },
     {
       "week": 7,
-      "team": "yacob",
+      "team": "Yacob",
       "total": "180.92"
     },
     {
       "week": 8,
-      "team": "cbuck",
+      "team": "CBuck",
       "total": "134.58"
     },
     {
       "week": 9,
-      "team": "mante",
+      "team": "Mante",
       "total": "184.76"
     },
     {
       "week": 10,
-      "team": "ayer",
+      "team": "Ayer",
       "total": "178.78"
     },
     {
       "week": 11,
-      "team": "byz",
+      "team": "Byz",
       "total": "145.52"
     },
     {
       "week": 12,
-      "team": "dgatz",
+      "team": "DGatz",
       "total": "186.12"
     },
     {
       "week": 13,
-      "team": "yacob",
+      "team": "Yacob",
       "total": "172.82"
     },
     {
       "week": 14,
-      "team": "tobin",
+      "team": "Tobin",
       "total": "145.78"
     }
   ]

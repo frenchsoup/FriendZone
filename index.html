@@ -12,6 +12,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 </head>
 
 <body class="bg-gray-900 text-gray-100">
@@ -174,6 +175,22 @@
         ADMIN_PASSWORD: 'friendzone2025',
         yearlyAwards, setYearlyAwards,
         leagueTeams, setLeagueTeams,
+        // Team helpers: canonical mapping and lookups
+        getTeamsForYear: (year) => {
+          const y = Number(year);
+          return (window.AppState.leagueTeams || []).filter(t => (t.years || []).map(Number).includes(y)).map(t => ({ id: t.id, team: t.team }));
+        },
+        getTeamById: (id) => (window.AppState.leagueTeams || []).find(t => t.id === id) || null,
+        getTeamIdByName: (name) => {
+          if (!name) return null;
+          const found = (window.AppState.leagueTeams || []).find(t => String(t.team).toLowerCase() === String(name).toLowerCase());
+          return found ? found.id : null;
+        },
+        normalizeTeamName: (name) => {
+          if (!name) return '';
+          const found = (window.AppState.leagueTeams || []).find(t => String(t.team).toLowerCase() === String(name).toLowerCase());
+          return found ? found.team : String(name).trim();
+        },
         calculateKeeperCost: (draftCost, tag, keeperName) => {
           if (keeperName === '' && draftCost === 0) return 0;
           if (draftCost === 0 && !tag) return 5;

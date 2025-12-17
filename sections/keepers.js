@@ -95,15 +95,19 @@ window.Keepers = () => {
                     <tr key={index} className={`border-b ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'} hover:bg-teal-50 transition-colors`}>
                       <td className="py-1 px-1 w-[12%] border-r border-gray-300">
                         {locks[selectedYear] ? (
-                          <span className="text-gray-800">{displayTeam.team || '-'}</span>
+                          <span className="text-gray-800">{window.AppState.getTeamById(displayTeam.team)?.team || displayTeam.team || '-'}</span>
                         ) : (
-                          <input
-                            type="text"
-                            value={displayTeam.team || ''}
+                          <select
+                            value={window.AppState.getTeamById(displayTeam.team)?.id || window.AppState.getTeamIdByName(displayTeam.team) || ''}
                             onChange={(e) => handleKeeperChange(selectedYear, index, 'team', e.target.value)}
                             className="w-full bg-gray-100 p-2 rounded text-base text-gray-800 focus:ring-2 focus:ring-teal-500"
                             style={{ minHeight: '2.25rem' }}
-                          />
+                          >
+                            <option value="">Select Team</option>
+                            {window.AppState.getTeamsForYear(selectedYear).map(t => (
+                              <option key={t.id} value={t.id}>{t.team}</option>
+                            ))}
+                          </select>
                         )}
                       </td>
                       <td className="py-1 px-1 w-[16%]">

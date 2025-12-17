@@ -1,32 +1,124 @@
 {
   "survivor": [
-    { "week": 1, "eliminated": "Tobin" },
-    { "week": 2, "eliminated": "Jordan" },
-    { "week": 3, "eliminated": "Adam" },
-    { "week": 4, "eliminated": "Mante" },
-    { "week": 5, "eliminated": "ALef" },
-    { "week": 6, "eliminated": "TLew" },
-    { "week": 7, "eliminated": "CBuck" },
-    { "week": 8, "eliminated": "DGatz" },
-    { "week": 9, "eliminated": "Ayer" },
-    { "week": 10, "eliminated": "Yacob" },
-    { "week": 11, "eliminated": "JLusa" },
-    { "week": 12, "winner": "Byz" }
+    {
+      "week": 1,
+      "eliminated": "tobin"
+    },
+    {
+      "week": 2,
+      "eliminated": "jordan"
+    },
+    {
+      "week": 3,
+      "eliminated": "adam"
+    },
+    {
+      "week": 4,
+      "eliminated": "mante"
+    },
+    {
+      "week": 5,
+      "eliminated": "alef"
+    },
+    {
+      "week": 6,
+      "eliminated": "tlew"
+    },
+    {
+      "week": 7,
+      "eliminated": "cbuck"
+    },
+    {
+      "week": 8,
+      "eliminated": "dgatz"
+    },
+    {
+      "week": 9,
+      "eliminated": "ayer"
+    },
+    {
+      "week": 10,
+      "eliminated": "yacob"
+    },
+    {
+      "week": 11,
+      "eliminated": "jlusa"
+    },
+    {
+      "week": 12,
+      "winner": "byz"
+    }
   ],
   "weeklyHighScores": [
-    { "week": 1, "team": "Jordan", "total": 152.16 },
-    { "week": 2, "team": "TLew", "total": 157.08 },
-    { "week": 3, "team": "ALef", "total": 154.04 },
-    { "week": 4, "team": "Yacob", "total": 152.98 },
-    { "week": 5, "team": "Jordan", "total": 176.94 },
-    { "week": 6, "team": "Tobin", "total": 149.94 },
-    { "week": 7, "team": "Mante", "total": 152.4 },
-    { "week": 8, "team": "Jordan", "total": 158.78 },
-    { "week": 9, "team": "DGatz", "total": 123.22 },
-    { "week": 10, "team": "JLusa", "total": 176.62 },
-    { "week": 11, "team": "Jordan", "total": 145.1 },
-    { "week": 12, "team": "DGatz", "total": 165.8 },
-    { "week": 13, "team": "ALef", "total": 184.28 },
-    { "week": 14, "team": "Jordan", "total": 133.38 }
+    {
+      "week": 1,
+      "team": "jordan",
+      "total": 152.16
+    },
+    {
+      "week": 2,
+      "team": "tlew",
+      "total": 157.08
+    },
+    {
+      "week": 3,
+      "team": "alef",
+      "total": 154.04
+    },
+    {
+      "week": 4,
+      "team": "yacob",
+      "total": 152.98
+    },
+    {
+      "week": 5,
+      "team": "jordan",
+      "total": 176.94
+    },
+    {
+      "week": 6,
+      "team": "tobin",
+      "total": 149.94
+    },
+    {
+      "week": 7,
+      "team": "mante",
+      "total": 152.4
+    },
+    {
+      "week": 8,
+      "team": "jordan",
+      "total": 158.78
+    },
+    {
+      "week": 9,
+      "team": "dgatz",
+      "total": 123.22
+    },
+    {
+      "week": 10,
+      "team": "jlusa",
+      "total": 176.62
+    },
+    {
+      "week": 11,
+      "team": "jordan",
+      "total": 145.1
+    },
+    {
+      "week": 12,
+      "team": "dgatz",
+      "total": 165.8
+    },
+    {
+      "week": 13,
+      "team": "alef",
+      "total": 184.28
+    },
+    {
+      "week": 14,
+      "team": "jordan",
+      "total": 133.38
+    }
   ]
 }

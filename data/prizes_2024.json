@@ -1,32 +1,124 @@
 {
   "weeklyHighScores": [
-    { "week": 1, "team": "Tobin", "total": 151.36 },
-    { "week": 2, "team": "JLusa", "total": 174.58 },
-    { "week": 3, "team": "Ayer", "total": 152.22 },
-    { "week": 4, "team": "Ayer", "total": 161.76 },
-    { "week": 5, "team": "Trudy", "total": 157.08 },
-    { "week": 6, "team": "Tobin", "total": 175.98 },
-    { "week": 7, "team": "Ayer", "total": 147 },
-    { "week": 8, "team": "DGatz", "total": 174.56 },
-    { "week": 9, "team": "TLew", "total": 190.52 },
-    { "week": 10, "team": "CBuck", "total": 131.86 },
-    { "week": 11, "team": "Ayer", "total": 155.82 },
-    { "week": 12, "team": "Mante", "total": 174.22 },
-    { "week": 13, "team": "Tobin", "total": 170.9 },
-    { "week": 14, "team": "Tobin", "total": 170.9 }
+    {
+      "week": 1,
+      "team": "tobin",
+      "total": 151.36
+    },
+    {
+      "week": 2,
+      "team": "jlusa",
+      "total": 174.58
+    },
+    {
+      "week": 3,
+      "team": "ayer",
+      "total": 152.22
+    },
+    {
+      "week": 4,
+      "team": "ayer",
+      "total": 161.76
+    },
+    {
+      "week": 5,
+      "team": "trudy",
+      "total": 157.08
+    },
+    {
+      "week": 6,
+      "team": "tobin",
+      "total": 175.98
+    },
+    {
+      "week": 7,
+      "team": "ayer",
+      "total": 147
+    },
+    {
+      "week": 8,
+      "team": "dgatz",
+      "total": 174.56
+    },
+    {
+      "week": 9,
+      "team": "tlew",
+      "total": 190.52
+    },
+    {
+      "week": 10,
+      "team": "cbuck",
+      "total": 131.86
+    },
+    {
+      "week": 11,
+      "team": "ayer",
+      "total": 155.82
+    },
+    {
+      "week": 12,
+      "team": "mante",
+      "total": 174.22
+    },
+    {
+      "week": 13,
+      "team": "tobin",
+      "total": 170.9
+    },
+    {
+      "week": 14,
+      "team": "tobin",
+      "total": 170.9
+    }
   ],
   "survivor": [
-    { "week": 1, "eliminated": "ALef" },
-    { "week": 2, "eliminated": "Mante" },
-    { "week": 3, "eliminated": "DGatz" },
-    { "week": 4, "eliminated": "TLew" },
-    { "week": 5, "eliminated": "Yacob" },
-    { "week": 6, "eliminated": "Jordan" },
-    { "week": 7, "eliminated": "Trudy" },
-    { "week": 8, "eliminated": "Byz" },
-    { "week": 9, "eliminated": "Ayer" },
-    { "week": 10, "eliminated": "Tobin" },
-    { "week": 11, "eliminated": "JLusa" },
-    { "week": 12, "winner": "CBuck" }
+    {
+      "week": 1,
+      "eliminated": "alef"
+    },
+    {
+      "week": 2,
+      "eliminated": "mante"
+    },
+    {
+      "week": 3,
+      "eliminated": "dgatz"
+    },
+    {
+      "week": 4,
+      "eliminated": "tlew"
+    },
+    {
+      "week": 5,
+      "eliminated": "yacob"
+    },
+    {
+      "week": 6,
+      "eliminated": "jordan"
+    },
+    {
+      "week": 7,
+      "eliminated": "trudy"
+    },
+    {
+      "week": 8,
+      "eliminated": "byz"
+    },
+    {
+      "week": 9,
+      "eliminated": "ayer"
+    },
+    {
+      "week": 10,
+      "eliminated": "tobin"
+    },
+    {
+      "week": 11,
+      "eliminated": "jlusa"
+    },
+    {
+      "week": 12,
+      "winner": "cbuck"
+    }
   ]
 }
