@@ -29,15 +29,20 @@ window.Financials = () => {
     let playoffRunnerUp = 0;
     let playoffThird = 0;
 
-    // Weekly High Score
-    const whsPrize = payoutMap['Weekly High Score (Weeks 1-14)'];
+    // Weekly High Score: `payoutMap` stores the total pool for Weeks 1-14 (e.g. $560),
+    // so compute per-week amount by dividing by number of weeks, then multiply
+    // by how many weekly wins the team has.
+    const totalWhsPool = Number(payoutMap['Weekly High Score (Weeks 1-14)']) || 0;
+    const numWeeks = (p.weeklyHighScores || []).length || 14;
+    const perWeekPrize = numWeeks > 0 ? (totalWhsPool / numWeeks) : 0;
     const whsCount = (p.weeklyHighScores || []).filter(w => {
-      const wTeamId = window.AppState.getTeamIdByName(w.team) || w.team;
+      const wTeamId = window.AppState.getTeamIdByName ? (window.AppState.getTeamIdByName(w.team) || w.team) : w.team;
       return wTeamId === team;
     }).length;
+    weeklyHighScore = perWeekPrize * whsCount;
 
     // Survivor
-    const survivorPrize = payoutMap['Survivor (Week 13 Winner)'];
+    const survivorPrize = Number(payoutMap['Survivor (Week 13 Winner)']) || 0;
     const winnerEntry = (p.survivor || [])[11];
     if (winnerEntry) {
       const winnerId = window.AppState.getTeamIdByName(winnerEntry.winner) || winnerEntry.winner;
@@ -50,10 +55,10 @@ window.Financials = () => {
       // yearlyAwards may store team ids or names; normalize to id when possible
       const awardTeamId = window.AppState.getTeamIdByName(w.team) || w.team;
       if (awardTeamId === team) {
-        if (w.category === 'Regular Season Champ') regularSeason = payoutMap[w.category] || 0;
-        if (w.category === 'Playoff Champ') playoffChamp = payoutMap[w.category] || 0;
-        if (w.category === 'Playoff Runner Up') playoffRunnerUp = payoutMap[w.category] || 0;
-        if (w.category === 'Playoff 3rd Place') playoffThird = payoutMap[w.category] || 0;
+        if (w.category === 'Regular Season Champ') regularSeason = Number(payoutMap[w.category]) || 0;
+        if (w.category === 'Playoff Champ') playoffChamp = Number(payoutMap[w.category]) || 0;
+        if (w.category === 'Playoff Runner Up') playoffRunnerUp = Number(payoutMap[w.category]) || 0;
+        if (w.category === 'Playoff 3rd Place') playoffThird = Number(payoutMap[w.category]) || 0;
       }
     });
 

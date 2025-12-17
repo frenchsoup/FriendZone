@@ -9,7 +9,13 @@ window.Home = () => {
   const getWinner = (year, category) => {
     const winners = yearlyAwards[year] || [];
     const found = winners.find(w => w.category === category);
-    return found ? found.team : 'TBD';
+    if (!found) return 'TBD';
+    const val = found.team;
+    // If the stored value is now a team id, resolve to the canonical display name
+    const byId = window.AppState.getTeamById(val);
+    if (byId) return byId.team;
+    // Fallback: normalize any legacy name casing
+    return window.AppState.normalizeTeamName ? window.AppState.normalizeTeamName(val) : (val || 'TBD');
   };
 
   // Categories to display
