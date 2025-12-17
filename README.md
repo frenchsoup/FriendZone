@@ -16,6 +16,19 @@ Welcome to the **FriendZone Fantasy Football League** web app—a platform for m
 
 ## Project Structure
 
+## Recent Changes (Dec 17, 2025)
+
+- Added a small SVG favicon (`/favicon.svg`) and linked it in `index.html` to avoid a missing favicon error.
+- Improved Netlify persistence function `.netlify/functions/update-data.js`: fetches latest file SHA before updates, retries on 409 conflicts, and uses a dynamic import to support the modern ESM `@octokit` package. Function now checks for `GITHUB_TOKEN` and supports `DEBUG_FUNCTIONS=true` for richer error output.
+- Introduced canonical team `id`s in `data/league_teams.json` and added `window.AppState` helpers (`getTeamById`, `getTeamIdByName`, `getTeamsForYear`, `normalizeTeamName`). The UI now prefers IDs internally while displaying friendly names.
+- New scripts:
+    - `scripts/migrate-teams-to-ids.js` — one-time migration tool to convert team names to canonical IDs (creates `.bak` backups when run).
+    - `scripts/compute_financials.js` — local verification script that reproduces the `Financials` calculations for debugging payouts.
+- UI updates:
+    - `sections/financials.js`: top 5 earners shown in a left leaderboard column; improved mobile/table styling (sticky headers, right-aligned numeric columns, compact mobile cards); fixed weekly-high-score payout calculation to use per-week amount derived from the total WHS pool.
+    - `sections/prizes.js` and `sections/keepers.js`: use canonical team IDs in selects and normalize before persisting.
+- UX: added global `isSaving` flag and wrapped setters for `prizes`, `payouts`, and `yearlyAwards` so inputs disable during saves and show saving state.
+
 ```
 FriendZone/
 ├── index.html
@@ -35,174 +48,86 @@ FriendZone/
 │   ├── prizes_2024.json
 │   ├── prizes_2025.json
 │   └── rules.json
-├── .netlify/
-│   └── functions/
-│       └── update-data.js
-└── sections/
-    ├── admin.js
-    ├── home.js
-    ├── keepers.js
-    ├── modal.js
-    ├── payouts.js
-    ├── prizes.js
-    └── rules.js
-```
+# FriendZone Fantasy Football League
 
-## Tech Stack
+A lightweight single-page web app for managing a fantasy football league: rules, payouts, keepers, weekly prizes, and simple admin tools.
 
-- **Frontend**: React (via CDN), JSX, Tailwind CSS, Babel Standalone
-- **Backend**: Netlify Functions ([`.netlify/functions/update-data.js`](.netlify/functions/update-data.js)), uses GitHub API to persist data
-- **Data Storage**: JSON files in [`data/`](data/)
-- **Styling**: Tailwind CSS, custom [`styles.css`](styles.css)
-- **Deployment**: Netlify
+Built with React (via CDN), Tailwind CSS, and Netlify Functions. Data is stored as JSON files under `/data/` and persisted back to the repository via a Netlify Function that uses the GitHub API.
 
-## Setup Instructions
+## Quick Start
 
-### Prerequisites
-
-- **Node.js** (optional, for local development)
-- **Git**
-- **Netlify CLI** (optional, for local Netlify Functions: `npm install -g netlify-cli`)
-
-### Local Development
-
-1. Clone the repo:
-    ```sh
-    git clone https://github.com/frenchsoup/FriendZone.git
-    cd FriendZone
-    ```
-2. Serve locally:
-    ```sh
-    npx serve .
-    ```
-    Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-3. **Netlify Functions (Optional)**:
-    - Install Netlify CLI: `npm install -g netlify-cli`
-    - Run: `netlify dev`
-    - Test `/data/*.json` updates locally.
-
-### Data Files
-
-Initialize `/data/` with these JSON files (create empty versions if needed):
-
-- `keepers_*.json`:
-    ```json
-    [
-      {
-        "team": "Team 1",
-        "keeper1": "",
-        "draftCost1": 0,
-        "tag1": false,
-        "cost1": 0,
-        "keeper2": "",
-        "draftCost2": 0,
-        "tag2": false,
-        "cost2": 0,
-        "remaining": 200
-      }
-    ]
-    ```
-- `prizes_*.json`:
-    ```json
-    { "survivor": [], "weeklyHighScores": [] }
-    ```
-- `payouts.json`:
-    ```json
-    []
-    ```
-- `rules.json`:
-    ```json
-    { "sections": [] }
-    ```
-- `locks.json`:
-    ```json
-    { "2022": false, "2023": false, "2024": false, "2025": false }
-    ```
-
-### Netlify Function
-
-The Netlify function ([`.netlify/functions/update-data.js`](.netlify/functions/update-data.js)) updates JSON files in the GitHub repo using the GitHub API. It supports `update` and `delete` actions for all data files.
-
-**Environment Variable Required:**  
-Set `GITHUB_TOKEN` in your Netlify site for authentication.
-
-## Deployment to Netlify
-
-1. Commit and push:
-    ```sh
-    git add .
-    git commit -m "Initial commit"
-    git push origin main
-    ```
-2. Configure Netlify:
-    - Log in at [Netlify](https://app.netlify.com/)
-    - Create a new site from Git, select your repo
-    - Set:
-        - **Base directory**: `FriendZone`
-        - **Publish directory**: `.`
-        - **Build command**: _(leave blank)_
-        - **Functions directory**: `.netlify/functions`
-    - Add environment variable `GITHUB_TOKEN` for GitHub API access
-    - Deploy the site
-
-3. **Verify Deployment**:
-    - Visit your Netlify URL
-    - Open browser console for errors
-    - Test admin login, keeper updates, and data persistence
-
-## **Yearly Upgrade Checklist (example: add 2026 support)**
-
-Follow these steps each offseason to add a new year (e.g. 2026) to the app.
-
-- **Create data files:** Add `data/keepers_2026.json` and `data/prizes_2026.json` (use the existing 2025 files as templates). Ensure `data/locks.json` contains a `2026` key (default `false`).
-- **Add defaults in app init:** Update the file-fetch list and default state in `index.html` so the app initializes `keepers[2026]` and `prizes[2026]` (use same structure as other years).
-- **Update UI year selectors:** Add `2026` to any hardcoded year lists in `sections/prizes.js`, `sections/keepers.js`, and other components, or change selectors to derive years dynamically from available data files.
-- **Update league/team metadata:** If teams change, update `data/league_teams.json` (add `2026` to team `years` arrays) and add an entry for `2026` in `data/yearlyawards.json` if you wish to pre-populate awards.
-- **Verify persistence/backend:** The Netlify function `/.netlify/functions/update-data.js` supports arbitrary `data/*.json` files, but confirm `GITHUB_TOKEN`, `GITHUB_REPO`/owner settings, and repository permissions (repo scope) in Netlify environment variables.
-- **UX and saving:** Confirm saving indicators and input disabling cover the new year (we added `isSaving` and wrapped setters for `prizes`, `payouts`, and `yearlyAwards`).
-- **Test locally:** Run `netlify dev` (or serve the site) and exercise keepers/prizes/financials for 2026; verify writes update the repo and the UI (including `Financials`) reflects changes.
-- **Commit & deploy:** Commit your new data files and code changes, push to GitHub, then deploy on Netlify; monitor function logs for errors and fix environment variables if needed.
-- **Optional - safer workflow:** Create a dedicated branch `upgrade/2026`, push changes there, and open a PR for review before merging to `main`.
-
-This checklist is intentionally minimal — if you want I can apply these changes now (create the 2026 files and update `index.html` and selectors) and open a PR for your review.
-
-### Team ID migration script
-
-To migrate existing team name references to canonical IDs (recommended):
-
-1. Review `data/league_teams.json` and ensure each entry has an `id` field (slug-like, unique).
-2. Run the migration script locally:
+1. Clone the repository:
 
 ```bash
-node scripts/migrate-teams-to-ids.js
+git clone https://github.com/frenchsoup/FriendZone.git
+cd FriendZone
 ```
 
-The script creates `.bak` backups for any file it modifies under `data/` and replaces team name strings with the matching team `id` where possible (in `keepers_*.json`, `prizes_*.json`, and `yearlyawards.json`).
+2. Serve the site locally (static server):
 
-After migration, the app UI will use canonical IDs internally while showing human-friendly team names.
+```bash
+npx serve .
+```
 
-## Usage
+Open http://localhost:3000 in your browser.
 
-- **Navigation**: Use the top bar (or hamburger menu) to switch tabs.
-- **Rules**: View/edit league rules by section (admins only).
-- **Payouts**: View/edit payout categories and amounts.
-- **Keepers**: Select year (2022–2025), manage keepers, budgets, and lock years.
-- **Prizes**: View/edit weekly high scores and survivor pool data (2023–2025).
-- **Admin**: Log in to enable editing; logout to return to read-only mode.
+3. (Optional) To run Netlify functions locally, install the Netlify CLI and run `netlify dev`.
+
+## What’s in the repo
+
+- `index.html` — app bootstrap and global state
+- `styles.css` — custom styles
+- `sections/` — UI sections (home, keepers, prizes, payouts, admin, financials, etc.)
+- `data/` — JSON data files (keepers, prizes, payouts, yearlyawards, league_teams, locks, rules)
+- `.netlify/functions/update-data.js` — Netlify Function that persists JSON files to GitHub
+- `scripts/` — developer scripts (migration and verification tools)
+
+## Data layout
+
+- `data/league_teams.json` — canonical list of teams (each entry includes an `id`, `team` display name, and `years` array)
+- `data/keepers_YYYY.json` — keeper info per year
+- `data/prizes_YYYY.json` — weeklyHighScores and survivor entries per year
+- `data/payouts.json` — payout categories and prize amounts
+- `data/yearlyawards.json` — yearly award winners
+
+The UI prefers canonical `id` values for internal comparisons but displays the `team` name for users.
+
+## Netlify function & GitHub persistence
+
+The Netlify function at `.netlify/functions/update-data.js` handles saving JSON back to GitHub. When deploying, set the `GITHUB_TOKEN` environment variable in Netlify with a token that has repository write access.
+
+Notes:
+- The function fetches the file's latest SHA before updating to avoid GitHub 409 conflicts.
+- If you see a 409 on updates, retrying after fetching the latest SHA resolves it.
+
+## Admin & editing
+
+- Admin actions are protected by a simple password (see `index.html` for the value used in this build). Admins can edit keepers, prizes, payouts, and rules.
+- While saving, inputs are disabled and a global `isSaving` flag prevents concurrent edits.
+
+## Responsive & UI notes
+
+- The Financials tab displays a compact leaderboard and a responsive table. Numeric columns are right-aligned and headers are sticky for easier mobile viewing.
+
+## Deploying to Netlify
+
+1. Push your branch to the repository:
+
+```bash
+git add .
+git commit -m "Your message"
+git push origin main
+```
+
+2. In Netlify, create a new site from Git and point it to this repository. Set the Functions directory to `.netlify/functions` and add the `GITHUB_TOKEN` environment variable.
 
 ## Contributing
 
-1. **Fork the Repo**: Fork `frenchsoup/FriendZone` on GitHub.
-2. **Make Changes**:
-    - Create a feature branch: `git checkout -b feature/your-feature`
-    - Update `index.html`, `styles.css`, or data files
-    - Test locally with `npx serve .`
-3. **Submit a Pull Request**:
-    - Push your branch: `git push origin feature/your-feature`
-    - Open a pull request with a clear description
-4. **Code Guidelines**:
-    - Use consistent JSX syntax and close all tags
-    - Follow Tailwind CSS conventions
-    - Use the Netlify Function for data updates
-    - Test changes in the browser and check console for errors
+1. Fork the repo and create a branch for your changes.
+2. Keep changes small and focused. Run the site locally to verify behavior.
+3. Open a PR with a clear description of your changes.
+
+If you want me to create a PR with today's updates (Netlify function fixes, team ID work, favicon, UI adjustments), I can prepare one.
+
+---
+Simple, focused, and ready for local testing — let me know if you want the README to include developer commands (install dependencies, linting, tests) or a diagram of data flow.
